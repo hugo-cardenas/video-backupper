@@ -6,6 +6,7 @@
   "dependencies": {
     "blue-tape": "^1.0.0",
     "googleapis": "^13.0.0",
+    "jsonfile": "^2.4.0",
     "sinon": "^1.17.6",
     "tape": "^4.6.2",
     "ytdl-core": "^0.7.18"
