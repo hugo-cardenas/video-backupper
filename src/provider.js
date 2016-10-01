@@ -34,7 +34,7 @@ module.exports = function (google, key) {
                 maxResults: 50
             };
 
-            var result = youtube.playlistItems.list(options, {}, function (err, data, response) {
+            youtube.playlistItems.list(options, {}, function (err, data, response) {
                 if (err) {
                     return reject(err);
                 }
@@ -44,19 +44,10 @@ module.exports = function (google, key) {
     }
 
     function getVideoItems(playlistId) {
-        return new Promise(function (resolve, reject) {
-            createAuthorizedJwtClient()
-                .then(function(jwtClient){
-                    return getItems(jwtClient, playlistId);
-                })
-                .then(function(data){
-                    console.log('success');
-                    return console.log(data);
-                })
-                .catch(function(err){
-                    return console.log(err);
-                })
-        });
+        return createAuthorizedJwtClient()
+            .then(function (jwtClient) {
+                return getItems(jwtClient, playlistId);
+            });
     }
 
     return {
