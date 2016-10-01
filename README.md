@@ -1,6 +1,6 @@
 # video-backupper
 
-Downloads videos from a Youtube playlist and saves them into a persistent storage.
+Makes backups of videos from a Youtube playlist, saving them into a persistent storage.
 
 # license
 
