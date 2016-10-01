@@ -1,0 +1,17 @@
+{
+  "name": "video-fetcher",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "dependencies": {
+    "googleapis": "^13.0.0",
+    "tape": "^4.6.2",
+    "ytdl-core": "^0.7.18"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
