@@ -4,6 +4,7 @@
   "description": "",
   "main": "main.js",
   "dependencies": {
+    "aws-sdk": "^2.6.6",
     "blue-tape": "^1.0.0",
     "googleapis": "^13.0.0",
     "jsonfile": "^2.4.0",
@@ -16,5 +17,5 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
-  "license": "ISC"
+  "license": "MIT"
 }

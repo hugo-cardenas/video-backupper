@@ -21,6 +21,12 @@ module.exports = function (google, key) {
         })
     }
 
+    function extractVideoItems(responseData){
+        return responseData.items.map(function(elem){
+            return elem.snippet;
+        });
+    }
+
     function getItems(jwtClient, playlistId) {
         return new Promise(function (resolve, reject) {
             youtube = google.youtube({
@@ -38,7 +44,7 @@ module.exports = function (google, key) {
                 if (err) {
                     return reject(err);
                 }
-                return resolve(data);
+                return resolve(extractVideoItems(data));
             });
         });
     }

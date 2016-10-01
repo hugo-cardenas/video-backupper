@@ -4,7 +4,10 @@ var createProvider = require('./../src/provider');
 test('getItems succeeds', function (t) {
     var playlistId = 'playlistId42';
 
-    var expectedItems = ['item1', 'item2'];
+    var item1 = { id: 'foo42' };
+    var item2 = { id: 'bar44' };
+    var responseData = createResponseData([item1, item2]);
+    var expectedItems = [item1, item2];
 
     var key = {
         client_email: 'foo@bar.com',
@@ -27,12 +30,11 @@ test('getItems succeeds', function (t) {
                 t.equal(options.maxResults, 50);
 
                 var err = null;
-                var items = ['item1', 'item2'];
                 var response = [];
-                callback(err, items, response);
+                callback(err, responseData, response);
             }
         }
-    }
+    };
 
     var google = {
         auth: {
@@ -86,9 +88,9 @@ test('getItems authorization error', function (t) {
     };
 
     var provider = createProvider(google, key);
-    
+
     return provider.getVideoItems(playlistId)
-        .catch(function(err){
+        .catch(function (err) {
             t.equal(err.message, errorMessage);
             return Promise.resolve();
         });
@@ -97,7 +99,10 @@ test('getItems authorization error', function (t) {
 test('getItems list error', function (t) {
     var playlistId = 'playlistId42';
 
-    var expectedItems = ['item1', 'item2'];
+    var item1 = { id: 'foo42' };
+    var item2 = { id: 'bar44' };
+    var responseData = createResponseData([item1, item2]);
+    var expectedItems = [item1, item2];
 
     var key = {
         client_email: 'foo@bar.com',
@@ -121,9 +126,8 @@ test('getItems list error', function (t) {
                 t.equal(options.maxResults, 50);
 
                 var err = new Error(errorMessage);
-                var items = ['item1', 'item2'];
                 var response = [];
-                callback(err, items, response);
+                callback(err, responseData, response);
             }
         }
     }
@@ -144,9 +148,25 @@ test('getItems list error', function (t) {
     var provider = createProvider(google, key);
 
     return provider.getVideoItems(playlistId)
-        .catch(function(err){
+        .catch(function (err) {
             t.equal(err.message, errorMessage);
             return Promise.resolve();
         });
 });
 
+
+function createResponseData(items) {
+    return {
+        kind: 'kind',
+        etag: 'etag',
+        pageInfo: { totalResults: 5, resultsPerPage: 50 },
+        items: items.map(function (elem) {
+            return {
+                kind: 'youtube#playlistItem',
+                etag: 'etag',
+                id: 'id42',
+                snippet: elem
+            }
+        })
+    }
+}
