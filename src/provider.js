@@ -22,6 +22,7 @@ module.exports = function (google, key) {
     }
 
     function extractVideoItems(responseData){
+        // TODO Validate response, ensure that videoId is found inside
         return responseData.items.map(function(elem){
             return elem.snippet;
         });
@@ -60,4 +61,3 @@ module.exports = function (google, key) {
         getVideoItems: getVideoItems
     };
 }
-

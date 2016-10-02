@@ -1,11 +1,11 @@
 var test = require('blue-tape');
-var createProvider = require('./../src/provider');
+var createProvider = require('./../../src/provider');
 
 test('getItems succeeds', function (t) {
     var playlistId = 'playlistId42';
 
-    var item1 = { id: 'foo42' };
-    var item2 = { id: 'bar44' };
+    var item1 = { title: 'foo', resourceId: { kind: 'youtube#video', videoId: 'foo42' }};
+    var item2 = { title: 'bar', resourceId: { kind: 'youtube#video', videoId: 'bar44' }};
     var responseData = createResponseData([item1, item2]);
     var expectedItems = [item1, item2];
 
@@ -62,8 +62,6 @@ test('getItems succeeds', function (t) {
 test('getItems authorization error', function (t) {
     var playlistId = 'playlistId42';
 
-    var expectedItems = ['item1', 'item2'];
-
     var key = {
         client_email: 'foo@bar.com',
         private_key: 'privateKeyFoo',
@@ -99,8 +97,8 @@ test('getItems authorization error', function (t) {
 test('getItems list error', function (t) {
     var playlistId = 'playlistId42';
 
-    var item1 = { id: 'foo42' };
-    var item2 = { id: 'bar44' };
+    var item1 = { title: 'foo', resourceId: { kind: 'youtube#video', videoId: 'foo42' }};
+    var item2 = { title: 'bar', resourceId: { kind: 'youtube#video', videoId: 'bar44' }};
     var responseData = createResponseData([item1, item2]);
     var expectedItems = [item1, item2];
 
@@ -153,7 +151,6 @@ test('getItems list error', function (t) {
             return Promise.resolve();
         });
 });
-
 
 function createResponseData(items) {
     return {
