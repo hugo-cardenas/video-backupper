@@ -1,8 +1,8 @@
 {
   "name": "video-backupper",
   "version": "1.0.0",
-  "description": "",
-  "main": "main.js",
+  "description": "Makes backups of Youtube videos",
+  "main": "",
   "dependencies": {
     "aws-sdk": "^2.6.6",
     "blue-tape": "^1.0.0",
@@ -20,6 +20,6 @@
     "test-unit": "tape test/unit/* |faucet",
     "test-int": "tape test/integration/* |faucet"
   },
-  "author": "",
+  "author": "Hugo Cárdenas",
   "license": "MIT"
 }
