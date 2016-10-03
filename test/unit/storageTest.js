@@ -3,14 +3,17 @@ var createStorage = require('./../../src/storage');
 
 test('storage - save - succeeds', function (t) {
     var bucket = 'bucketFoo';
-    var name = 'foobar';
+    var playlistId = 'playlistId40';
+    var videoId = 'videoId42';
     var stream = 'I am a stream';
+
+    var expectedKey = playlistId + '/' + videoId;
 
     var s3 = {
         upload: function(params, callback){
             t.equal(params.Bucket, bucket);
             t.equal(params.Body, stream);
-            t.equal(params.Key, name);
+            t.equal(params.Key, expectedKey);
 
             var err = null;
             var data = 'success';
@@ -19,7 +22,7 @@ test('storage - save - succeeds', function (t) {
     };
 
     var storage = createStorage(s3, bucket);
-    return storage.save(stream, name)
+    return storage.save(stream, playlistId, videoId)
         .then(function(){
             return Promise.resolve();
         });
@@ -27,15 +30,18 @@ test('storage - save - succeeds', function (t) {
 
 test('storage - save - fails', function (t) {
     var bucket = 'bucketFoo';
-    var name = 'foobar';
+    var playlistId = 'playlistId40';
+    var videoId = 'videoId42';
     var stream = 'I am a stream';
+
+    var expectedKey = playlistId + '/' + videoId;
 
     var errorMessage = 'Error saving stream';
     var s3 = {
         upload: function(params, callback){
             t.equal(params.Bucket, bucket);
             t.equal(params.Body, stream);
-            t.equal(params.Key, name);
+            t.equal(params.Key, expectedKey);
 
             var err = new Error(errorMessage);;
             var data = 'irrelevant';
@@ -44,7 +50,7 @@ test('storage - save - fails', function (t) {
     };
 
     var storage = createStorage(s3, bucket);
-    return storage.save(stream, name)
+    return storage.save(stream, playlistId, videoId)
         .catch(function(err){
             t.equal(err.message, errorMessage);
             return Promise.resolve();

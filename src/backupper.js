@@ -6,7 +6,7 @@ module.exports = function (provider, ytdl, storage) {
         return baseVideoUrl + videoId;
     }
 
-    function backup(videoId) {
+    function backup(playlistId, videoId) {
         return new Promise(function (resolve, reject) {
             var errorMessage = 'Error in backup of video id: ' + videoId + ', reason: ';
             try {
@@ -17,7 +17,7 @@ module.exports = function (provider, ytdl, storage) {
                 return reject(new Error(errorMessage + err.message));
             }
 
-            storage.save(stream, videoId)
+            storage.save(stream, playlistId, videoId)
                 .then(function () {
                     return resolve();
                 })
@@ -30,9 +30,9 @@ module.exports = function (provider, ytdl, storage) {
     /**
      * Resolve in parallel all video backups, return promise resolved with error list
      */
-    function backupVideoItems(videoItems) {
+    function backupVideoItems(playlistId, videoItems) {
         var promises = videoItems.map(function (videoItem) {
-            return backup(videoItem.resourceId.videoId);
+            return backup(playlistId, videoItem.resourceId.videoId);
         });
 
         var solvedPromises = promises.map(function (promise) {
@@ -57,7 +57,9 @@ module.exports = function (provider, ytdl, storage) {
 
     function run(playlistId) {
         return provider.getVideoItems(playlistId)
-            .then(backupVideoItems);
+            .then(function(videoItems){
+                return backupVideoItems(playlistId, videoItems);
+            });
     }
 
     return {

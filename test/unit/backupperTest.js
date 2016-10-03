@@ -30,14 +30,14 @@ test('backupper - run - succeeds', function (t) {
     ytdl.withArgs(expectedVideoUrl2).returns(stream2);
 
     var storage = { save: sinon.stub() };
-    storage.save.withArgs(stream1, videoId1).returns(Promise.resolve());
-    storage.save.withArgs(stream2, videoId2).returns(Promise.resolve());
+    storage.save.withArgs(stream1, playlistId, videoId1).returns(Promise.resolve());
+    storage.save.withArgs(stream2, playlistId, videoId2).returns(Promise.resolve());
 
     var backupper = createBackupper(provider, ytdl, storage);
     return backupper.run(playlistId)
         .then(function (errors) {
-            t.ok(storage.save.calledWith(stream1, videoId1));
-            t.ok(storage.save.calledWith(stream2, videoId2));
+            t.ok(storage.save.calledWith(stream1, playlistId, videoId1));
+            t.ok(storage.save.calledWith(stream2, playlistId, videoId2));
 
             t.deepEqual(errors, []);
             return Promise.resolve();
@@ -102,15 +102,15 @@ test('backupper - run - ytdl fails, skips video', function (t) {
     ytdl.withArgs(expectedVideoUrl3).returns(stream3);
 
     var storage = { save: sinon.stub() };
-    storage.save.withArgs(stream1, videoId1).returns(Promise.resolve());
-    storage.save.withArgs(stream3, videoId3).returns(Promise.resolve());
+    storage.save.withArgs(stream1, playlistId, videoId1).returns(Promise.resolve());
+    storage.save.withArgs(stream3, playlistId, videoId3).returns(Promise.resolve());
 
     var backupper = createBackupper(provider, ytdl, storage);
     return backupper.run(playlistId)
         .then(function (errors) {
-            t.ok(storage.save.calledWith(stream1, videoId1));
-            t.ok(storage.save.neverCalledWith(stream2, videoId2));
-            t.ok(storage.save.calledWith(stream3, videoId3));
+            t.ok(storage.save.calledWith(stream1, playlistId, videoId1));
+            t.ok(storage.save.neverCalledWith(stream2, playlistId, videoId2));
+            t.ok(storage.save.calledWith(stream3, playlistId, videoId3));
 
             t.equal(errors.length, 1);
             t.ok(errors[0].message.includes(videoId2));
@@ -154,16 +154,16 @@ test('backupper - run - storage fails, skips video', function (t) {
 
     var errorMessage = 'storage has failed';
     var storage = { save: sinon.stub() };
-    storage.save.withArgs(stream1, videoId1).returns(Promise.resolve());
-    storage.save.withArgs(stream2, videoId2).returns(Promise.reject(new Error(errorMessage)));
-    storage.save.withArgs(stream3, videoId3).returns(Promise.resolve());
+    storage.save.withArgs(stream1, playlistId, videoId1).returns(Promise.resolve());
+    storage.save.withArgs(stream2, playlistId, videoId2).returns(Promise.reject(new Error(errorMessage)));
+    storage.save.withArgs(stream3, playlistId, videoId3).returns(Promise.resolve());
 
     var backupper = createBackupper(provider, ytdl, storage);
     return backupper.run(playlistId)
         .then(function (errors) {
-            t.ok(storage.save.calledWith(stream1, videoId1));
-            t.ok(storage.save.calledWith(stream2, videoId2));
-            t.ok(storage.save.calledWith(stream3, videoId3));
+            t.ok(storage.save.calledWith(stream1, playlistId, videoId1));
+            t.ok(storage.save.calledWith(stream2, playlistId, videoId2));
+            t.ok(storage.save.calledWith(stream3, playlistId, videoId3));
 
             t.equal(errors.length, 1);
             t.ok(errors[0].message.includes(videoId2));
