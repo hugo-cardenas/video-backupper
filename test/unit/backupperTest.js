@@ -2,10 +2,9 @@ var test = require('blue-tape');
 var sinon = require('sinon');
 var createBackupper = require('./../../src/backupper');
 
-test('run succeeds', function (t) {
+test('backupper - run - succeeds', function (t) {
     var playlistId = 'myPlaylist42';
-    var bucket = 'myBucket';
-
+    
     var videoId1 = 'foo42';
     var videoId2 = 'bar44';
     var videoItems = [
@@ -34,13 +33,8 @@ test('run succeeds', function (t) {
     storage.save.withArgs(stream1, videoId1).returns(Promise.resolve());
     storage.save.withArgs(stream2, videoId2).returns(Promise.resolve());
 
-    var config = {
-        playlistId: playlistId,
-        bucket: bucket
-    };
-
-    var backupper = createBackupper(provider, ytdl, storage, config);
-    return backupper.run()
+    var backupper = createBackupper(provider, ytdl, storage);
+    return backupper.run(playlistId)
         .then(function (errors) {
             t.ok(storage.save.calledWith(stream1, videoId1));
             t.ok(storage.save.calledWith(stream2, videoId2));
@@ -50,10 +44,9 @@ test('run succeeds', function (t) {
         });
 });
 
-test('run provider fails', function (t) {
+test('backupper - run - provider fails', function (t) {
     var playlistId = 'myPlaylist42';
-    var bucket = 'myBucket';
-
+    
     var errorMessage = 'Provider has failed';
     var provider = {
         getVideoItems: function (id) {
@@ -65,13 +58,9 @@ test('run provider fails', function (t) {
     var ytdl = sinon.stub(); 
     
     var storage = {};
-    var config = {
-        playlistId: playlistId,
-        bucket: bucket
-    }
-
-    var backupper = createBackupper(provider, ytdl, storage, config);
-    return backupper.run()
+    
+    var backupper = createBackupper(provider, ytdl, storage);
+    return backupper.run(playlistId)
         .catch(function (err) {
             t.equal(err.message, errorMessage);
             t.notOk(ytdl.called);
@@ -79,10 +68,9 @@ test('run provider fails', function (t) {
         });
 });
 
-test('run ytdl fails, skips video', function (t) {
+test('backupper - run - ytdl fails, skips video', function (t) {
     var playlistId = 'myPlaylist42';
-    var bucket = 'myBucket';
-
+    
     var videoId1 = 'foo42';
     var videoId2 = 'bar44';
     var videoId3 = 'baz46';
@@ -117,13 +105,8 @@ test('run ytdl fails, skips video', function (t) {
     storage.save.withArgs(stream1, videoId1).returns(Promise.resolve());
     storage.save.withArgs(stream3, videoId3).returns(Promise.resolve());
 
-    var config = {
-        playlistId: playlistId,
-        bucket: bucket
-    };
-
-    var backupper = createBackupper(provider, ytdl, storage, config);
-    return backupper.run()
+    var backupper = createBackupper(provider, ytdl, storage);
+    return backupper.run(playlistId)
         .then(function (errors) {
             t.ok(storage.save.calledWith(stream1, videoId1));
             t.ok(storage.save.neverCalledWith(stream2, videoId2));
@@ -137,9 +120,8 @@ test('run ytdl fails, skips video', function (t) {
         });
 });
 
-test('run storage fails, skips video', function (t) {
+test('backupper - run - storage fails, skips video', function (t) {
     var playlistId = 'myPlaylist42';
-    var bucket = 'myBucket';
 
     var videoId1 = 'foo42';
     var videoId2 = 'bar44';
@@ -176,13 +158,8 @@ test('run storage fails, skips video', function (t) {
     storage.save.withArgs(stream2, videoId2).returns(Promise.reject(new Error(errorMessage)));
     storage.save.withArgs(stream3, videoId3).returns(Promise.resolve());
 
-    var config = {
-        playlistId: playlistId,
-        bucket: bucket
-    };
-
-    var backupper = createBackupper(provider, ytdl, storage, config);
-    return backupper.run()
+    var backupper = createBackupper(provider, ytdl, storage);
+    return backupper.run(playlistId)
         .then(function (errors) {
             t.ok(storage.save.calledWith(stream1, videoId1));
             t.ok(storage.save.calledWith(stream2, videoId2));

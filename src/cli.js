@@ -1,7 +1,4 @@
-
-var google = require('googleapis');
-var createProvider = require('./provider');
-var jsonFile = require('jsonfile');
+var locator = require('./locator');
 
 if (process.argv.length !== 4) {
     var message = 'Invalid number of arguments' + '\n'
@@ -10,7 +7,9 @@ if (process.argv.length !== 4) {
     return;
 }
 
-var key = jsonFile.readFileSync(process.argv[2]);
+var backupper = locator.getBackupper();
+backupper.run()
+
 var playlistId = process.argv[3];
 
 var provider = createProvider(google, key);

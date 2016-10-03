@@ -1,7 +1,7 @@
 var test = require('blue-tape');
 var createStorage = require('./../../src/storage');
 
-test('save succeeds', function (t) {
+test('storage - save - succeeds', function (t) {
     var bucket = 'bucketFoo';
     var name = 'foobar';
     var stream = 'I am a stream';
@@ -25,7 +25,7 @@ test('save succeeds', function (t) {
         });
 });
 
-test('save fails', function (t) {
+test('storage - save - fails', function (t) {
     var bucket = 'bucketFoo';
     var name = 'foobar';
     var stream = 'I am a stream';

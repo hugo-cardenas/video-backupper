@@ -1,7 +1,7 @@
 var test = require('blue-tape');
 var createProvider = require('./../../src/provider');
 
-test('getItems succeeds', function (t) {
+test('provider - getItems - succeeds', function (t) {
     var playlistId = 'playlistId42';
 
     var item1 = { title: 'foo', resourceId: { kind: 'youtube#video', videoId: 'foo42' }};
@@ -59,7 +59,7 @@ test('getItems succeeds', function (t) {
 });
 
 
-test('getItems authorization error', function (t) {
+test('provider - getItems - authorization error', function (t) {
     var playlistId = 'playlistId42';
 
     var key = {
@@ -94,7 +94,7 @@ test('getItems authorization error', function (t) {
         });
 });
 
-test('getItems list error', function (t) {
+test('provider - getItems - list error', function (t) {
     var playlistId = 'playlistId42';
 
     var item1 = { title: 'foo', resourceId: { kind: 'youtube#video', videoId: 'foo42' }};

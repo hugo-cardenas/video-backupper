@@ -16,9 +16,9 @@
     "tap-spec": "^4.1.1"
   },
   "scripts": {
-    "test": "tape test/integration/* test/unit/* |tap-spec",
-    "test-unit": "tape test/unit/* |tap-spec",
-    "test-int": "tape test/integration/* |tap-spec"
+    "test": "tape test/integration/* test/unit/* |faucet",
+    "test-unit": "tape test/unit/* |faucet",
+    "test-int": "tape test/integration/* |faucet"
   },
   "author": "",
   "license": "MIT"
