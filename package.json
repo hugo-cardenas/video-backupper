@@ -13,6 +13,7 @@
     "ytdl-core": "^0.7.18"
   },
   "devDependencies": {
+    "faucet": "0.0.1",
     "tap-spec": "^4.1.1"
   },
   "scripts": {
