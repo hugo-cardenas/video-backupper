@@ -1,0 +1,10 @@
+{
+    "provider": {
+        "key": "path/to/youtube/key.json"
+    },
+    "storage": {
+        "s3": {
+            "bucket": "bucket-name"
+        }
+    }
+}

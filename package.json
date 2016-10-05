@@ -13,13 +13,14 @@
     "ytdl-core": "^0.7.18"
   },
   "devDependencies": {
+    "commander": "^2.9.0",
     "faucet": "0.0.1",
     "tap-spec": "^4.1.1"
   },
   "scripts": {
-    "test": "tape test/integration/* test/unit/* |faucet",
-    "test-unit": "tape test/unit/* |faucet",
-    "test-int": "tape test/integration/* |faucet"
+    "test": "tape 'test/**/*.test.js' |faucet",
+    "test-unit": "tape 'test/unit/**/*.test.js' |faucet",
+    "test-int": "tape 'test/integration/**/*.test.js' |faucet"
   },
   "author": "Hugo Cárdenas",
   "license": "MIT"

@@ -2,22 +2,17 @@ var aws = require('aws-sdk');
 var google = require('googleapis');
 var ytdl = require('ytdl-core');
 
-// TODO Make this robust on missing keys
-var config = require('./config.json');
-var providerConfig = config.provider;
-var storageConfig = config.storage;
-
 var createBackupper = require('./backupper');
 var createProvider = require('./provider');
 var createStorage = require('./storage');
-
-var jsonFile = require('jsonfile');
+var createConfigManager = require('./config/configManager');
 
 var s3;
 
 var backupper;
 var provider;
 var storage;
+var configManager;
 
 function getS3() {
     if (!s3) {
@@ -26,23 +21,34 @@ function getS3() {
     return s3;
 }
 
+function getConfigManager() {
+    if (!configManager) {
+        configManager = createConfigManager();
+    }
+    return configManager;
+}
+
+function getConfig() {
+    return getConfigManager().getConfig();
+}
+
 function getStorage() {
     if (!storage) {
-        storage = createStorage(getS3(), storageConfig.bucket);
+        storage = createStorage(getS3(), getConfig().storage.bucket);
     }
     return storage;
 }
 
 function getProvider() {
     if (!provider) {
-        var key = jsonFile.readFileSync(providerConfig.key);
+        var key = jsonFile.readFileSync(getConfig().provider.key);
         provider = createProvider(google, key);
     }
     return provider;
 }
 
-function getBackupper(){
-    if (!backupper){
+function getBackupper() {
+    if (!backupper) {
         backupper = createBackupper(getProvider(), ytdl, getStorage());
     }
     return backupper;

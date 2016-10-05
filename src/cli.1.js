@@ -8,7 +8,7 @@ if (process.argv.length !== 4) {
 }
 
 var backupper = locator.getBackupper();
-backupper.run()
+backupper.run();
 
 var playlistId = process.argv[3];
 
