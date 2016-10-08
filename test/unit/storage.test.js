@@ -7,7 +7,7 @@ test('storage - save - succeeds', function (t) {
     var videoId = 'videoId42';
     var stream = 'I am a stream';
 
-    var expectedKey = playlistId + '/' + videoId;
+    var expectedKey = playlistId + '/' + videoId + '.mp4';
 
     var s3 = {
         upload: function (params, callback) {
@@ -34,7 +34,7 @@ test('storage - save - fails', function (t) {
     var videoId = 'videoId42';
     var stream = 'I am a stream';
 
-    var expectedKey = playlistId + '/' + videoId;
+    var expectedKey = playlistId + '/' + videoId + '.mp4';
 
     var errorMessage = 'Error saving stream';
     var s3 = {

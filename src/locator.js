@@ -35,7 +35,7 @@ function getConfig() {
 
 function getStorage() {
     if (!storage) {
-        storage = createStorage(getS3(), getConfig().storage.bucket);
+        storage = createStorage(getS3(), getConfig().storage.s3.bucket);
     }
     return storage;
 }

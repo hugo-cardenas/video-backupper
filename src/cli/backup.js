@@ -3,8 +3,9 @@ var locator = require('../locator');
 
 function handleCommand(playlistId) {
     locator.getBackupper().run(playlistId)
-        .then(function () {
-            console.log('Success!');
+        .then(function (errors) {
+            console.log(errors);
+            console.log('Finished!');
         })
         .catch(function (err) {
             console.log('Error!', err);

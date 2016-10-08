@@ -13,14 +13,17 @@ module.exports = function (provider, ytdl, storage) {
                 var url = getVideoUrl(videoId);
                 var stream = ytdl(url);
             } catch (err) {
+                //console.log('Error downloading video ' + videoId + ': ' + err.message);
                 return reject(new Error(errorMessage + err.message));
             }
 
             storage.save(stream, playlistId, videoId)
                 .then(function () {
+                    //console.log('Success saving video ' + videoId);
                     return resolve();
                 })
                 .catch(function (err) {
+                    //console.log('Error uploading video ' + videoId + ': ' + err.message);
                     return reject(new Error(errorMessage + err.message));
                 });
         });
@@ -57,6 +60,7 @@ module.exports = function (provider, ytdl, storage) {
     function run(playlistId) {
         return provider.getVideoItems(playlistId)
             .then(function (videoItems) {
+                //console.log('Found ' + videoItems.length + ' video items');
                 return backupVideoItems(playlistId, videoItems);
             });
     }

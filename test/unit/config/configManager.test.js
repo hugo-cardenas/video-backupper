@@ -37,7 +37,6 @@ test('configManager - getConfig - env var not set', function (t) {
         configManager.getConfig();
     } catch (e) {
         t.ok(e.message.includes('VIDEOBACKUPPER_CONFIG'));
-        console.log(e);
         t.end();
     }
 });

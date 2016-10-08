@@ -2,8 +2,10 @@
  * Storage entry point, to be used from other modules
  */
 module.exports = function (s3, bucket) {
+    var extension = 'mp4';
+
     function buildKey(playlistId, videoId) {
-        return playlistId + '/' + videoId;
+        return playlistId + '/' + videoId + '.' + extension;
     }
 
     /**
