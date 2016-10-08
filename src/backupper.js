@@ -1,15 +1,41 @@
+/**
+ * @typedef {Object} Backupper
+ *
+ * @property {function} run Run the backup process
+ */
+
+/**
+ * Create a backupper
+ *
+ * @param {Provider} provider Provider of video items
+ * @param {Object} ytdl Library for downloading videos
+ * @param {Storage} storage Storage for saving videos
+ * @param {DisplayOutput} displayOutput Object to output messages
+ * @returns {Backupper}
+ */
 module.exports = function (provider, ytdl, storage, displayOutput) {
     // TODO Use proper query build
     var baseVideoUrl = 'https://www.youtube.com/watch?v=';
 
-    function getVideoUrl(videoId) {
+    /**
+     * @param {string} videoId
+     * @returns {string}
+     */
+    function buildVideoUrl(videoId) {
         return baseVideoUrl + videoId;
     }
 
+    /**
+     * Backup one specific video (download and save)
+     *
+     * @param {string} playlistId Playlist to which the video belongs
+     * @param {string} videoId
+     * @returns {Promise}
+     */
     function backup(playlistId, videoId) {
         return new Promise(function (resolve, reject) {
             try {
-                var url = getVideoUrl(videoId);
+                var url = buildVideoUrl(videoId);
                 var stream = ytdl(url);
             } catch (err) {
                 return reject(createError(videoId, err));
@@ -26,6 +52,13 @@ module.exports = function (provider, ytdl, storage, displayOutput) {
         });
     }
 
+    /**
+     * Create a backup specific error
+     *
+     * @param {string} videoId
+     * @param {Error} previousErr
+     * @returns {Error}
+     */
     function createError(videoId, previousErr) {
         var message = 'Backup failed for video id: ' + videoId + ', reason: ' + previousErr.message;
         displayOutput.outputLine(message);
@@ -33,7 +66,12 @@ module.exports = function (provider, ytdl, storage, displayOutput) {
     }
 
     /**
-     * Resolve in parallel all video backups, return promise resolved with error list
+     * Launch in parallel all video backups.
+     * If there are errors, it will collect them and still try to backup all videos.
+     *
+     * @param {any} playlistId
+     * @param {any} videoItems
+     * @returns {Promise<Error[]>} Promise which resolves with a list of errors (empty if none)
      */
     function backupVideoItems(playlistId, videoItems) {
         var promises = videoItems.map(function (videoItem) {
@@ -58,6 +96,12 @@ module.exports = function (provider, ytdl, storage, displayOutput) {
             });
     }
 
+    /**
+     * Run the backup process for all the videos in the playlist specified
+     *
+     * @param {string} playlistId
+     * @returns {Promise<Error[]>} Promise which resolves with a list of errors (empty if none)
+     */
     function run(playlistId) {
         return provider.getVideoItems(playlistId)
             .then(function (videoItems) {

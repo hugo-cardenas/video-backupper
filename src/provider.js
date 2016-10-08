@@ -1,4 +1,20 @@
+/**
+ * @typedef {Object} Provider
+ *
+ * @property {function} getVideoItems Get a list of video items
+ */
+
+/**
+ * Create provider
+ *
+ * @param {Object} google Google API client object
+ * @param {Object} config Project config
+ * @returns {Provider}
+ */
 module.exports = function (google, config) {
+    /**
+     * @returns {Object} JWT client
+     */
     function createJwtClient() {
         return new google.auth.JWT(
             config.email,
@@ -9,6 +25,9 @@ module.exports = function (google, config) {
         );
     }
 
+    /**
+     * @returns {Promise<Object>} Promise resolving with authenticated JWT client
+     */
     function createAuthorizedJwtClient() {
         return new Promise(function (resolve, reject) {
             var jwtClient = createJwtClient();
@@ -21,6 +40,12 @@ module.exports = function (google, config) {
         });
     }
 
+    /**
+     * Extract all video items from the API response
+     *
+     * @param {Object} responseData
+     * @returns {Object[]} Array of video items
+     */
     function extractVideoItems(responseData) {
         // TODO Validate response, ensure that videoId is found inside
         return responseData.items.map(function (elem) {
@@ -28,6 +53,13 @@ module.exports = function (google, config) {
         });
     }
 
+    /**
+     * Get all video items from the specified playlist
+     *
+     * @param {Object} jwtClient
+     * @param {string} playlistId
+     * @returns {Promise<Object[]>} Promise resolving with an array of video items
+     */
     function getItems(jwtClient, playlistId) {
         return new Promise(function (resolve, reject) {
             var youtube = google.youtube({
@@ -50,6 +82,12 @@ module.exports = function (google, config) {
         });
     }
 
+    /**
+     * Get video items from the specified playlist
+     *
+     * @param {string} playlistId
+     * @returns {Promise<Object[]>} Promise resolving with an array of video items
+     */
     function getVideoItems(playlistId) {
         return createAuthorizedJwtClient()
             .then(function (jwtClient) {
