@@ -21,9 +21,9 @@ test('provider - getItems - succeeds', function (t) {
     var responseData = createResponseData([item1, item2]);
     var expectedItems = [item1, item2];
 
-    var key = {
-        client_email: 'foo@bar.com',
-        private_key: 'privateKeyFoo'
+    var config = {
+        email: 'foo@bar.com',
+        keyFile: '/path/to/private/key.pem'
     };
 
     var jwtClient = {
@@ -61,7 +61,7 @@ test('provider - getItems - succeeds', function (t) {
         }
     };
 
-    var provider = createProvider(google, key);
+    var provider = createProvider(google, config);
 
     return provider.getVideoItems(playlistId)
         .then(function (items) {
@@ -73,9 +73,9 @@ test('provider - getItems - succeeds', function (t) {
 test('provider - getItems - authorization error', function (t) {
     var playlistId = 'playlistId42';
 
-    var key = {
-        client_email: 'foo@bar.com',
-        private_key: 'privateKeyFoo'
+    var config = {
+        email: 'foo@bar.com',
+        keyFile: '/path/to/private/key.pem'
     };
 
     var errorMessage = 'jwtClientError';
@@ -95,7 +95,7 @@ test('provider - getItems - authorization error', function (t) {
         }
     };
 
-    var provider = createProvider(google, key);
+    var provider = createProvider(google, config);
 
     return provider.getVideoItems(playlistId)
         .catch(function (err) {
@@ -123,9 +123,9 @@ test('provider - getItems - list error', function (t) {
     };
     var responseData = createResponseData([item1, item2]);
 
-    var key = {
-        client_email: 'foo@bar.com',
-        private_key: 'privateKeyFoo'
+    var config = {
+        email: 'foo@bar.com',
+        keyFile: '/path/to/private/key.pem'
     };
 
     var jwtClient = {
@@ -164,7 +164,7 @@ test('provider - getItems - list error', function (t) {
         }
     };
 
-    var provider = createProvider(google, key);
+    var provider = createProvider(google, config);
 
     return provider.getVideoItems(playlistId)
         .catch(function (err) {

@@ -51,8 +51,7 @@ function getStorage() {
 
 function getProvider() {
     if (!provider) {
-        var key = jsonfile.readFileSync(getConfig().provider.key);
-        provider = createProvider(google, key);
+        provider = createProvider(google, getConfig().provider.youtube);
     }
     return provider;
 }

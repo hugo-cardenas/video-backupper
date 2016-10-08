@@ -1,6 +1,9 @@
 {
     "provider": {
-        "key": "path/to/youtube/key.json"
+        "youtube": {
+            "email": "my-service-account@developer.gserviceaccount.com",
+            "keyFile": "/path/to/google/api/private.pem"
+        }
     },
     "storage": {
         "s3": {

@@ -1,9 +1,10 @@
-module.exports = function (google, key) {
+module.exports = function (google, config) {
     function createJwtClient() {
         return new google.auth.JWT(
-            key.client_email,
+            config.email,
+            config.keyFile,
             null,
-            key.private_key, ['https://www.googleapis.com/auth/youtube.readonly'],
+            ['https://www.googleapis.com/auth/youtube.readonly'],
             null
         );
     }
