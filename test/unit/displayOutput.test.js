@@ -8,7 +8,7 @@ test('displayOutput - outputLine - succeeds', function (t) {
 
     var displayOutput = createDisplayOutput();
     displayOutput.outputLine(message);
-    // Important to restore console.log before asserting anything, because assertion will print
+    // Important to restore console.log before asserting anything, because assertion will call it
     console.log.restore();
 
     t.ok(stub.calledWith(message));

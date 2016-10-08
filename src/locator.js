@@ -6,6 +6,7 @@ var jsonfile = require('jsonfile');
 var createBackupper = require('./backupper');
 var createProvider = require('./provider');
 var createStorage = require('./storage');
+var createDisplayOutput = require('./displayOutput');
 var createConfigManager = require('./config/configManager');
 
 var s3;
@@ -13,6 +14,7 @@ var s3;
 var backupper;
 var provider;
 var storage;
+var displayOutput;
 var configManager;
 
 function getS3() {
@@ -33,6 +35,13 @@ function getConfig() {
     return getConfigManager().getConfig();
 }
 
+function getDisplayOutput() {
+    if (!displayOutput) {
+        displayOutput = createDisplayOutput();
+    }
+    return displayOutput;
+}
+
 function getStorage() {
     if (!storage) {
         storage = createStorage(getS3(), getConfig().storage.s3.bucket);
@@ -50,7 +59,7 @@ function getProvider() {
 
 function getBackupper() {
     if (!backupper) {
-        backupper = createBackupper(getProvider(), ytdl, getStorage());
+        backupper = createBackupper(getProvider(), ytdl, getStorage(), getDisplayOutput());
     }
     return backupper;
 }

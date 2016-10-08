@@ -4,7 +4,9 @@ var locator = require('../locator');
 function handleCommand(playlistId) {
     locator.getBackupper().run(playlistId)
         .then(function (errors) {
-            console.log(errors);
+            if (errors.length > 0) {
+                console.log('Errors:', errors);
+            }
             console.log('Finished!');
         })
         .catch(function (err) {
@@ -16,6 +18,5 @@ program
     .version('0.0.1')
     .description('Backup videos from a youtube playlist')
     .arguments('backup <playlist-id>')
-    .action(handleCommand);
-
-program.parse(process.argv);
+    .action(handleCommand)
+    .parse(process.argv);

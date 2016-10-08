@@ -33,11 +33,19 @@ test('backupper - run - succeeds', function (t) {
     storage.save.withArgs(stream1, playlistId, videoId1).returns(Promise.resolve());
     storage.save.withArgs(stream2, playlistId, videoId2).returns(Promise.resolve());
 
-    var backupper = createBackupper(provider, ytdl, storage);
+    var displayOutput = {
+        outputLine: sinon.stub()
+    };
+
+    var backupper = createBackupper(provider, ytdl, storage, displayOutput);
     return backupper.run(playlistId)
         .then(function (errors) {
             t.ok(storage.save.calledWith(stream1, playlistId, videoId1));
             t.ok(storage.save.calledWith(stream2, playlistId, videoId2));
+
+            t.ok(displayOutput.outputLine.calledWith(sinon.match(/2 video/)));
+            t.ok(displayOutput.outputLine.calledWith(sinon.match(/Success saving video foo42/)));
+            t.ok(displayOutput.outputLine.calledWith(sinon.match(/Success saving video bar44/)));
 
             t.deepEqual(errors, []);
             return Promise.resolve();
@@ -59,7 +67,9 @@ test('backupper - run - provider fails', function (t) {
 
     var storage = {};
 
-    var backupper = createBackupper(provider, ytdl, storage);
+    var displayOutput = {};
+
+    var backupper = createBackupper(provider, ytdl, storage, displayOutput);
     return backupper.run(playlistId)
         .catch(function (err) {
             t.equal(err.message, errorMessage);
@@ -105,7 +115,11 @@ test('backupper - run - ytdl fails, skips video', function (t) {
     storage.save.withArgs(stream1, playlistId, videoId1).returns(Promise.resolve());
     storage.save.withArgs(stream3, playlistId, videoId3).returns(Promise.resolve());
 
-    var backupper = createBackupper(provider, ytdl, storage);
+    var displayOutput = {
+        outputLine: sinon.stub()
+    };
+
+    var backupper = createBackupper(provider, ytdl, storage, displayOutput);
     return backupper.run(playlistId)
         .then(function (errors) {
             t.ok(storage.save.calledWith(stream1, playlistId, videoId1));
@@ -115,6 +129,11 @@ test('backupper - run - ytdl fails, skips video', function (t) {
             t.equal(errors.length, 1);
             t.ok(errors[0].message.includes(videoId2));
             t.ok(errors[0].message.includes(errorMessage));
+
+            t.ok(displayOutput.outputLine.calledWith(
+                sinon.match(/bar44/)
+                .and(sinon.match(new RegExp(errorMessage)))
+            ));
 
             return Promise.resolve();
         });
@@ -158,7 +177,11 @@ test('backupper - run - storage fails, skips video', function (t) {
     storage.save.withArgs(stream2, playlistId, videoId2).returns(Promise.reject(new Error(errorMessage)));
     storage.save.withArgs(stream3, playlistId, videoId3).returns(Promise.resolve());
 
-    var backupper = createBackupper(provider, ytdl, storage);
+    var displayOutput = {
+        outputLine: sinon.stub()
+    };
+
+    var backupper = createBackupper(provider, ytdl, storage, displayOutput);
     return backupper.run(playlistId)
         .then(function (errors) {
             t.ok(storage.save.calledWith(stream1, playlistId, videoId1));
@@ -168,6 +191,11 @@ test('backupper - run - storage fails, skips video', function (t) {
             t.equal(errors.length, 1);
             t.ok(errors[0].message.includes(videoId2));
             t.ok(errors[0].message.includes(errorMessage), 'foobar');
+
+            t.ok(displayOutput.outputLine.calledWith(
+                sinon.match(/bar44/)
+                .and(sinon.match(new RegExp(errorMessage)))
+            ));
 
             return Promise.resolve();
         });

@@ -1,4 +1,4 @@
-module.exports = function (provider, ytdl, storage) {
+module.exports = function (provider, ytdl, storage, displayOutput) {
     // TODO Use proper query build
     var baseVideoUrl = 'https://www.youtube.com/watch?v=';
 
@@ -8,25 +8,28 @@ module.exports = function (provider, ytdl, storage) {
 
     function backup(playlistId, videoId) {
         return new Promise(function (resolve, reject) {
-            var errorMessage = 'Error in backup of video id: ' + videoId + ', reason: ';
             try {
                 var url = getVideoUrl(videoId);
                 var stream = ytdl(url);
             } catch (err) {
-                //console.log('Error downloading video ' + videoId + ': ' + err.message);
-                return reject(new Error(errorMessage + err.message));
+                return reject(createError(videoId, err));
             }
 
             storage.save(stream, playlistId, videoId)
                 .then(function () {
-                    //console.log('Success saving video ' + videoId);
+                    displayOutput.outputLine('Success saving video ' + videoId);
                     return resolve();
                 })
                 .catch(function (err) {
-                    //console.log('Error uploading video ' + videoId + ': ' + err.message);
-                    return reject(new Error(errorMessage + err.message));
+                    return reject(createError(videoId, err));
                 });
         });
+    }
+
+    function createError(videoId, previousErr) {
+        var message = 'Backup failed for video id: ' + videoId + ', reason: ' + previousErr.message;
+        displayOutput.outputLine(message);
+        return new Error(message);
     }
 
     /**
@@ -40,8 +43,6 @@ module.exports = function (provider, ytdl, storage) {
         var solvedPromises = promises.map(function (promise) {
             return promise
                 .then(function () {
-                    // TODO
-                    console.log('Completed promise');
                     return Promise.resolve();
                 })
                 .catch(function (err) {
@@ -60,7 +61,7 @@ module.exports = function (provider, ytdl, storage) {
     function run(playlistId) {
         return provider.getVideoItems(playlistId)
             .then(function (videoItems) {
-                //console.log('Found ' + videoItems.length + ' video items');
+                displayOutput.outputLine('Found ' + videoItems.length + ' video items');
                 return backupVideoItems(playlistId, videoItems);
             });
     }
