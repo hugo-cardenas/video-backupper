@@ -36,6 +36,10 @@ Example of the project config.json:
 }
 ```
 
+How to obtain Google API service account credentials: https://developers.google.com/identity/protocols/OAuth2ServiceAccount
+
+How to setup the AWS credentials and profile files: http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html#cli-config-files
+
 # Tests
 Tests are written with [tape](https://github.com/substack/tape)
 
