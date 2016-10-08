@@ -69,8 +69,8 @@ module.exports = function (provider, ytdl, storage, displayOutput) {
      * Launch in parallel all video backups.
      * If there are errors, it will collect them and still try to backup all videos.
      *
-     * @param {any} playlistId
-     * @param {any} videoItems
+     * @param {string} playlistId
+     * @param {Object[]} videoItems Video item object list
      * @returns {Promise<Error[]>} Promise which resolves with a list of errors (empty if none)
      */
     function backupVideoItems(playlistId, videoItems) {
