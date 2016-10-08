@@ -3,8 +3,7 @@ module.exports = function (google, key) {
         return new google.auth.JWT(
             key.client_email,
             null,
-            key.private_key,
-            ['https://www.googleapis.com/auth/youtube.readonly'],
+            key.private_key, ['https://www.googleapis.com/auth/youtube.readonly'],
             null
         );
     }
@@ -17,20 +16,20 @@ module.exports = function (google, key) {
                     return reject(err);
                 }
                 return resolve(jwtClient);
-            })
-        })
+            });
+        });
     }
 
-    function extractVideoItems(responseData){
+    function extractVideoItems(responseData) {
         // TODO Validate response, ensure that videoId is found inside
-        return responseData.items.map(function(elem){
+        return responseData.items.map(function (elem) {
             return elem.snippet;
         });
     }
 
     function getItems(jwtClient, playlistId) {
         return new Promise(function (resolve, reject) {
-            youtube = google.youtube({
+            var youtube = google.youtube({
                 version: 'v3',
                 auth: jwtClient
             });
@@ -60,4 +59,4 @@ module.exports = function (google, key) {
     return {
         getVideoItems: getVideoItems
     };
-}
+};

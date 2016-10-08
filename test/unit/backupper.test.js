@@ -4,7 +4,7 @@ var createBackupper = require('./../../src/backupper');
 
 test('backupper - run - succeeds', function (t) {
     var playlistId = 'myPlaylist42';
-    
+
     var videoId1 = 'foo42';
     var videoId2 = 'bar44';
     var videoItems = [
@@ -46,7 +46,7 @@ test('backupper - run - succeeds', function (t) {
 
 test('backupper - run - provider fails', function (t) {
     var playlistId = 'myPlaylist42';
-    
+
     var errorMessage = 'Provider has failed';
     var provider = {
         getVideoItems: function (id) {
@@ -55,10 +55,10 @@ test('backupper - run - provider fails', function (t) {
         }
     };
 
-    var ytdl = sinon.stub(); 
-    
+    var ytdl = sinon.stub();
+
     var storage = {};
-    
+
     var backupper = createBackupper(provider, ytdl, storage);
     return backupper.run(playlistId)
         .catch(function (err) {
@@ -70,7 +70,7 @@ test('backupper - run - provider fails', function (t) {
 
 test('backupper - run - ytdl fails, skips video', function (t) {
     var playlistId = 'myPlaylist42';
-    
+
     var videoId1 = 'foo42';
     var videoId2 = 'bar44';
     var videoId3 = 'baz46';

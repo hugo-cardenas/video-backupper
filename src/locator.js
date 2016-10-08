@@ -1,6 +1,7 @@
 var aws = require('aws-sdk');
 var google = require('googleapis');
 var ytdl = require('ytdl-core');
+var jsonfile = require('jsonfile');
 
 var createBackupper = require('./backupper');
 var createProvider = require('./provider');
@@ -41,7 +42,7 @@ function getStorage() {
 
 function getProvider() {
     if (!provider) {
-        var key = jsonFile.readFileSync(getConfig().provider.key);
+        var key = jsonfile.readFileSync(getConfig().provider.key);
         provider = createProvider(google, key);
     }
     return provider;
@@ -58,4 +59,4 @@ module.exports = {
     getBackupper: getBackupper,
     getProvider: getProvider,
     getStorage: getStorage
-}
+};

@@ -4,14 +4,26 @@ var createProvider = require('./../../src/provider');
 test('provider - getItems - succeeds', function (t) {
     var playlistId = 'playlistId42';
 
-    var item1 = { title: 'foo', resourceId: { kind: 'youtube#video', videoId: 'foo42' }};
-    var item2 = { title: 'bar', resourceId: { kind: 'youtube#video', videoId: 'bar44' }};
+    var item1 = {
+        title: 'foo',
+        resourceId: {
+            kind: 'youtube#video',
+            videoId: 'foo42'
+        }
+    };
+    var item2 = {
+        title: 'bar',
+        resourceId: {
+            kind: 'youtube#video',
+            videoId: 'bar44'
+        }
+    };
     var responseData = createResponseData([item1, item2]);
     var expectedItems = [item1, item2];
 
     var key = {
         client_email: 'foo@bar.com',
-        private_key: 'privateKeyFoo',
+        private_key: 'privateKeyFoo'
     };
 
     var jwtClient = {
@@ -58,13 +70,12 @@ test('provider - getItems - succeeds', function (t) {
         });
 });
 
-
 test('provider - getItems - authorization error', function (t) {
     var playlistId = 'playlistId42';
 
     var key = {
         client_email: 'foo@bar.com',
-        private_key: 'privateKeyFoo',
+        private_key: 'privateKeyFoo'
     };
 
     var errorMessage = 'jwtClientError';
@@ -76,7 +87,6 @@ test('provider - getItems - authorization error', function (t) {
         }
     };
 
-    var youtube = {}
     var google = {
         auth: {
             JWT: function () {
@@ -97,14 +107,25 @@ test('provider - getItems - authorization error', function (t) {
 test('provider - getItems - list error', function (t) {
     var playlistId = 'playlistId42';
 
-    var item1 = { title: 'foo', resourceId: { kind: 'youtube#video', videoId: 'foo42' }};
-    var item2 = { title: 'bar', resourceId: { kind: 'youtube#video', videoId: 'bar44' }};
+    var item1 = {
+        title: 'foo',
+        resourceId: {
+            kind: 'youtube#video',
+            videoId: 'foo42'
+        }
+    };
+    var item2 = {
+        title: 'bar',
+        resourceId: {
+            kind: 'youtube#video',
+            videoId: 'bar44'
+        }
+    };
     var responseData = createResponseData([item1, item2]);
-    var expectedItems = [item1, item2];
 
     var key = {
         client_email: 'foo@bar.com',
-        private_key: 'privateKeyFoo',
+        private_key: 'privateKeyFoo'
     };
 
     var jwtClient = {
@@ -128,7 +149,7 @@ test('provider - getItems - list error', function (t) {
                 callback(err, responseData, response);
             }
         }
-    }
+    };
 
     var google = {
         auth: {
@@ -156,14 +177,17 @@ function createResponseData(items) {
     return {
         kind: 'kind',
         etag: 'etag',
-        pageInfo: { totalResults: 5, resultsPerPage: 50 },
+        pageInfo: {
+            totalResults: 5,
+            resultsPerPage: 50
+        },
         items: items.map(function (elem) {
             return {
                 kind: 'youtube#playlistItem',
                 etag: 'etag',
                 id: 'id42',
                 snippet: elem
-            }
+            };
         })
-    }
+    };
 }

@@ -1,12 +1,17 @@
 /**
- * Storage entry point, to be used from other modules 
+ * Storage entry point, to be used from other modules
  */
 module.exports = function (s3, bucket) {
-
     function buildKey(playlistId, videoId) {
         return playlistId + '/' + videoId;
     }
 
+    /**
+     * @param {Stream} stream
+     * @param {string} playlistId
+     * @param {string} videoId
+     * @returns
+     */
     function save(stream, playlistId, videoId) {
         // TODO Get list of stored files
         // Only if not stored already, save
@@ -29,5 +34,5 @@ module.exports = function (s3, bucket) {
 
     return {
         save: save
-    }
-}
+    };
+};

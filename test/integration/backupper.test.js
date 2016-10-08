@@ -9,11 +9,11 @@ test('backupper - run - succeeds', function (t) {
     // TODO Setup test config for this
     var backupper = locator.getBackupper();
     return backupper.run('foobar')
-        .then(function(data){
+        .then(function (data) {
             console.log(data);
             return Promise.resolve();
         })
-        .catch(function(err){
+        .catch(function (err) {
             console.log(err);
             return Promise.reject(err);
         });

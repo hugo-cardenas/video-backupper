@@ -1,0 +1,15 @@
+{
+    "extends": "standard",
+    "plugins": [
+        "standard",
+        "promise"
+    ],
+    "rules": {
+        "indent": ["warn", 4],
+        "semi": ["error", "always"],
+        "space-before-function-paren": ["warn", {
+            "anonymous": "always",
+            "named": "never"
+        }]
+    }
+}

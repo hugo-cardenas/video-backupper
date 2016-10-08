@@ -1,5 +1,5 @@
 module.exports = function (provider, ytdl, storage) {
-
+    // TODO Use proper query build
     var baseVideoUrl = 'https://www.youtube.com/watch?v=';
 
     function getVideoUrl(videoId) {
@@ -12,8 +12,7 @@ module.exports = function (provider, ytdl, storage) {
             try {
                 var url = getVideoUrl(videoId);
                 var stream = ytdl(url);
-            }
-            catch (err) {
+            } catch (err) {
                 return reject(new Error(errorMessage + err.message));
             }
 
@@ -37,7 +36,7 @@ module.exports = function (provider, ytdl, storage) {
 
         var solvedPromises = promises.map(function (promise) {
             return promise
-                .then(function(){
+                .then(function () {
                     // TODO
                     console.log('Completed promise');
                     return Promise.resolve();
@@ -51,13 +50,13 @@ module.exports = function (provider, ytdl, storage) {
             .then(function (errors) {
                 return Promise.resolve(errors.filter(function (e) {
                     return e;
-                }))
+                }));
             });
     }
 
     function run(playlistId) {
         return provider.getVideoItems(playlistId)
-            .then(function(videoItems){
+            .then(function (videoItems) {
                 return backupVideoItems(playlistId, videoItems);
             });
     }
@@ -65,4 +64,4 @@ module.exports = function (provider, ytdl, storage) {
     return {
         run: run
     };
-}
+};

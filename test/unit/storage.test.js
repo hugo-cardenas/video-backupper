@@ -10,7 +10,7 @@ test('storage - save - succeeds', function (t) {
     var expectedKey = playlistId + '/' + videoId;
 
     var s3 = {
-        upload: function(params, callback){
+        upload: function (params, callback) {
             t.equal(params.Bucket, bucket);
             t.equal(params.Body, stream);
             t.equal(params.Key, expectedKey);
@@ -23,7 +23,7 @@ test('storage - save - succeeds', function (t) {
 
     var storage = createStorage(s3, bucket);
     return storage.save(stream, playlistId, videoId)
-        .then(function(){
+        .then(function () {
             return Promise.resolve();
         });
 });
@@ -38,12 +38,12 @@ test('storage - save - fails', function (t) {
 
     var errorMessage = 'Error saving stream';
     var s3 = {
-        upload: function(params, callback){
+        upload: function (params, callback) {
             t.equal(params.Bucket, bucket);
             t.equal(params.Body, stream);
             t.equal(params.Key, expectedKey);
 
-            var err = new Error(errorMessage);;
+            var err = new Error(errorMessage);
             var data = 'irrelevant';
             callback(err, data);
         }
@@ -51,7 +51,7 @@ test('storage - save - fails', function (t) {
 
     var storage = createStorage(s3, bucket);
     return storage.save(stream, playlistId, videoId)
-        .catch(function(err){
+        .catch(function (err) {
             t.equal(err.message, errorMessage);
             return Promise.resolve();
         });
