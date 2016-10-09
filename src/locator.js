@@ -7,24 +7,25 @@ var createDisplayOutput = baserequire('src/output/displayOutput');
 var storageLocator = baserequire('src/storage/storageLocator');
 var providerLocator = baserequire('src/provider/providerLocator');
 
-var backupper;
-var displayOutput;
+var _ytdl;
+var _displayOutput;
+var _backupper;
 
 /**
  * @returns {DisplayOutput}
  */
 function getDisplayOutput() {
-    if (!displayOutput) {
-        displayOutput = createDisplayOutput();
+    if (!_displayOutput) {
+        _displayOutput = createDisplayOutput();
     }
-    return displayOutput;
+    return _displayOutput;
 }
 
 /**
- * @returns {Storage}
+ * @param {DisplayOutput} displayOutput
  */
-function getStorage() {
-    return storageLocator.getStorage();
+function setDisplayOutput(displayOutput) {
+    _displayOutput = displayOutput;
 }
 
 /**
@@ -35,15 +36,43 @@ function getProvider() {
 }
 
 /**
+ * @returns {Object} Ytdl library method
+ */
+function getYtdl() {
+    if (!_ytdl) {
+        _ytdl = require('ytdl-core');
+    }
+    return _ytdl;
+}
+
+/**
+ * @param {Object} ytdl Ytdl library method
+ */
+function setYtdl(ytdl) {
+    _ytdl = ytdl;
+}
+
+/**
+ * @returns {Storage}
+ */
+function getStorage() {
+    return storageLocator.getStorage();
+}
+
+/**
  * @returns {Backupper}
  */
 function getBackupper() {
-    if (!backupper) {
-        backupper = createBackupper(getProvider(), ytdl, getStorage(), getDisplayOutput());
+    if (!_backupper) {
+        _backupper = createBackupper(getProvider(), ytdl, getStorage(), getDisplayOutput());
     }
-    return backupper;
+    return _backupper;
 }
 
 module.exports = {
+    getYtdl: getYtdl,
+    setYtdl: setYtdl,
+    getDisplayOutput: getDisplayOutput,
+    setDisplayOutput: setDisplayOutput,
     getBackupper: getBackupper
 };

@@ -1,18 +1,26 @@
 var baserequire = require('base-require');
 var createConfigManager = baserequire('src/config/configManager');
 
-var configManager;
+var _configManager;
 
 /**
  * @returns {ConfigManager}
  */
 function getConfigManager() {
-    if (!configManager) {
-        configManager = createConfigManager();
+    if (!_configManager) {
+        _configManager = createConfigManager();
     }
-    return configManager;
+    return _configManager;
+}
+
+/**
+ * @param {ConfigManager|null} configManager
+ */
+function setConfigManager(configManager) {
+    _configManager = configManager;
 }
 
 module.exports = {
-    getConfigManager: getConfigManager
+    getConfigManager: getConfigManager,
+    setConfigManager: setConfigManager
 };

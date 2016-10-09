@@ -1,10 +1,9 @@
-var google = require('googleapis');
-
 var baserequire = require('base-require');
 var configLocator = baserequire('src/config/configLocator');
 var createProvider = baserequire('src/provider/provider');
 
-var provider;
+var _google;
+var _provider;
 
 /**
  * @returns {Config} Config object
@@ -14,15 +13,42 @@ function getConfig() {
 }
 
 /**
+ * @returns {Object} Google API client
+ */
+function getGoogle() {
+    if (!_google) {
+        _google = require('googleapis');
+    }
+    return _google;
+}
+
+/**
+ * @param {Object} google Google API client
+ */
+function setGoogle(google) {
+    _google = google;
+}
+
+/**
  * @returns {Provider} Provides video items
  */
 function getProvider() {
-    if (!provider) {
-        provider = createProvider(google, getConfig());
+    if (!_provider) {
+        _provider = createProvider(getGoogle(), getConfig().provider.youtube);
     }
-    return provider;
+    return _provider;
+}
+
+/**
+ * @param {Provider|null} provider
+ */
+function setProvider(provider) {
+    _provider = provider;
 }
 
 module.exports = {
-    getProvider: getProvider
+    getProvider: getProvider,
+    setProvider: setProvider,
+    getGoogle: getGoogle,
+    setGoogle: setGoogle
 };

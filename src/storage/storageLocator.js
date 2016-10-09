@@ -3,17 +3,24 @@ var baserequire = require('base-require');
 var configLocator = baserequire('src/config/configLocator');
 var createStorage = baserequire('src/storage/storage');
 
-var s3;
-var storage;
+var _s3;
+var _storage;
 
 /**
- * @returns {S3} S3 client object
+ * @returns {Object} S3 client object
  */
 function getS3() {
-    if (!s3) {
-        s3 = new aws.S3();
+    if (!_s3) {
+        _s3 = new aws.S3();
     }
-    return s3;
+    return _s3;
+}
+
+/**
+ * @param {Object} s3 S3 client object
+ */
+function setS3(s3) {
+    _s3 = s3;
 }
 
 /**
@@ -34,12 +41,22 @@ function getBucket() {
  * @returns {Storage}
  */
 function getStorage() {
-    if (!storage) {
-        storage = createStorage(getS3(), getBucket());
+    if (!_storage) {
+        _storage = createStorage(getS3(), getBucket());
     }
-    return storage;
+    return _storage;
+}
+
+/**
+ * @param {Storage} storage
+ */
+function setStorage(storage) {
+    _storage = storage;
 }
 
 module.exports = {
-    getStorage: getStorage
+    getS3: getS3,
+    setS3: setS3,
+    getStorage: getStorage,
+    setStorage: setStorage
 };
