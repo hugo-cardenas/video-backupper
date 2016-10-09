@@ -70,7 +70,7 @@ module.exports = function (google, config) {
             var options = {
                 playlistId: playlistId,
                 part: ['snippet'],
-                maxResults: 50
+                maxResults: 5
             };
 
             youtube.playlistItems.list(options, {}, function (err, data, response) {

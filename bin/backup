@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
 var program = require('commander');
-var locator = require('../src/locator');
+var baserequire = require('base-require');
+var locator = baserequire('src/locator');
 
 function handleCommand(playlistId) {
     locator.getBackupper().run(playlistId)

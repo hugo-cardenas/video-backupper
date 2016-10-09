@@ -1,47 +1,14 @@
-var aws = require('aws-sdk');
-var google = require('googleapis');
 var ytdl = require('ytdl-core');
+var baserequire = require('base-require');
 
-var createBackupper = require('./backupper');
-var createProvider = require('./provider');
-var createStorage = require('./storage');
-var createDisplayOutput = require('./displayOutput');
-var createConfigManager = require('./config/configManager');
+var createBackupper = baserequire('src/backupper');
+var createDisplayOutput = baserequire('src/output/displayOutput');
 
-var s3;
+var storageLocator = baserequire('src/storage/storageLocator');
+var providerLocator = baserequire('src/provider/providerLocator');
 
 var backupper;
-var provider;
-var storage;
 var displayOutput;
-var configManager;
-
-/**
- * @returns {S3}
- */
-function getS3() {
-    if (!s3) {
-        s3 = new aws.S3();
-    }
-    return s3;
-}
-
-/**
- * @returns {ConfigManager}
- */
-function getConfigManager() {
-    if (!configManager) {
-        configManager = createConfigManager();
-    }
-    return configManager;
-}
-
-/**
- * @returns {Object}
- */
-function getConfig() {
-    return getConfigManager().getConfig();
-}
 
 /**
  * @returns {DisplayOutput}
@@ -57,20 +24,14 @@ function getDisplayOutput() {
  * @returns {Storage}
  */
 function getStorage() {
-    if (!storage) {
-        storage = createStorage(getS3(), getConfig().storage.s3.bucket);
-    }
-    return storage;
+    return storageLocator.getStorage();
 }
 
 /**
  * @returns {Provider}
  */
 function getProvider() {
-    if (!provider) {
-        provider = createProvider(google, getConfig().provider.youtube);
-    }
-    return provider;
+    return providerLocator.getProvider();
 }
 
 /**
@@ -84,7 +45,5 @@ function getBackupper() {
 }
 
 module.exports = {
-    getBackupper: getBackupper,
-    getProvider: getProvider,
-    getStorage: getStorage
+    getBackupper: getBackupper
 };

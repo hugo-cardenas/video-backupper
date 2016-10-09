@@ -1,6 +1,7 @@
 var test = require('blue-tape');
 var sinon = require('sinon');
-var createBackupper = require('./../../src/backupper');
+var baserequire = require('base-require');
+var createBackupper = baserequire('src/backupper');
 
 test('backupper - run - succeeds', function (t) {
     var playlistId = 'myPlaylist42';

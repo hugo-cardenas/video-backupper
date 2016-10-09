@@ -5,6 +5,7 @@
   "main": "",
   "dependencies": {
     "aws-sdk": "^2.6.6",
+    "base-require": "hugo-cardenas/base-require",
     "blue-tape": "^1.0.0",
     "googleapis": "^13.0.0",
     "jsonfile": "^2.4.0",

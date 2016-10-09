@@ -1,5 +1,6 @@
 var test = require('blue-tape');
-var createProvider = require('./../../src/provider');
+var baserequire = require('base-require');
+var createProvider = baserequire('src/provider/provider');
 
 test('provider - getItems - succeeds', function (t) {
     var playlistId = 'playlistId42';
@@ -39,7 +40,7 @@ test('provider - getItems - succeeds', function (t) {
             list: function (options, params, callback) {
                 t.equal(options.playlistId, playlistId);
                 t.deepEqual(options.part, ['snippet']);
-                t.equal(options.maxResults, 50);
+                t.equal(options.maxResults, 5);
 
                 var err = null;
                 var response = [];
@@ -142,7 +143,7 @@ test('provider - getItems - list error', function (t) {
             list: function (options, params, callback) {
                 t.equal(options.playlistId, playlistId);
                 t.deepEqual(options.part, ['snippet']);
-                t.equal(options.maxResults, 50);
+                t.equal(options.maxResults, 5);
 
                 var err = new Error(errorMessage);
                 var response = [];

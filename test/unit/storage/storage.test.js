@@ -1,5 +1,6 @@
 var test = require('blue-tape');
-var createStorage = require('./../../src/storage');
+var baserequire = require('base-require');
+var createStorage = baserequire('src/storage/storage');
 
 test('storage - save - succeeds', function (t) {
     var bucket = 'bucketFoo';

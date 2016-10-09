@@ -1,6 +1,7 @@
 var path = require('path');
 var test = require('blue-tape');
-var createConfigManager = require('../../../src/config/configManager');
+var baserequire = require('base-require');
+var createConfigManager = baserequire('src/config/configManager');
 
 test('configManager - getConfig - succeeds', function (t) {
     process.env.VIDEOBACKUPPER_CONFIG = path.join(__dirname, '/test.config.json');

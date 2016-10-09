@@ -1,6 +1,7 @@
 var test = require('blue-tape');
 var sinon = require('sinon');
-var createDisplayOutput = require('./../../src/displayOutput');
+var baserequire = require('base-require');
+var createDisplayOutput = baserequire('src/output/displayOutput');
 
 test('displayOutput - outputLine - succeeds', function (t) {
     var stub = sinon.stub(console, 'log');
