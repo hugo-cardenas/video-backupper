@@ -18,7 +18,17 @@ module.exports = function () {
         if (!process.env.VIDEOBACKUPPER_CONFIG) {
             throw new Error('VIDEOBACKUPPER_CONFIG env var should contain path to configuration file');
         }
-        return jsonfile.readFileSync(process.env.VIDEOBACKUPPER_CONFIG);
+        try {
+            var file = process.env.VIDEOBACKUPPER_CONFIG;
+            var config = jsonfile.readFileSync(file);
+        } catch (err) {
+            throw new Error('Unable to read config file ' + file + ', reason: ' + err.message);
+        }
+
+        if (typeof config !== 'object'){
+            throw new Error('Invalid config file ' + file + ', JSON is not an object');
+        }
+        return config;
     }
 
     // TODO Make this robust on missing keys

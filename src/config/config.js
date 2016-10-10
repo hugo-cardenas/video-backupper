@@ -28,6 +28,11 @@ module.exports = function (configArray) {
         }
     }
 
+    /**
+     * @param {Object} configArray
+     * @param {string[]} keys Array of split key parts
+     * @returns
+     */
     function getRecursive(configArray, keys) {
         var firstKey = keys.shift();
         if (typeof configArray !== 'object' || !configArray.hasOwnProperty(firstKey)) {

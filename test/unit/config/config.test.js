@@ -19,6 +19,25 @@ test('config - get - succeeds', function (t) {
     });
     t.equal(config.get('bar.baz'), 456);
     t.deepEqual(config.get('bar.foobar'), ['a', 'b']);
+
+    // Numeric arrays are also accessible by index
+    t.equal(config.get('bar.foobar.0'), 'a');
+    t.equal(config.get('bar.foobar.1'), 'b');
+
+    // Empty key returns whole config
+    t.deepEqual(config.get(''), configArray);
+    t.end();
+});
+
+test('config - get - succeeds with a numeric config array', function (t) {
+    var configArray = [
+        'foo', 'bar'
+    ];
+
+    var config = createConfig(configArray);
+    t.equal(config.get('0'), 'foo');
+    t.equal(config.get('1'), 'bar');
+    t.deepEqual(config.get(''), configArray);
     t.end();
 });
 
@@ -42,19 +61,6 @@ falsyValues.forEach(function (falsyValue, index) {
         t.equal(config.get('foo.bar'), falsyValue);
         t.end();
     });
-});
-
-test('config - get - empty key returns whole config', function (t) {
-    var configArray = {
-        'foo': 123,
-        'bar': {
-            'baz': 456
-        }
-    };
-
-    var config = createConfig(configArray);
-    t.deepEqual(config.get(''), configArray);
-    t.end();
 });
 
 var data = [
