@@ -14,7 +14,7 @@ test('configManager - getConfig - succeeds', function (t) {
     };
 
     var configManager = createConfigManager();
-    t.deepEqual(configManager.getConfig(), expectedConfig);
+    t.deepEqual(configManager.getConfig().get(''), expectedConfig);
 
     delete process.env.VIDEOBACKUPPER_CONFIG;
     t.end();

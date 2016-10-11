@@ -1,3 +1,5 @@
+var _ = require('lodash');
+
 /**
  * @typedef {Object} Provider
  *
@@ -8,10 +10,22 @@
  * Create provider
  *
  * @param {Object} google Google API client object
- * @param {Object} config Project config
+ * @param {Object} config Plain config object
  * @returns {Provider}
  */
 module.exports = function (google, config) {
+    validateConfig();
+
+    /**
+     * @throws {Error
+     */
+    function validateConfig() {
+        var keys = ['email', 'keyFile'];
+        var missingKeys = _.difference(keys, Object.keys(config));
+        if (missingKeys.length > 0) {
+            throw new Error('Invalid config. Missing keys: ' + missingKeys.join(','));
+        }
+    }
     /**
      * @returns {Object} JWT client
      */
@@ -19,8 +33,7 @@ module.exports = function (google, config) {
         return new google.auth.JWT(
             config.email,
             config.keyFile,
-            null,
-            ['https://www.googleapis.com/auth/youtube.readonly'],
+            null, ['https://www.googleapis.com/auth/youtube.readonly'],
             null
         );
     }

@@ -2,6 +2,20 @@ var test = require('blue-tape');
 var baserequire = require('base-require');
 var createProvider = baserequire('src/provider/provider');
 
+test('provider - create - invalid config', function (t) {
+    var google = {};
+    var config = {};
+    try {
+        createProvider(google, config);
+        t.fail('Should throw error for invalid config');
+    } catch (err) {
+        t.ok(err.message.includes('Invalid config'));
+        t.ok(err.message.includes('email'));
+        t.ok(err.message.includes('keyFile'));
+        t.end();
+    }
+});
+
 test('provider - getItems - succeeds', function (t) {
     var playlistId = 'playlistId42';
 

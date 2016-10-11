@@ -1,9 +1,11 @@
 var test = require('blue-tape');
 var baserequire = require('base-require');
-var createStorage = baserequire('src/storage/storage');
+var createStorage = baserequire('src/storage/s3Storage');
 
-test('storage - save - succeeds', function (t) {
-    var bucket = 'bucketFoo';
+test('s3Storage - save - succeeds', function (t) {
+    var config = {
+        bucket: 'bucketFoo'
+    };
     var playlistId = 'playlistId40';
     var videoId = 'videoId42';
     var stream = 'I am a stream';
@@ -12,7 +14,7 @@ test('storage - save - succeeds', function (t) {
 
     var s3 = {
         upload: function (params, callback) {
-            t.equal(params.Bucket, bucket);
+            t.equal(params.Bucket, config.bucket);
             t.equal(params.Body, stream);
             t.equal(params.Key, expectedKey);
 
@@ -22,15 +24,17 @@ test('storage - save - succeeds', function (t) {
         }
     };
 
-    var storage = createStorage(s3, bucket);
+    var storage = createStorage(s3, config);
     return storage.save(stream, playlistId, videoId)
         .then(function () {
             return Promise.resolve();
         });
 });
 
-test('storage - save - fails', function (t) {
-    var bucket = 'bucketFoo';
+test('s3Storage - save - fails', function (t) {
+    var config = {
+        bucket: 'bucketFoo'
+    };
     var playlistId = 'playlistId40';
     var videoId = 'videoId42';
     var stream = 'I am a stream';
@@ -40,7 +44,7 @@ test('storage - save - fails', function (t) {
     var errorMessage = 'Error saving stream';
     var s3 = {
         upload: function (params, callback) {
-            t.equal(params.Bucket, bucket);
+            t.equal(params.Bucket, config.bucket);
             t.equal(params.Body, stream);
             t.equal(params.Key, expectedKey);
 
@@ -50,7 +54,7 @@ test('storage - save - fails', function (t) {
         }
     };
 
-    var storage = createStorage(s3, bucket);
+    var storage = createStorage(s3, config);
     return storage.save(stream, playlistId, videoId)
         .catch(function (err) {
             t.equal(err.message, errorMessage);

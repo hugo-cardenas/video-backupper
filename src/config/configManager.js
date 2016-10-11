@@ -1,4 +1,6 @@
 var jsonfile = require('jsonfile');
+var baserequire = require('base-require');
+var createConfig = baserequire('src/config/config');
 
 /**
  * @typedef {Object} ConfigManager
@@ -7,7 +9,7 @@ var jsonfile = require('jsonfile');
  */
 
 module.exports = function () {
-    var config = null;
+    var config;
 
     /**
      * Load the config object from file
@@ -18,6 +20,7 @@ module.exports = function () {
         if (!process.env.VIDEOBACKUPPER_CONFIG) {
             throw new Error('VIDEOBACKUPPER_CONFIG env var should contain path to configuration file');
         }
+
         try {
             var file = process.env.VIDEOBACKUPPER_CONFIG;
             var config = jsonfile.readFileSync(file);
@@ -25,19 +28,17 @@ module.exports = function () {
             throw new Error('Unable to read config file ' + file + ', reason: ' + err.message);
         }
 
-        if (typeof config !== 'object'){
+        if (typeof config !== 'object') {
             throw new Error('Invalid config file ' + file + ', JSON is not an object');
         }
-        return config;
+        return createConfig(config);
     }
-
-    // TODO Make this robust on missing keys
 
     /**
      * @returns {Object} Config object
      */
     function getConfig() {
-        if (config === null) {
+        if (!config) {
             config = loadConfig();
         }
         return config;

@@ -1,10 +1,11 @@
 var aws = require('aws-sdk');
 var baserequire = require('base-require');
 var configLocator = baserequire('src/config/configLocator');
-var createStorage = baserequire('src/storage/storage');
+var createStorageManager = baserequire('src/storage/storageManager');
+var createS3Storage = baserequire('src/storage/s3Storage');
 
 var _s3;
-var _storage;
+var _storageManager;
 
 /**
  * @returns {Object} S3 client object
@@ -17,13 +18,6 @@ function getS3() {
 }
 
 /**
- * @param {Object} s3 S3 client object
- */
-function setS3(s3) {
-    _s3 = s3;
-}
-
-/**
  * @returns {Config} Config object
  */
 function getConfig() {
@@ -31,32 +25,25 @@ function getConfig() {
 }
 
 /**
- * @returns {string} S3 bucket name
+ * @returns {StorageManager}
  */
-function getBucket() {
-    return getConfig().storage.s3.bucket;
-}
-
-/**
- * @returns {Storage}
- */
-function getStorage() {
-    if (!_storage) {
-        _storage = createStorage(getS3(), getBucket());
+function getStorageManager() {
+    if (!_storageManager) {
+        // TODO
+        _storageManager = createStorageManager(getConfig(), createS3Storage, getS3(), {}, {});
     }
-    return _storage;
+    return _storageManager;
 }
 
 /**
- * @param {Storage} storage
+ * @param {StorageManager} storageManager
  */
-function setStorage(storage) {
-    _storage = storage;
+function setStorageManager(storageManager) {
+    _storageManager = storageManager;
 }
 
 module.exports = {
     getS3: getS3,
-    setS3: setS3,
-    getStorage: getStorage,
-    setStorage: setStorage
+    getStorageManager: getStorageManager,
+    setStorageManager: setStorageManager
 };

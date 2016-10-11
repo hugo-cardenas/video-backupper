@@ -8,11 +8,25 @@
  * Create an S3 storage
  *
  * @param {Object} s3 S3 client object
- * @param {any} bucket S3 bucket where to store the files
+ * @param {Object} config Plain config object
  * @returns {Object}
  */
-module.exports = function (s3, bucket) {
+module.exports = function (s3, config) {
     var extension = 'mp4';
+
+    validateConfig(config);
+
+    /**
+     * Validate input storage config
+     *
+     * @param {Object} config Plain config object
+     * @throws {Error}
+     */
+    function validateConfig(config) {
+        if (!config.bucket) {
+            throw new Error('Invalid config.bucket value: ' + config.bucket);
+        }
+    }
 
     /**
      * Build the S3 key (path)
@@ -38,7 +52,7 @@ module.exports = function (s3, bucket) {
         // Only if not stored already, save
 
         var params = {
-            Bucket: bucket,
+            Bucket: config.bucket,
             Key: buildKey(playlistId, videoId),
             Body: stream
         };

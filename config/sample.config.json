@@ -1,4 +1,7 @@
 {
+    "backupper": {
+        "storage": "s3"
+    },
     "provider": {
         "youtube": {
             "email": "my-service-account@developer.gserviceaccount.com",

@@ -1,6 +1,6 @@
 var test = require('blue-tape');
 var baserequire = require('base-require');
-var locator = baserequire('src/locator');
+var backupperLocator = baserequire('src/backupper/backupperLocator');
 var configLocator = baserequire('src/config/configLocator');
 var storageLocator = baserequire('src/storage/storageLocator');
 
@@ -12,8 +12,8 @@ test.skip('backupper - run - succeeds', function (t) {
     var displayOutput = {
         outputLine: function () {}
     };
-    locator.setDisplayOutput(displayOutput);
-    var backupper = locator.getBackupper();
+    backupperLocator.setDisplayOutput(displayOutput);
+    var backupper = backupperLocator.getBackupperManager().getBackupper();
 
     listS3Keys()
         .then(deleteS3Keys)
@@ -38,6 +38,7 @@ test.skip('backupper - run - succeeds', function (t) {
             t.end();
         })
         .catch(function (err) {
+            console.log(err);
             t.end(err);
         });
 });
@@ -91,5 +92,5 @@ function deleteS3Keys(keys) {
  * @returns {string}
  */
 function getS3Bucket() {
-    return configLocator.getConfigManager().getConfig().storage.s3.bucket;
+    return configLocator.getConfigManager().getConfig().get('storage.s3.bucket');
 }

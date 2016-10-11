@@ -1,15 +1,24 @@
-var ytdl = require('ytdl-core');
+
 var baserequire = require('base-require');
 
-var createBackupper = baserequire('src/backupper');
 var createDisplayOutput = baserequire('src/output/displayOutput');
 
+var configLocator = baserequire('src/config/configLocator');
 var storageLocator = baserequire('src/storage/storageLocator');
 var providerLocator = baserequire('src/provider/providerLocator');
 
+var createBackupperManager = baserequire('src/backupper/backupperManager');
+
 var _ytdl;
 var _displayOutput;
-var _backupper;
+var _backupperManager;
+
+/**
+ * @returns {Config
+ */
+function getConfig() {
+    return configLocator.getConfigManager().getConfig();
+}
 
 /**
  * @returns {DisplayOutput}
@@ -32,7 +41,7 @@ function setDisplayOutput(displayOutput) {
  * @returns {Provider}
  */
 function getProvider() {
-    return providerLocator.getProvider();
+    return providerLocator.getProviderManager().getProvider();
 }
 
 /**
@@ -46,33 +55,26 @@ function getYtdl() {
 }
 
 /**
- * @param {Object} ytdl Ytdl library method
+ * @returns {StorageManager}
  */
-function setYtdl(ytdl) {
-    _ytdl = ytdl;
+function getStorageManager() {
+    return storageLocator.getStorageManager();
 }
 
 /**
- * @returns {Storage}
+ * @returns {BackupperManager}
  */
-function getStorage() {
-    return storageLocator.getStorage();
-}
-
-/**
- * @returns {Backupper}
- */
-function getBackupper() {
-    if (!_backupper) {
-        _backupper = createBackupper(getProvider(), ytdl, getStorage(), getDisplayOutput());
+function getBackupperManager() {
+    if (!_backupperManager) {
+        _backupperManager = createBackupperManager(
+            getConfig(), getProvider(), getYtdl(), getStorageManager(), getDisplayOutput()
+        );
     }
-    return _backupper;
+    return _backupperManager;
 }
 
 module.exports = {
-    getYtdl: getYtdl,
-    setYtdl: setYtdl,
     getDisplayOutput: getDisplayOutput,
     setDisplayOutput: setDisplayOutput,
-    getBackupper: getBackupper
+    getBackupperManager: getBackupperManager
 };
