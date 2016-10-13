@@ -9,6 +9,9 @@
         }
     },
     "storage": {
+        "dropbox": {
+            "token": "dropbox-token"
+        },
         "s3": {
             "bucket": "bucket-name"
         }
