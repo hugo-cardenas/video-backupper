@@ -4,6 +4,7 @@ var backupperLocator = baserequire('src/backupper/backupperLocator');
 var configLocator = baserequire('src/config/configLocator');
 var storageLocator = baserequire('src/storage/storageLocator');
 
+// TODO Fix
 test.skip('backupper - run - succeeds', function (t) {
     var playlistId = 'PLWcOakfYWxVM_wvoM_bKxEiuGwvgYCvOE';
     var videoId1 = 'egjumMGKZCg';
@@ -73,7 +74,7 @@ function deleteS3Keys(keys) {
         Bucket: getS3Bucket(),
         Delete: {
             Objects: keys.map(function (key) {
-                return {Key: key};
+                return { Key: key };
             })
         }
     };

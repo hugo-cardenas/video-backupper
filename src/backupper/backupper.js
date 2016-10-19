@@ -88,12 +88,33 @@ module.exports = function (provider, ytdl, storage, displayOutput) {
                 });
         });
 
-        return Promise.all(solvedPromises)
+        return resolvePromisesInSeries(solvedPromises)
             .then(function (errors) {
                 return Promise.resolve(errors.filter(function (e) {
                     return e;
                 }));
             });
+    }
+
+    function resolvePromisesInSeries(promises) {
+        var executePromiseAndCollectResult = function (promise, results) {
+            return new Promise(function (resolve, reject) {
+                promise
+                    .then(function (result) {
+                        results.push(result);
+                        return resolve(results);
+                    });
+            });
+        };
+
+        var reduceFunction = function (previousPromise, currentPromise) {
+            return previousPromise
+                .then(function (results) {
+                    return executePromiseAndCollectResult(currentPromise, results);
+                });
+        };
+
+        return promises.reduce(reduceFunction, Promise.resolve([]));
     }
 
     /**

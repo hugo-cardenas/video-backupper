@@ -12,6 +12,6 @@ test('displayOutput - outputLine - succeeds', function (t) {
     // Important to restore console.log before asserting anything, because assertion will call it
     console.log.restore();
 
-    t.ok(stub.calledWith(message));
+    t.ok(stub.calledWith(sinon.match(new RegExp(message))));
     t.end();
 });

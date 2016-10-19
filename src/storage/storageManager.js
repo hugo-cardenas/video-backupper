@@ -10,16 +10,20 @@
  * @property {function} save Save a stream for a playlistId, videoId
  */
 
+var baserequire = require('base-require');
+var createS3Storage = baserequire('src/storage/s3Storage');
+var createDropboxStorage = baserequire('src/storage/dropboxStorage');
+
 /**
  * @param {Config} config Config object
  * @param {function} createS3Storage S3 storage factory
  * @param {function} createDropboxStorage Dropbox storage factory
  * @returns {StorageManager}
  */
-module.exports = function (config, createS3Storage, s3, createDropboxStorage, dropbox) {
+module.exports = function (config, s3, Dropbox) {
     const CONFIG_S3 = 'storage.s3';
-    const CONFIG_DROPBOX = 'storage.dropbox';
 
+    var dropbox;
     var storages = {};
 
     /**
@@ -47,6 +51,8 @@ module.exports = function (config, createS3Storage, s3, createDropboxStorage, dr
         switch (name) {
             case 's3':
                 return createS3Storage(s3, getConfigValue(name, CONFIG_S3));
+            case 'dropbox':
+                return createDropboxStorage(getDropbox());
             default:
                 throw new Error('Invalid storage name: "' + name + '"');
         }
@@ -63,6 +69,18 @@ module.exports = function (config, createS3Storage, s3, createDropboxStorage, dr
         } catch (err) {
             throw new Error('Invalid config for storage "' + name + '": ' + err.message);
         }
+    }
+
+    /**
+     * @returns {Object} Dropbox client object
+     */
+    function getDropbox() {
+        if (!dropbox) {
+            var token = getConfigValue('dropbox', 'storage.dropbox.token');
+            var config = { accessToken: token };
+            dropbox = new Dropbox(config);
+        }
+        return dropbox;
     }
 
     return {

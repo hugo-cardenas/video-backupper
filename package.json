@@ -7,9 +7,11 @@
     "aws-sdk": "^2.6.6",
     "base-require": "hugo-cardenas/base-require",
     "blue-tape": "^1.0.0",
+    "dropbox": "^2.3.0",
     "googleapis": "^13.0.0",
     "jsonfile": "^2.4.0",
     "lodash": "^4.16.4",
+    "request": "^2.75.0",
     "sinon": "^1.17.6",
     "tape": "^4.6.2",
     "ytdl-core": "^0.7.18"
@@ -21,7 +23,10 @@
     "eslint-plugin-promise": "^3.0.0",
     "eslint-plugin-standard": "^2.0.1",
     "faucet": "0.0.1",
-    "tap-spec": "^4.1.1"
+    "into-stream": "^3.0.0",
+    "request": "^2.75.0",
+    "tap-spec": "^4.1.1",
+    "tmp": "0.0.29"
   },
   "scripts": {
     "test": "tape 'test/**/*.test.js' |faucet",

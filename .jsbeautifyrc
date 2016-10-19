@@ -1,4 +1,5 @@
 {
+    "beautify.onSave": ["js"],
     "indent_size": 4,
     "indent_char": " ",
     "eol": "\n",
@@ -8,7 +9,7 @@
     "max_preserve_newlines": 10,
     "jslint_happy": false,
     "space_after_anon_function": true,
-    "brace_style": "collapse",
+    "brace_style": "collapse-preserve-inline",
     "keep_array_indentation": false,
     "keep_function_indentation": false,
     "space_before_conditional": true,

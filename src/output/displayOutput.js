@@ -13,8 +13,10 @@ module.exports = function () {
      *
      * @param {string} $message
      */
-    function outputLine($message) {
-        console.log($message);
+    function outputLine(message) {
+        message = '[' + (new Date()).toISOString() + '] ' + message;
+        console.log(message);
+        // fs.appendFileSync('/tmp/backupper.log', message + '\n');
     }
 
     return {

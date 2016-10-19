@@ -3,32 +3,43 @@ var sinon = require('sinon');
 var baserequire = require('base-require');
 var createStorageManager = baserequire('src/storage/storageManager');
 
-test('storageManager - getStorage - succeeds', function (t) {
-    var s3StorageConfig = ['s3Config'];
-    var dropboxStorageConfig = ['dropboxConfig'];
+test('storageManager - getStorage - s3 succeeds', function (t) {
+    var s3StorageConfig = { bucket: 'bucket42' };
 
     var config = {
         get: sinon.stub()
     };
     config.get.withArgs('storage.s3').returns(s3StorageConfig);
-    config.get.withArgs('storage.dropbox').returns(dropboxStorageConfig);
 
-    var s3 = {'foo': 's3'};
-    var dropbox = {'bar': 'dropbox'};
+    var s3 = { 'foo': 's3' };
+    var Dropbox = function () {};
 
-    var s3Storage = {name: 's3Storage'};
-    var createS3Storage = sinon.stub();
-    createS3Storage.withArgs(s3, s3StorageConfig).returns(s3Storage);
+    var storageManager = createStorageManager(config, s3, Dropbox);
 
-    var dropboxStorage = {name: 'dropboxStorage'};
-    var createDropboxStorage = sinon.stub();
-    createDropboxStorage.withArgs(dropbox, dropboxStorageConfig).returns(dropboxStorage);
+    var s3Storage = storageManager.getStorage('s3');
+    t.ok(s3Storage);
+    t.ok(s3Storage.hasOwnProperty('save'));
+    t.end();
+});
 
-    var storageManager = createStorageManager(config, createS3Storage, s3, createDropboxStorage, dropbox);
+test('storageManager - getStorage - dropbox succeeds', function (t) {
+    var dropboxToken = 'token42';
 
-    t.deepEqual(storageManager.getStorage('s3'), s3Storage);
-    // TODO
-    // t.deepEqual(storageManager.getStorage('dropbox'), dropboxStorage);
+    var config = {
+        get: sinon.stub()
+    };
+    config.get.withArgs('storage.dropbox.token').returns(dropboxToken);
+
+    var s3 = {};
+    var Dropbox = function () {};
+
+    var storageManager = createStorageManager(config, s3, Dropbox);
+
+    var s3Storage = storageManager.getStorage('dropbox');
+    t.ok(s3Storage);
+    t.ok(s3Storage.hasOwnProperty('save'));
+
+    t.ok(config.get.calledWith('storage.dropbox.token'));
     t.end();
 });
 

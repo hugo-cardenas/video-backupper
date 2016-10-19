@@ -1,8 +1,8 @@
 var aws = require('aws-sdk');
+var Dropbox = require('dropbox');
 var baserequire = require('base-require');
 var configLocator = baserequire('src/config/configLocator');
 var createStorageManager = baserequire('src/storage/storageManager');
-var createS3Storage = baserequire('src/storage/s3Storage');
 
 var _s3;
 var _storageManager;
@@ -29,8 +29,7 @@ function getConfig() {
  */
 function getStorageManager() {
     if (!_storageManager) {
-        // TODO
-        _storageManager = createStorageManager(getConfig(), createS3Storage, getS3(), {}, {});
+        _storageManager = createStorageManager(getConfig(), getS3(), Dropbox);
     }
     return _storageManager;
 }
