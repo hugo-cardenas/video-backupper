@@ -158,6 +158,10 @@ module.exports = function (dropbox) {
     }
 
     /**
+     * TODO Set file write mode overwrite - if file exists, overwrite it
+     */
+
+    /**
      * @param {Stream} stream
      * @param {string} playlistId
      * @param {string} videoId
