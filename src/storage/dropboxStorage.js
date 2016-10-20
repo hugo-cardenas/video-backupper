@@ -64,14 +64,11 @@ module.exports = function (dropbox) {
      * @returns {Promise}
      */
     function deleteTmpFile(file) {
-        return Promise.resolve();
-        /* TODO
         return new Promise(function (resolve, reject) {
             fs.unlink(file, function () {
                 return resolve();
             });
         });
-        */
     }
 
     /**

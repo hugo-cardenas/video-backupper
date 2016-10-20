@@ -1,12 +1,17 @@
 var test = require('blue-tape');
 var sinon = require('sinon');
 var baserequire = require('base-require');
+var baseTest = baserequire('test/integration/baseTest');
 var backupperLocator = baserequire('src/backupper/backupperLocator');
 var configLocator = baserequire('src/config/configLocator');
 var storageLocator = baserequire('src/storage/storageLocator');
 var createConfig = baserequire('src/config/config');
 
-test.skip('backupper - run s3 - succeeds', function (t) {
+var options = {
+    skip: !baseTest.isIntegrationTestEnabled()
+};
+
+test('backupper - run s3 - succeeds', options, function (t) {
     setS3StorageConfig();
 
     var playlistId = 'PLWcOakfYWxVM_wvoM_bKxEiuGwvgYCvOE';

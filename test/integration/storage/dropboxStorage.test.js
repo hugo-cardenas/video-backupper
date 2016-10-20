@@ -3,10 +3,15 @@ var intoStream = require('into-stream');
 var request = require('request');
 var Dropbox = require('dropbox');
 var baserequire = require('base-require');
+var baseTest = baserequire('test/integration/baseTest');
 var configLocator = baserequire('src/config/configLocator');
 var storageLocator = baserequire('src/storage/storageLocator');
 
-test.skip('dropboxStorage - save - succeeds', function (t) {
+var options = {
+    skip: !baseTest.isIntegrationTestEnabled()
+};
+
+test('dropboxStorage - save - succeeds', options, function (t) {
     var storage = storageLocator.getStorageManager().getStorage('dropbox');
     var extension = 'mp4';
 
