@@ -1,11 +1,14 @@
 var test = require('blue-tape');
+var sinon = require('sinon');
 var baserequire = require('base-require');
 var backupperLocator = baserequire('src/backupper/backupperLocator');
 var configLocator = baserequire('src/config/configLocator');
 var storageLocator = baserequire('src/storage/storageLocator');
+var createConfig = baserequire('src/config/config');
 
-// TODO Fix
-test.skip('backupper - run - succeeds', function (t) {
+test.skip('backupper - run s3 - succeeds', function (t) {
+    setS3StorageConfig();
+
     var playlistId = 'PLWcOakfYWxVM_wvoM_bKxEiuGwvgYCvOE';
     var videoId1 = 'egjumMGKZCg';
     var videoId2 = '40T4IrLiCiU';
@@ -16,7 +19,7 @@ test.skip('backupper - run - succeeds', function (t) {
     backupperLocator.setDisplayOutput(displayOutput);
     var backupper = backupperLocator.getBackupperManager().getBackupper();
 
-    listS3Keys()
+    return listS3Keys()
         .then(deleteS3Keys)
         .then(listS3Keys)
         .then(function (s3Keys) {
@@ -27,7 +30,7 @@ test.skip('backupper - run - succeeds', function (t) {
         .then(function (errors) {
             t.equal(errors.length, 0);
             if (errors[0]) {
-                t.end(errors[0]);
+                t.fail(errors[0]);
             }
             return Promise.resolve();
         })
@@ -36,11 +39,11 @@ test.skip('backupper - run - succeeds', function (t) {
             t.equal(s3Keys.length, 2);
             t.ok(s3Keys.includes(playlistId + '/' + videoId1 + '.mp4'));
             t.ok(s3Keys.includes(playlistId + '/' + videoId2 + '.mp4'));
-            t.end();
+            resetConfig();
+            return Promise.resolve();
         })
         .catch(function (err) {
-            console.log(err);
-            t.end(err);
+            t.fail(err);
         });
 });
 
@@ -69,6 +72,9 @@ function listS3Keys() {
  * @returns {Promise} Promise resolving without arguments
  */
 function deleteS3Keys(keys) {
+    if (keys.length === 0) {
+        return Promise.resolve();
+    }
     var s3 = storageLocator.getS3();
     var params = {
         Bucket: getS3Bucket(),
@@ -94,4 +100,16 @@ function deleteS3Keys(keys) {
  */
 function getS3Bucket() {
     return configLocator.getConfigManager().getConfig().get('storage.s3.bucket');
+}
+
+function setS3StorageConfig() {
+    var configArray = configLocator.getConfigManager().getConfig().get('');
+    configArray.backupper.storage = 's3';
+    var newConfig = createConfig(configArray);
+    configLocator.getConfigManager().getConfig = sinon.stub();
+    configLocator.getConfigManager().getConfig.returns(newConfig);
+}
+
+function resetConfig() {
+    configLocator.setConfigManager(null);
 }

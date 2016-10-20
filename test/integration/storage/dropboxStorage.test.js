@@ -1,4 +1,4 @@
-var test = require('tape');
+var test = require('blue-tape');
 var intoStream = require('into-stream');
 var request = require('request');
 var Dropbox = require('dropbox');
@@ -68,10 +68,6 @@ test.skip('dropboxStorage - save - succeeds', function (t) {
                 assertFileContents(t, dropbox, expectedFile2, contents2),
                 assertFileContents(t, dropbox, expectedFile3, contents3)
             ]);
-        })
-        .then(function () {
-            t.end();
-            return Promise.resolve();
         })
         .catch(function (err) {
             t.fail(err);
