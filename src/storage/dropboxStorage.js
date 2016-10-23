@@ -4,9 +4,6 @@
  * @property {function} save Save a stream in Dropbox
  */
 
-var tmp = require('tmp');
-var fs = require('fs');
-
 /**
  * Create an Dropbox storage
  *
@@ -17,56 +14,20 @@ module.exports = function (dropbox) {
     var extension = 'mp4';
 
     /**
-     * Create a tmp file with the contents of stream
-     *
-     * @param {Stream} stream
-     * @returns {string} Path of the tmp file
+     * @param {Readable} stream
+     * @returns {Promise<Buffer, Error>} Resolves with a buffer containing the stream contents
      */
-    function createTmpFile(stream) {
-        return createFile()
-            .then(function (file) {
-                return writeStreamToFile(stream, file);
-            });
-    }
-
-    /**
-     * @param {Stream} stream
-     * @param {string} file
-     * @returns {Promise}
-     */
-    function writeStreamToFile(stream, file) {
+    function getStreamBuffer(stream) {
         return new Promise(function (resolve, reject) {
-            var writableStream = fs.createWriteStream(file);
-            stream.pipe(writableStream);
+            var chunks = [];
+            stream.on('data', function (chunk) {
+                chunks.push(chunk);
+            });
+            stream.on('error', function (err) {
+                return reject(err);
+            });
             stream.on('end', function () {
-                return resolve(file);
-            });
-        });
-    }
-
-    /**
-     * Create temporary file
-     * @returns {Promise<string, Stream>}
-     */
-    function createFile() {
-        return new Promise(function (resolve, reject) {
-            tmp.file(function (err, path) {
-                if (err) {
-                    return reject(err);
-                }
-                return resolve(path);
-            });
-        });
-    }
-
-    /**
-     * @param {string} file
-     * @returns {Promise}
-     */
-    function deleteTmpFile(file) {
-        return new Promise(function (resolve, reject) {
-            fs.unlink(file, function () {
-                return resolve();
+                return resolve(Buffer.concat(chunks));
             });
         });
     }
@@ -136,7 +97,6 @@ module.exports = function (dropbox) {
      * @returns {Error}
      */
     function createError(playlistId, videoId, err) {
-        console.log(err);
         var message = 'Unable to save stream for playlistId: ' + playlistId +
             ', videoId: ' + videoId +
             ', reason: ' + err.error;
@@ -146,15 +106,18 @@ module.exports = function (dropbox) {
     /**
      * Save file contents to dropbox path
      * @param {string} dropboxPath
-     * @param {string} file
+     * @param {Readable} stream
      * @returns {Promise}
      */
-    function saveFile(dropboxPath, file) {
-        var arg = {
-            contents: fs.readFileSync(file),
-            path: dropboxPath
-        };
-        return dropbox.filesUpload(arg);
+    function saveStream(dropboxPath, stream) {
+        return getStreamBuffer(stream)
+            .then(function (buffer) {
+                var arg = {
+                    contents: buffer,
+                    path: dropboxPath
+                };
+                return dropbox.filesUpload(arg);
+            });
     }
 
     /**
@@ -168,25 +131,12 @@ module.exports = function (dropbox) {
      * @returns {Promise}
      */
     function save(stream, playlistId, videoId) {
-        var promises = [
-            getDropboxPath(playlistId, videoId),
-            createTmpFile(stream)
-        ];
-        var tmpFile;
-        return Promise.all(promises)
-            .then(function (values) {
-                var dropboxPath = values[0];
-                tmpFile = values[1];
-                return saveFile(dropboxPath, tmpFile);
-            })
-            .then(function () {
-                return deleteTmpFile(tmpFile);
+        return getDropboxPath(playlistId, videoId)
+            .then(function (dropboxPath) {
+                return saveStream(dropboxPath, stream);
             })
             .catch(function (err) {
-                return deleteTmpFile(tmpFile)
-                    .then(function () {
-                        return Promise.reject(createError(playlistId, videoId, err));
-                    });
+                return Promise.reject(createError(playlistId, videoId, err));
             });
     }
 

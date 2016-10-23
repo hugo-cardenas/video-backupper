@@ -1,5 +1,6 @@
 var test = require('blue-tape');
-var intoStream = require('into-stream');
+var fs = require('fs');
+var buffertools = require('buffertools');
 var request = require('request');
 var Dropbox = require('dropbox');
 var baserequire = require('base-require');
@@ -15,13 +16,9 @@ test('dropboxStorage - save - succeeds', options, function (t) {
     var storage = storageLocator.getStorageManager().getStorage('dropbox');
     var extension = 'mp4';
 
-    var contents1 = 'foo';
-    var contents2 = 'bar';
-    var contents3 = 'baz';
-
-    var stream1 = intoStream(contents1);
-    var stream2 = intoStream(contents2);
-    var stream3 = intoStream(contents3);
+    var stream1 = fs.createReadStream('./test/integration/storage/video1.mp4');
+    var stream2 = fs.createReadStream('./test/integration/storage/video2.mp4');
+    var stream3 = fs.createReadStream('./test/integration/storage/video3.mp4');
 
     var playlistId1 = 'playlistId1';
     var playlistId2 = 'playlistId2';
@@ -69,13 +66,13 @@ test('dropboxStorage - save - succeeds', options, function (t) {
         // Assert the file contents
         .then(function () {
             return Promise.all([
-                assertFileContents(t, dropbox, expectedFile1, contents1),
-                assertFileContents(t, dropbox, expectedFile2, contents2),
-                assertFileContents(t, dropbox, expectedFile3, contents3)
+                assertFileContents(t, dropbox, expectedFile1, stream1),
+                assertFileContents(t, dropbox, expectedFile2, stream2),
+                assertFileContents(t, dropbox, expectedFile3, stream3)
             ]);
         })
         .catch(function (err) {
-            t.fail(err);
+            console.log(err);
         });
 });
 
@@ -107,13 +104,19 @@ function assertFiles(t, dropbox, path, expectedFiles) {
  * @param {any} filePath Path of the file in dropbox
  * @param {any} expectedContents Expected contents
  */
-function assertFileContents(t, dropbox, filePath, expectedContents) {
+function assertFileContents(t, dropbox, filePath, expectedStream) {
     return dropbox.filesGetTemporaryLink({ path: filePath })
         .then(function (response) {
-            return getUrlContents(response.link);
+            return Promise.all([
+                getStreamBuffer(expectedStream),
+                getUrlContents(response.link)
+            ]);
         })
-        .then(function (contents) {
-            t.equal(contents, expectedContents);
+        .then(function (values) {
+            var expectedBuffer = values[0];
+            var contents = values[1];
+            t.ok(buffertools.equals(expectedBuffer, contents));
+            // t.equal(contents, expectedBuffer.toString());
             return Promise.resolve();
         });
 }
@@ -181,4 +184,19 @@ function getDropbox() {
         });
     }
     return dropbox;
+}
+
+function getStreamBuffer(stream) {
+    return new Promise(function (resolve, reject) {
+        var chunks = [];
+        stream.on('data', function (chunk) {
+            chunks.push(chunk);
+        });
+        stream.on('error', function (err) {
+            return reject(err);
+        });
+        stream.on('end', function () {
+            return resolve(Buffer.concat(chunks));
+        });
+    });
 }

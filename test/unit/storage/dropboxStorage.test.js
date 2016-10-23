@@ -13,25 +13,23 @@ test.skip('dropboxStorage - save - succeeds', function (t) {
     var videoId = 'video44';
 
     var expectedFolderPath = '/' + playlistId;
-    var expectedFilePath = expectedFolderPath + '/' + videoId;
+    var expectedFilePath = expectedFolderPath + '/' + videoId + '.mp4';
 
     var dropbox = {
-        filesCreateFolder: sinon.stub(),
-        filesUpload: sinon.stub()
+        filesCreateFolder: function () {},
+        filesUpload: function () {}
     };
 
-    dropbox.filesCreateFolder
+    sinon.mock(dropbox).expects('filesCreateFolder')
         .withArgs({ path: expectedFolderPath })
         .returns(Promise.resolve());
-    dropbox.filesCreateFolder.returns(Promise.reject());
 
-    dropbox.filesUpload
+    sinon.mock(dropbox).expects('filesUpload')
         .withArgs({
             contents: contents,
             path: expectedFilePath
         })
         .returns(Promise.resolve());
-    dropbox.filesCreateFolder.returns(Promise.reject());
 
     var storage = createDropboxStorage(dropbox);
 
