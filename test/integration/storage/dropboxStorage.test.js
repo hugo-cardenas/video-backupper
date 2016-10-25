@@ -83,6 +83,51 @@ test('dropboxStorage - save - succeeds', options, function (t) {
         });
 });
 
+test('dropboxStorage - save - overwrite file', options, function (t) {
+    var storage = storageLocator.getStorageManager().getStorage('dropbox');
+    var extension = 'mp4';
+
+    var file1 = './test/integration/storage/video1.mp4';
+    var file2 = './test/integration/storage/video2.mp4';
+    var stream1 = fs.createReadStream(file1);
+    var stream2 = fs.createReadStream(file2);
+
+    var playlistId1 = 'playlistId1';
+    var videoId1 = 'videoId1';
+
+    var dropboxFilePath1 = '/' + playlistId1.toLowerCase() + '/' + videoId1.toLowerCase() + '.' + extension;
+    var dropbox = getDropbox();
+
+    return listFiles(dropbox, '')
+        // Clean test dropbox dir
+        .then(function (files) {
+            var deleteFilePromises = files.map(function (file) {
+                return deleteFile(dropbox, file);
+            });
+            return Promise.all(deleteFilePromises);
+        })
+        // Verify that dir is empty after cleaning
+        .then(function () {
+            return assertFiles(t, dropbox, '', []);
+        })
+        // Save video1
+        .then(function () {
+            return storage.save(stream1, playlistId1, videoId1);
+        })
+        // Save a different stream on the same id
+        .then(function () {
+            return storage.save(stream2, playlistId1, videoId1);
+        })
+        // Assert the file contents
+        .then(function () {
+            return assertFileContents(t, dropbox, dropboxFilePath1, file2);
+        })
+        .then(function () {
+            cleanTmpFiles();
+            return Promise.resolve();
+        });
+});
+
 /**
  * Assert contents of a dropbox directory
  *

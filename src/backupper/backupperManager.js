@@ -1,3 +1,4 @@
+var VError = require('verror');
 var baserequire = require('base-require');
 var createBackupper = baserequire('src/backupper/backupper');
 
@@ -39,7 +40,7 @@ module.exports = function (config, provider, ytdl, storageManager, displayOutput
         try {
             return storageManager.getStorage(config.get(CONFIG_BACKUPPER_STORAGE));
         } catch (err) {
-            throw new Error('Unable to create backupper: ' + err.message);
+            throw new VError(err, 'Unable to create backupper');
         }
     }
 

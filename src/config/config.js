@@ -31,7 +31,7 @@ module.exports = function (configArray) {
     /**
      * @param {Object} configArray
      * @param {string[]} keys Array of split key parts
-     * @returns
+     * @returns {Object|string|number}
      */
     function getRecursive(configArray, keys) {
         var firstKey = keys.shift();

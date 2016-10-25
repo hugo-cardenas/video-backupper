@@ -4,6 +4,8 @@
  * @property {function} save Save a stream in Dropbox
  */
 
+var VError = require('verror');
+
 /**
  * Create an Dropbox storage
  *
@@ -98,9 +100,8 @@ module.exports = function (dropbox) {
      */
     function createError(playlistId, videoId, err) {
         var message = 'Unable to save stream for playlistId: ' + playlistId +
-            ', videoId: ' + videoId +
-            ', reason: ' + err.error;
-        return new Error(message);
+            ', videoId: ' + videoId;
+        return new VError(err, message);
     }
 
     /**

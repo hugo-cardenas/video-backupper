@@ -1,3 +1,4 @@
+var VError = require('verror');
 var baserequire = require('base-require');
 var createProvider = baserequire('src/provider/provider');
 
@@ -36,7 +37,7 @@ module.exports = function (google, config) {
         try {
             return config.get(PROVIDER_CONFIG);
         } catch (err) {
-            throw new Error('Unable to create provider: ' + err.message);
+            throw new VError(err, 'Unable to create provider');
         }
     }
 

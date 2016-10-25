@@ -10,6 +10,7 @@
  * @property {function} save Save a stream for a playlistId, videoId
  */
 
+var VError = require('verror');
 var baserequire = require('base-require');
 var createS3Storage = baserequire('src/storage/s3Storage');
 var createDropboxStorage = baserequire('src/storage/dropboxStorage');
@@ -67,7 +68,7 @@ module.exports = function (config, s3, Dropbox) {
         try {
             return config.get(key);
         } catch (err) {
-            throw new Error('Invalid config for storage "' + name + '": ' + err.message);
+            throw new VError(err, 'Invalid config for storage "' + name + '"');
         }
     }
 

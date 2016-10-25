@@ -4,6 +4,8 @@
  * @property {function} run Run the backup process
  */
 
+var VError = require('verror');
+
 /**
  * Create a backupper
  *
@@ -60,9 +62,10 @@ module.exports = function (provider, ytdl, storage, displayOutput) {
      * @returns {Error}
      */
     function createError(videoId, previousErr) {
-        var message = 'Backup failed for video id: ' + videoId + ', reason: ' + previousErr.message;
-        displayOutput.outputLine(message);
-        return new Error(message);
+        var message = 'Backup failed for video id ' + videoId;
+        var err = new VError(previousErr, message);
+        displayOutput.outputLine(err.message);
+        return err;
     }
 
     /**

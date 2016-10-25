@@ -1,4 +1,5 @@
 var jsonfile = require('jsonfile');
+var VError = require('verror');
 var baserequire = require('base-require');
 var createConfig = baserequire('src/config/config');
 
@@ -25,7 +26,7 @@ module.exports = function () {
             var file = process.env.VIDEOBACKUPPER_CONFIG;
             var config = jsonfile.readFileSync(file);
         } catch (err) {
-            throw new Error('Unable to read config file ' + file + ', reason: ' + err.message);
+            throw new VError(err, 'Unable to read config file ' + file);
         }
 
         if (typeof config !== 'object') {
