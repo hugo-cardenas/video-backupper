@@ -48,6 +48,7 @@ module.exports = function (dropbox) {
                 return Promise.resolve(path);
             })
             .catch(function (err) {
+                console.log(err);
                 var responseError = parseResponseError(err);
                 if (isFolderConflictError(responseError)) {
                     return Promise.resolve(path);
@@ -99,8 +100,8 @@ module.exports = function (dropbox) {
      * @returns {Error}
      */
     function createError(playlistId, videoId, err) {
-        var message = 'Unable to save stream for playlistId: ' + playlistId +
-            ', videoId: ' + videoId;
+        var message = 'Dropbox storage unable to save stream for playlistId ' + playlistId +
+            ', videoId ' + videoId;
         return new VError(err, message);
     }
 
