@@ -1,7 +1,7 @@
 var test = require('blue-tape');
 var fs = require('fs');
-var buffertools = require('buffertools');
 var request = require('request');
+var tmp = require('tmp');
 var Dropbox = require('dropbox');
 var baserequire = require('base-require');
 var baseTest = baserequire('test/integration/baseTest');
@@ -12,13 +12,19 @@ var options = {
     skip: !baseTest.isIntegrationTestEnabled()
 };
 
+var tmpFileCleanupCallbacks = [];
+
 test('dropboxStorage - save - succeeds', options, function (t) {
     var storage = storageLocator.getStorageManager().getStorage('dropbox');
     var extension = 'mp4';
 
-    var stream1 = fs.createReadStream('./test/integration/storage/video1.mp4');
-    var stream2 = fs.createReadStream('./test/integration/storage/video2.mp4');
-    var stream3 = fs.createReadStream('./test/integration/storage/video3.mp4');
+    var file1 = './test/integration/storage/video1.mp4';
+    var file2 = './test/integration/storage/video2.mp4';
+    var file3 = './test/integration/storage/video3.mp4';
+
+    var stream1 = fs.createReadStream(file1);
+    var stream2 = fs.createReadStream(file2);
+    var stream3 = fs.createReadStream(file3);
 
     var playlistId1 = 'playlistId1';
     var playlistId2 = 'playlistId2';
@@ -29,9 +35,9 @@ test('dropboxStorage - save - succeeds', options, function (t) {
     var folder1 = '/' + playlistId1.toLowerCase();
     var folder2 = '/' + playlistId2.toLowerCase();
 
-    var expectedFile1 = folder1 + '/' + videoId1.toLowerCase() + '.' + extension;
-    var expectedFile2 = folder1 + '/' + videoId2.toLowerCase() + '.' + extension;
-    var expectedFile3 = folder2 + '/' + videoId3.toLowerCase() + '.' + extension;
+    var dropboxFilePath1 = folder1 + '/' + videoId1.toLowerCase() + '.' + extension;
+    var dropboxFilePath2 = folder1 + '/' + videoId2.toLowerCase() + '.' + extension;
+    var dropboxFilePath3 = folder2 + '/' + videoId3.toLowerCase() + '.' + extension;
 
     var dropbox = getDropbox();
 
@@ -59,20 +65,21 @@ test('dropboxStorage - save - succeeds', options, function (t) {
         .then(function () {
             return Promise.all([
                 assertFiles(t, dropbox, '', [folder1, folder2]),
-                assertFiles(t, dropbox, folder1, [expectedFile1, expectedFile2]),
-                assertFiles(t, dropbox, folder2, [expectedFile3])
+                assertFiles(t, dropbox, folder1, [dropboxFilePath1, dropboxFilePath2]),
+                assertFiles(t, dropbox, folder2, [dropboxFilePath3])
             ]);
         })
         // Assert the file contents
         .then(function () {
             return Promise.all([
-                assertFileContents(t, dropbox, expectedFile1, stream1),
-                assertFileContents(t, dropbox, expectedFile2, stream2),
-                assertFileContents(t, dropbox, expectedFile3, stream3)
+                assertFileContents(t, dropbox, dropboxFilePath1, file1),
+                assertFileContents(t, dropbox, dropboxFilePath2, file2),
+                assertFileContents(t, dropbox, dropboxFilePath3, file3)
             ]);
         })
-        .catch(function (err) {
-            console.log(err);
+        .then(function () {
+            cleanTmpFiles();
+            return Promise.resolve();
         });
 });
 
@@ -99,39 +106,68 @@ function assertFiles(t, dropbox, path, expectedFiles) {
 /**
  * Assert contents of a dropbox file
  *
- * @param {any} t Test object
- * @param {any} dropbox Dropbox client
- * @param {any} filePath Path of the file in dropbox
- * @param {any} expectedContents Expected contents
+ * @param {Object} t Test object
+ * @param {Object} dropbox Dropbox client
+ * @param {string} dropboxPath Path of the file in dropbox
+ * @param {string} expectedFilePath Path of the file with expected contents
  */
-function assertFileContents(t, dropbox, filePath, expectedStream) {
-    return dropbox.filesGetTemporaryLink({ path: filePath })
-        .then(function (response) {
+function assertFileContents(t, dropbox, dropboxPath, expectedFile) {
+    return getDropboxTempLink(dropbox, dropboxPath)
+        .then(saveUrlToTmpFile)
+        .then(function (tmpFile) {
             return Promise.all([
-                getStreamBuffer(expectedStream),
-                getUrlContents(response.link)
+                getStreamBuffer(fs.createReadStream(tmpFile)),
+                getStreamBuffer(fs.createReadStream(expectedFile))
             ]);
         })
         .then(function (values) {
-            var expectedBuffer = values[0];
-            var contents = values[1];
-            t.ok(buffertools.equals(expectedBuffer, contents));
-            // t.equal(contents, expectedBuffer.toString());
+            var dropboxBuffer = values[0];
+            var expectedBuffer = values[1];
+            t.ok(dropboxBuffer.toString('binary') === expectedBuffer.toString('binary'), 'Buffers are equal');
             return Promise.resolve();
         });
 }
 
 /**
- * @param {string} url
- * @returns {Promise} Resolves with url contents
+ * @param {Dropbox} dropbox
+ * @param {string} filePath
+ * @returns {Promise<string>}
  */
-function getUrlContents(url) {
+function getDropboxTempLink(dropbox, filePath) {
+    return dropbox.filesGetTemporaryLink({ path: filePath })
+        .then(function (response) {
+            return response.link;
+        });
+}
+
+/**
+ * Create a new tmp file and save url contents into it
+ * @param {string} url
+ * @returns {Promise<string>} Resolves with filePath
+ */
+function saveUrlToTmpFile(url) {
+    return createTmpFile()
+        .then(function (filePath) {
+            return saveUrlToFile(url, filePath);
+        });
+}
+
+/**
+ * Save url contents to file
+ * @param {string} url
+ * @param {string} filePath
+ * @returns {Promise<string>} Resolves with filePath
+ */
+function saveUrlToFile(url, filePath) {
     return new Promise(function (resolve, reject) {
-        request(url, function (err, response, body) {
-            if (err) {
+        var readableStream = request(url);
+        readableStream
+            .on('error', function (err) {
                 return reject(err);
-            }
-            return resolve(body);
+            })
+            .pipe(fs.createWriteStream(filePath));
+        readableStream.on('end', function () {
+            return resolve(filePath);
         });
     });
 }
@@ -186,6 +222,33 @@ function getDropbox() {
     return dropbox;
 }
 
+/**
+ * Create a tmp file which will be deleted on process exit
+ * @returns {Promise<string>} Resolves with file path
+ */
+function createTmpFile() {
+    return new Promise(function (resolve, reject) {
+        tmp.file(function (err, path, fd, cleanupCallback) {
+            if (err) {
+                return reject(err);
+            }
+            tmpFileCleanupCallbacks.push(cleanupCallback);
+            return resolve(path);
+        });
+    });
+}
+
+function cleanTmpFiles() {
+    tmpFileCleanupCallbacks.forEach(function (callback) {
+        callback();
+    });
+}
+
+/**
+ * Get buffer from stream
+ * @param {Stream} stream
+ * @returns {Promise<Buffer>}
+ */
 function getStreamBuffer(stream) {
     return new Promise(function (resolve, reject) {
         var chunks = [];
