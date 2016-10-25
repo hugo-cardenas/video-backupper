@@ -1,6 +1,5 @@
 var test = require('blue-tape');
 var sinon = require('sinon');
-var intoStream = require('into-stream');
 var baserequire = require('base-require');
 var createDropboxStorage = baserequire('src/storage/dropboxStorage');
 
