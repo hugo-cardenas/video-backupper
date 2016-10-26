@@ -1,10 +1,11 @@
 var test = require('blue-tape');
 var sinon = require('sinon');
+var VError = require('verror');
 var Readable = require('stream').Readable;
 var baserequire = require('base-require');
 var createDropboxStorage = baserequire('src/storage/dropboxStorage');
 
-test.skip('dropboxStorage - save - succeeds', function (t) {
+test('dropboxStorage - save - succeeds', function (t) {
     var contents = 'foobar';
 
     var stream = createReadableStream(contents);
@@ -36,7 +37,7 @@ test.skip('dropboxStorage - save - succeeds', function (t) {
     return storage.save(stream, playlistId, videoId);
 });
 
-test.skip('dropboxStorage - save - folder exists', function (t) {
+test('dropboxStorage - save - folder exists', function (t) {
     var contents = 'foobar';
 
     var stream = createReadableStream(contents);
@@ -53,14 +54,16 @@ test.skip('dropboxStorage - save - folder exists', function (t) {
         filesUpload: function () {}
     };
 
-    var errorMessage = 'This is a random error';
-    var folderCreationPromiseError = {
-        error: errorMessage
+    // This is the error returned by Dropbox if folder conflict
+    var promiseError = {
+        error: JSON.stringify({
+            error: { path: { '.tag': 'conflict' } }
+        })
     };
 
     sinon.mock(dropbox).expects('filesCreateFolder')
         .withArgs({ path: expectedFolderPath })
-        .returns(Promise.reject(folderCreationPromiseError));
+        .returns(Promise.reject(promiseError));
 
     sinon.mock(dropbox).expects('filesUpload')
         .withArgs({
@@ -73,7 +76,7 @@ test.skip('dropboxStorage - save - folder exists', function (t) {
     return storage.save(stream, playlistId, videoId);
 });
 
-test.skip('dropboxStorage - save - folder creation fails with non conflict error', function (t) {
+test('dropboxStorage - save - folder creation fails with non solvable error', function (t) {
     var stream = {};
     var playlistId = 'playlist42';
     var videoId = 'video44';
@@ -84,27 +87,31 @@ test.skip('dropboxStorage - save - folder creation fails with non conflict error
         filesCreateFolder: function () {}
     };
 
-    var errorMessage = 'This is a random error';
-    var folderCreationPromiseError = {
+    var errorMessage = 'Folder creation has failed';
+    var promiseError = {
         error: errorMessage
     };
 
     sinon.mock(dropbox).expects('filesCreateFolder')
         .withArgs({ path: expectedFolderPath })
-        .returns(Promise.reject(folderCreationPromiseError));
+        .returns(Promise.reject(promiseError));
 
     var storage = createDropboxStorage(dropbox);
     return storage.save(stream, playlistId, videoId)
+        .then(function () {
+            t.fail('Should throw error');
+        })
         .catch(function (err) {
             t.ok(err.message.includes('unable to save stream'));
             t.ok(err.message.includes(playlistId));
             t.ok(err.message.includes(videoId));
             t.ok(err.message.includes(errorMessage));
+            t.equal(VError.info(VError.cause(err)).responseError, JSON.stringify(promiseError));
             return Promise.resolve();
         });
 });
 
-test.skip('dropboxStorage - save - folder creation fails with non parsable error', function (t) {
+test('dropboxStorage - save - folder creation fails with non parsable error', function (t) {
     var stream = {};
     var playlistId = 'playlist42';
     var videoId = 'video44';
@@ -115,11 +122,104 @@ test.skip('dropboxStorage - save - folder creation fails with non parsable error
         filesCreateFolder: function () {}
     };
 
-    var folderCreationPromiseError = {};
+    var promiseError = { foo: 'Non parsable error' };
 
     sinon.mock(dropbox).expects('filesCreateFolder')
         .withArgs({ path: expectedFolderPath })
-        .returns(Promise.reject(folderCreationPromiseError));
+        .returns(Promise.reject(promiseError));
+
+    var storage = createDropboxStorage(dropbox);
+    return storage.save(stream, playlistId, videoId)
+        .then(function () {
+            t.fail('Should throw error');
+        })
+        .catch(function (err) {
+            t.ok(err.message.includes('unable to save stream'));
+            t.ok(err.message.includes(playlistId));
+            t.ok(err.message.includes(videoId));
+            t.ok(err.message.includes('Unable to parse response error'));
+            t.equal(VError.info(VError.cause(err)).responseError, JSON.stringify(promiseError));
+            return Promise.resolve();
+        });
+});
+
+test('dropboxStorage - save - upload fails', function (t) {
+    var contents = 'foobar';
+
+    var stream = createReadableStream(contents);
+    var expectedBuffer = Buffer.from(contents);
+
+    var playlistId = 'playlist42';
+    var videoId = 'video44';
+
+    var expectedFolderPath = '/' + playlistId;
+    var expectedFilePath = expectedFolderPath + '/' + videoId + '.mp4';
+
+    var dropbox = {
+        filesCreateFolder: function () {},
+        filesUpload: function () {}
+    };
+
+    sinon.mock(dropbox).expects('filesCreateFolder')
+        .withArgs({ path: expectedFolderPath })
+        .returns(Promise.resolve());
+
+    var errorMessage = 'Upload has failed';
+    var promiseError = {
+        error: errorMessage
+    };
+
+    sinon.mock(dropbox).expects('filesUpload')
+        .withArgs({
+            contents: expectedBuffer,
+            path: expectedFilePath
+        })
+        .returns(Promise.reject(promiseError));
+
+    var storage = createDropboxStorage(dropbox);
+    return storage.save(stream, playlistId, videoId)
+        .then(function () {
+            t.fail('Should throw error');
+        })
+        .catch(function (err) {
+            t.ok(err.message.includes('unable to save stream'));
+            t.ok(err.message.includes(playlistId));
+            t.ok(err.message.includes(videoId));
+            t.ok(err.message.includes(errorMessage));
+            t.equal(VError.info(VError.cause(err)).responseError, JSON.stringify(promiseError));
+            return Promise.resolve();
+        });
+});
+
+test('dropboxStorage - save - upload fails with non parsable error', function (t) {
+    var contents = 'foobar';
+
+    var stream = createReadableStream(contents);
+    var expectedBuffer = Buffer.from(contents);
+
+    var playlistId = 'playlist42';
+    var videoId = 'video44';
+
+    var expectedFolderPath = '/' + playlistId;
+    var expectedFilePath = expectedFolderPath + '/' + videoId + '.mp4';
+
+    var dropbox = {
+        filesCreateFolder: function () {},
+        filesUpload: function () {}
+    };
+
+    sinon.mock(dropbox).expects('filesCreateFolder')
+        .withArgs({ path: expectedFolderPath })
+        .returns(Promise.resolve());
+
+    var promiseError = { foo: 'Non parsable error' };
+
+    sinon.mock(dropbox).expects('filesUpload')
+        .withArgs({
+            contents: expectedBuffer,
+            path: expectedFilePath
+        })
+        .returns(Promise.reject(promiseError));
 
     var storage = createDropboxStorage(dropbox);
     return storage.save(stream, playlistId, videoId)
@@ -128,16 +228,9 @@ test.skip('dropboxStorage - save - folder creation fails with non parsable error
             t.ok(err.message.includes(playlistId));
             t.ok(err.message.includes(videoId));
             t.ok(err.message.includes('Unable to parse response error'));
+            t.equal(VError.info(VError.cause(err)).responseError, JSON.stringify(promiseError));
             return Promise.resolve();
         });
-});
-
-test('dropboxStorage - save - dropbox upload fails', function (t) {
-    t.end();
-});
-
-test('dropboxStorage - save - dropbox upload fails with unparsable error', function (t) {
-    t.end();
 });
 
 /**

@@ -48,12 +48,11 @@ module.exports = function (dropbox) {
                 return Promise.resolve(path);
             })
             .catch(function (err) {
-                console.log(err);
-                var responseError = parseResponseError(err);
-                if (isFolderConflictError(responseError)) {
+                var error = parseResponseError(err);
+                if (isFolderConflictError(error)) {
                     return Promise.resolve(path);
                 }
-                return Promise.reject(responseError);
+                return Promise.reject(error);
             });
     }
 
@@ -61,21 +60,23 @@ module.exports = function (dropbox) {
      * @param {Object} err Error object in response
      * @returns {Object|Error}
      */
-    function parseResponseError(err) {
-        try {
-            return JSON.parse(err.error);
-        } catch (jsonError) {
-            return new Error('Unable to parse response error');
+    function parseResponseError(error) {
+        var options = {
+            info: { responseError: JSON.stringify(error) }
+        };
+        if (error.error) {
+            return new VError(options, error.error);
         }
+        return new VError(options, 'Unable to parse response error');
     }
 
     /**
-     * @param {Object} err Dropbox base Error
+     * @param {Error} err
      * @returns {boolean}
      */
     function isFolderConflictError(err) {
         try {
-            return err.error.path['.tag'] === 'conflict';
+            return JSON.parse(err.message).error.path['.tag'] === 'conflict';
         } catch (error) {
             return false;
         }
@@ -119,6 +120,9 @@ module.exports = function (dropbox) {
                     path: dropboxPath
                 };
                 return dropbox.filesUpload(arg);
+            })
+            .catch(function (err) {
+                return Promise.reject(parseResponseError(err));
             });
     }
 
