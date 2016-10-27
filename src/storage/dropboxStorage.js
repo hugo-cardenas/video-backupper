@@ -117,6 +117,7 @@ module.exports = function (dropbox) {
             .then(function (buffer) {
                 var arg = {
                     contents: buffer,
+                    mode: {'.tag': 'overwrite'},
                     path: dropboxPath
                 };
                 return dropbox.filesUpload(arg);

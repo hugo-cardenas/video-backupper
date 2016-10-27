@@ -114,7 +114,7 @@ test('dropboxStorage - save - overwrite file', options, function (t) {
         .then(function () {
             return storage.save(stream1, playlistId1, videoId1);
         })
-        // Save a different stream on the same id
+        // Save a different stream on the same video id
         .then(function () {
             return storage.save(stream2, playlistId1, videoId1);
         })

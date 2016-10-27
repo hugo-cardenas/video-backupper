@@ -29,6 +29,7 @@ test('dropboxStorage - save - succeeds', function (t) {
     sinon.mock(dropbox).expects('filesUpload')
         .withArgs({
             contents: expectedBuffer,
+            mode: {'.tag': 'overwrite'},
             path: expectedFilePath
         })
         .returns(Promise.resolve());
@@ -68,6 +69,7 @@ test('dropboxStorage - save - folder exists', function (t) {
     sinon.mock(dropbox).expects('filesUpload')
         .withArgs({
             contents: expectedBuffer,
+            mode: {'.tag': 'overwrite'},
             path: expectedFilePath
         })
         .returns(Promise.resolve());
@@ -172,6 +174,7 @@ test('dropboxStorage - save - upload fails', function (t) {
     sinon.mock(dropbox).expects('filesUpload')
         .withArgs({
             contents: expectedBuffer,
+            mode: {'.tag': 'overwrite'},
             path: expectedFilePath
         })
         .returns(Promise.reject(promiseError));
@@ -217,6 +220,7 @@ test('dropboxStorage - save - upload fails with non parsable error', function (t
     sinon.mock(dropbox).expects('filesUpload')
         .withArgs({
             contents: expectedBuffer,
+            mode: {'.tag': 'overwrite'},
             path: expectedFilePath
         })
         .returns(Promise.reject(promiseError));
