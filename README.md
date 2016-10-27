@@ -19,9 +19,14 @@ Options:
   -V, --version  output the version number
 ```
 
+# Config
+
 Example of the project config.json:
 ```
 {
+    "backupper": {
+        "storage": "dropbox"
+    },
     "provider": {
         "youtube": {
             "email": "my-service-account@developer.gserviceaccount.com",
@@ -29,16 +34,28 @@ Example of the project config.json:
         }
     },
     "storage": {
+        "dropbox": {
+            "token": "my-dropbox-token"
+        },
         "s3": {
             "bucket": "bucket-name"
         }
     }
 }
 ```
+#### Provider
 
-How to obtain Google API service account credentials: https://developers.google.com/identity/protocols/OAuth2ServiceAccount
+For fetching the videos from the playlist, it's necessary to configure Google API service account credentials: https://developers.google.com/identity/protocols/OAuth2ServiceAccount
 
-How to setup the AWS credentials and profile files: http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html#cli-config-files
+The email and private key have to be specified in the `provider`.`youtube` section.
+
+#### Storage
+
+There are two storages available for saving the videos: Amazon S3 and Dropbox. The storage to be used is specified in the `backupper` section.
+
+How to setup credentials for the S3 storage: http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html#cli-config-files
+
+How to setup credentials for the Dropbox storage: https://www.dropbox.com/developers/reference/oauth-guide
 
 # Tests
 Tests are written with [tape](https://github.com/substack/tape)
