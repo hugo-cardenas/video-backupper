@@ -43,7 +43,7 @@ module.exports = function (provider, ytdl, storage, displayOutput) {
                 return reject(createError(videoId, err));
             }
 
-            storage.save(stream, playlistId, videoId)
+            return storage.save(stream, playlistId, videoId)
                 .then(function () {
                     displayOutput.outputLine('Success saving video ' + videoId);
                     return resolve();
@@ -77,43 +77,37 @@ module.exports = function (provider, ytdl, storage, displayOutput) {
      * @returns {Promise<Error[]>} Promise which resolves with a list of errors (empty if none)
      */
     function backupVideoItems(playlistId, videoItems) {
-        var promises = videoItems.map(function (videoItem) {
-            return backup(playlistId, videoItem.resourceId.videoId);
+        var promiseFunctions = videoItems.map(function (videoItem) {
+            return backup.bind(this, playlistId, videoItem.resourceId.videoId);
         });
 
-        var solvedPromises = promises.map(function (promise) {
-            return promise
-                .then(function () {
-                    return Promise.resolve();
-                })
-                .catch(function (err) {
-                    return Promise.resolve(err);
-                });
-        });
-
-        return resolvePromisesInSeries(solvedPromises)
-            .then(function (errors) {
-                return Promise.resolve(errors.filter(function (e) {
-                    return e;
-                }));
-            });
+        return resolvePromisesInSeries(promiseFunctions);
     }
 
+    /**
+     * Resolve promise functions in series and collect all the errors
+     *
+     * @param {function[]} promises Array of functions which return promise
+     * @returns {Promise<Error[]>} Resolves with an array of errors (if any)
+     */
     function resolvePromisesInSeries(promises) {
-        var executePromiseAndCollectResult = function (promise, results) {
+        var executePromiseAndCollectError = function (promise, errors) {
             return new Promise(function (resolve, reject) {
-                promise
-                    .then(function (result) {
-                        results.push(result);
-                        return resolve(results);
+                promise()
+                    .then(function () {
+                        return resolve(errors);
+                    })
+                    .catch(function (err) {
+                        errors.push(err);
+                        return resolve(errors);
                     });
             });
         };
 
         var reduceFunction = function (previousPromise, currentPromise) {
             return previousPromise
-                .then(function (results) {
-                    return executePromiseAndCollectResult(currentPromise, results);
+                .then(function (errors) {
+                    return executePromiseAndCollectError(currentPromise, errors);
                 });
         };
 
