@@ -43,10 +43,13 @@ Example of the project config.json:
     }
 }
 ```
+#### Provider
 
 For fetching the videos from the playlist, it's necessary to configure Google API service account credentials: https://developers.google.com/identity/protocols/OAuth2ServiceAccount
 
 The email and private key have to be specified in the `provider`.`youtube` section.
+
+#### Storage
 
 There are two storages available for saving the videos: Amazon S3 and Dropbox. The storage to be used is specified in the `backupper` section.
 
