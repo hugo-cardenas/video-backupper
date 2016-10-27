@@ -15,8 +15,9 @@ test('backupper - run s3 - succeeds', options, function (t) {
     setS3StorageConfig();
 
     var playlistId = 'PLWcOakfYWxVM_wvoM_bKxEiuGwvgYCvOE';
-    var videoId1 = 'egjumMGKZCg';
-    var videoId2 = '40T4IrLiCiU';
+    var videoId1 = '40T4IrLiCiU';
+    var videoId2 = 'egjumMGKZCg';
+    var videoId3 = '5y5MQMJmCxI';
 
     var displayOutput = {
         outputLine: function () {}
@@ -41,14 +42,12 @@ test('backupper - run s3 - succeeds', options, function (t) {
         })
         .then(listS3Keys)
         .then(function (s3Keys) {
-            t.equal(s3Keys.length, 2);
+            t.equal(s3Keys.length, 3);
             t.ok(s3Keys.includes(playlistId + '/' + videoId1 + '.mp4'));
             t.ok(s3Keys.includes(playlistId + '/' + videoId2 + '.mp4'));
+            t.ok(s3Keys.includes(playlistId + '/' + videoId3 + '.mp4'));
             resetConfig();
             return Promise.resolve();
-        })
-        .catch(function (err) {
-            t.fail(err);
         });
 });
 
@@ -64,7 +63,7 @@ function listS3Keys() {
     return new Promise(function (resolve, reject) {
         s3.listObjects(params, function (err, data) {
             if (err) {
-                reject(err);
+                return reject(err);
             }
             resolve(data.Contents.map(function (item) {
                 return item.Key;
@@ -93,9 +92,9 @@ function deleteS3Keys(keys) {
     return new Promise(function (resolve, reject) {
         s3.deleteObjects(params, function (err, data) {
             if (err) {
-                reject(err);
+                return reject(err);
             }
-            resolve(data);
+            return resolve(data);
         });
     });
 }
