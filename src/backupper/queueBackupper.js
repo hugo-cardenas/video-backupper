@@ -24,33 +24,29 @@ module.exports = function (provider, queue, displayOutput) {
 
     /**
      * @param {string} playlistId
-     * @returns {Promise<string[]>} Resolves with array of video ids
+     * @returns {Promise<string[]>} Resolves with array of video items
      */
-    function getVideoIds(playlistId) {
+    function getVideoItems(playlistId) {
         return provider.getVideoItems(playlistId)
             .then(function (videoItems) {
                 return videoItems.map(function (videoItem) {
-                    return videoItem.resourceId.videoId;
+                    // TODO This responsibility should be moved to provider
+                    return {
+                        videoId: videoItem.resourceId.videoId,
+                        playlistId: playlistId
+                    };
                 });
             });
     }
 
     /**
-     * Create jobs for backupping list of video ids, add jobs to queue
-     * @param {string[]} videoIds
+     * Create jobs for backupping list of video items, add jobs to queue
+     * @param {Object[]} videoItems
      */
-    function queueVideoIds(videoIds) {
-        videoIds.forEach(function (id) {
-            queue.createJob(createJobObject(id)).save();
+    function queueVideoItems(videoItems) {
+        videoItems.forEach(function (videoItem) {
+            queue.createJob(videoItem).save();
         });
-    }
-
-    /**
-     * @param {string} videoId
-     * @returns {Object}
-     */
-    function createJobObject(videoId) {
-        return { videoId: videoId };
     }
 
     /**
@@ -59,8 +55,8 @@ module.exports = function (provider, queue, displayOutput) {
      * @returns {Promise} No resolve value
      */
     function run(playlistId) {
-        return getVideoIds(playlistId)
-            .then(queueVideoIds)
+        return getVideoItems(playlistId)
+            .then(queueVideoItems)
             .catch(function (err) {
                 return Promise.reject(createError(playlistId, err));
             });

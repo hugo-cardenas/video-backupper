@@ -34,10 +34,10 @@ test('queueBackupper - run - succeeds', function (t) {
     };
 
     queue.createJob
-        .withArgs({ videoId: videoId1 })
+        .withArgs({ playlistId: playlistId, videoId: videoId1 })
         .returns(queueJob1);
     queue.createJob
-        .withArgs({ videoId: videoId2 })
+        .withArgs({ playlistId: playlistId, videoId: videoId2 })
         .returns(queueJob2);
 
     var backupper = createBackupper(provider, queue, displayOutput);
@@ -130,7 +130,7 @@ test('queueBackupper - run - queue fails', function (t) {
         createJob: sinon.stub()
     };
     queue.createJob
-        .withArgs({ videoId: videoId1 })
+        .withArgs({ playlistId: playlistId, videoId: videoId1 })
         .throws(new Error(errorMessage));
 
     var backupper = createBackupper(provider, queue, displayOutput);
