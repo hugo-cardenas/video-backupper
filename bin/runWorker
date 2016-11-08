@@ -1,0 +1,8 @@
+#!/usr/bin/env node
+
+var baserequire = require('base-require');
+var locator = baserequire('src/queue/queueLocator');
+var createWorker = locator.getCreateWorker();
+
+// TODO
+// Create worker - run
