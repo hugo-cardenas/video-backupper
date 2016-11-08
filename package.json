@@ -10,7 +10,7 @@
     "dropbox": "^2.3.0",
     "googleapis": "^13.0.0",
     "jsonfile": "^2.4.0",
-    "lodash": "^4.16.4",
+    "lodash": "^4.16.6",
     "request": "^2.75.0",
     "sinon": "^1.17.6",
     "tape": "^4.6.2",
