@@ -1,6 +1,7 @@
 var VError = require('verror');
 var baserequire = require('base-require');
 var createBackupper = baserequire('src/backupper/backupper');
+var createQueueBackupper = baserequire('src/backupper/queueBackupper');
 
 /**
  * @typedef {Object} BackupperManager
@@ -13,13 +14,15 @@ var createBackupper = baserequire('src/backupper/backupper');
  * @param {Provider} provider
  * @param {Object} ytdl
  * @param {StorageManager} storageManager
+ * @param {Queue} BeeQueue queue
  * @param {DisplayOutput} displayOutput
  * @returns {BackupperManager}
  */
-module.exports = function (config, provider, ytdl, storageManager, displayOutput) {
+module.exports = function (config, provider, ytdl, storageManager, queue, displayOutput) {
     var CONFIG_BACKUPPER_STORAGE = 'backupper.storage';
 
     var backupper;
+    var queueBackupper;
 
     /**
      * @returns {Backupper}
@@ -30,6 +33,16 @@ module.exports = function (config, provider, ytdl, storageManager, displayOutput
             backupper = createBackupper(provider, ytdl, getStorage(), displayOutput);
         }
         return backupper;
+    }
+
+    /**
+     * @returns {QueueBackupper}
+     */
+    function getQueueBackupper() {
+        if (!queueBackupper) {
+            queueBackupper = createQueueBackupper(provider, queue, displayOutput);
+        }
+        return queueBackupper;
     }
 
     /**
@@ -45,6 +58,7 @@ module.exports = function (config, provider, ytdl, storageManager, displayOutput
     }
 
     return {
-        getBackupper: getBackupper
+        getBackupper: getBackupper,
+        getQueueBackupper: getQueueBackupper
     };
 };

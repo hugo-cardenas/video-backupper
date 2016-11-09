@@ -12,6 +12,7 @@ test('backupperManager - getBackupper - succeeds', function (t) {
     var storageManager = {
         getStorage: sinon.stub()
     };
+    var queue = {name: 'queue'};
     var displayOutput = {name: 'displayOutput'};
 
     var storage = {name: 'storage'};
@@ -19,8 +20,28 @@ test('backupperManager - getBackupper - succeeds', function (t) {
     config.get.withArgs('backupper.storage').returns(storageName);
     storageManager.getStorage.withArgs(storageName).returns(storage);
 
-    var backupperManager = createBackupperManager(config, provider, ytdl, storageManager, displayOutput);
+    var backupperManager = createBackupperManager(config, provider, ytdl, storageManager, queue, displayOutput);
     var backupper = backupperManager.getBackupper();
+
+    t.ok(backupper);
+    t.ok(backupper.hasOwnProperty('run'));
+    t.end();
+});
+
+test('backupperManager - getQueueBackupper - succeeds', function (t) {
+    var config = {
+        get: sinon.stub()
+    };
+    var provider = {name: 'provider'};
+    var ytdl = {name: 'ytdl'};
+    var storageManager = {
+        getStorage: sinon.stub()
+    };
+    var queue = {name: 'queue'};
+    var displayOutput = {name: 'displayOutput'};
+
+    var backupperManager = createBackupperManager(config, provider, ytdl, storageManager, queue, displayOutput);
+    var backupper = backupperManager.getQueueBackupper();
 
     t.ok(backupper);
     t.ok(backupper.hasOwnProperty('run'));
@@ -36,12 +57,13 @@ test('backupperManager - getBackupper - missing config', function (t) {
     var storageManager = {
         getStorage: sinon.stub()
     };
+    var queue = {name: 'queue'};
     var displayOutput = {name: 'displayOutput'};
 
     var configErrorMessage = 'Missing config key';
     config.get.withArgs('backupper.storage').throws(new Error(configErrorMessage));
 
-    var backupperManager = createBackupperManager(config, provider, ytdl, storageManager, displayOutput);
+    var backupperManager = createBackupperManager(config, provider, ytdl, storageManager, queue, displayOutput);
     try {
         backupperManager.getBackupper();
         t.fail('Should throw error for missing backupper config');
@@ -61,6 +83,7 @@ test('backupperManager - getBackupper - invalid storage name', function (t) {
     var storageManager = {
         getStorage: sinon.stub()
     };
+    var queue = {name: 'queue'};
     var displayOutput = {name: 'displayOutput'};
 
     var storageName = 'myStorage';
@@ -68,7 +91,7 @@ test('backupperManager - getBackupper - invalid storage name', function (t) {
     config.get.withArgs('backupper.storage').returns(storageName);
     storageManager.getStorage.withArgs(storageName).throws(new Error(storageManagerErrorMessage));
 
-    var backupperManager = createBackupperManager(config, provider, ytdl, storageManager, displayOutput);
+    var backupperManager = createBackupperManager(config, provider, ytdl, storageManager, queue, displayOutput);
     try {
         backupperManager.getBackupper();
         t.fail('Should throw error for invalid backupper config');

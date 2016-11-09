@@ -10,7 +10,7 @@ function handleCommand(playlistId) {
 
 
 
-    locator.getBackupperManager().getBackupper().run(playlistId)
+    locator.getBackupperManager().getQueueBackupper().run(playlistId)
         .then(function (errors) {
             if (errors && errors.length > 0) {
                 console.log('Errors:', errors);

@@ -1,10 +1,13 @@
-module.exports = function (queue, handler, displayOutput, options) {
+module.exports = function (queue, handler, displayOutput) {
     function run() {
-        while (true) {
+        console.log('Running');
+        queue.process(processJob);
+        /* TODO Why on('ready') does not trigger in test
+        queue.on('ready', function () {
+            console.log('READY');
             queue.process(processJob);
-            // Sleep
-            // TODO Test
-        }
+        });
+        */
     }
 
     function processJob(job, done) {
