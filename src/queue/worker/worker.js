@@ -1,6 +1,5 @@
 module.exports = function (queue, handler, displayOutput) {
     function run() {
-        console.log('Running');
         queue.process(processJob);
         /* TODO Why on('ready') does not trigger in test
         queue.on('ready', function () {

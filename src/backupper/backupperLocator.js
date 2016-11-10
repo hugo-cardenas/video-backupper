@@ -65,7 +65,7 @@ function getStorageManager() {
  * @returns {Queue}
  */
 function getQueue() {
-    return queueLocator.getQueue();
+    return queueLocator.getQueueManager().getQueue();
 }
 
 /**

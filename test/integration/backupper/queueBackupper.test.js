@@ -1,5 +1,6 @@
 var test = require('blue-tape');
 var sinon = require('sinon');
+var redis = require('redis');
 var baserequire = require('base-require');
 var baseTest = baserequire('test/integration/baseTest');
 var backupperLocator = baserequire('src/backupper/backupperLocator');
@@ -20,8 +21,8 @@ test('queueBackupper - backup - succeeds', options, function (t) {
     var videoId2 = 'egjumMGKZCg';
     var videoId3 = '5y5MQMJmCxI';
 
-    // TODO Flush testing Redis here in the beginning
-    return dropboxHelper.deleteAllFiles()
+    return flushRedis()
+        .then(dropboxHelper.deleteAllFiles())
         .then(function () {
             // Queue all jobs for the playlist videos
             return getQueueBackupper().run(playlistId);
@@ -39,6 +40,7 @@ test('queueBackupper - backup - succeeds', options, function (t) {
                 queue.on('succeeded', function () {
                     numSucceeded++;
                     if (numSucceeded === 3) {
+                        queue.close();
                         return resolve();
                     }
                 });
@@ -52,8 +54,8 @@ test('queueBackupper - backup - succeeds', options, function (t) {
             t.ok(files.includes(buildDropboxPath(playlistId, videoId2)));
             t.ok(files.includes(buildDropboxPath(playlistId, videoId3)));
             resetConfig();
-            return Promise.resolve();
-        });
+        })
+        .then(quitRedis);
 });
 
 function buildDropboxPath(playlistId, videoId) {
@@ -65,18 +67,18 @@ function getQueueBackupper() {
 }
 
 function getWorker() {
-    return queueLocator.getWorker();
+    return queueLocator.getQueueManager().getWorker();
 }
 
 function getQueue() {
-    return queueLocator.getQueue();
+    return queueLocator.getQueueManager().getQueue();
 }
 
 /**
  * Enable Dropbox storage in config
  */
 function setDropboxStorageConfig() {
-    var configArray = configLocator.getConfigManager().getConfig().get('');
+    var configArray = getConfigValue('');
     configArray.backupper.storage = 'dropbox';
     var newConfig = createConfig(configArray);
     configLocator.getConfigManager().getConfig = sinon.stub();
@@ -88,4 +90,48 @@ function setDropboxStorageConfig() {
  */
 function resetConfig() {
     configLocator.setConfigManager(null);
+}
+
+/**
+ * @param {string} key
+ * @returns {string|number|boolean|Object}
+ */
+function getConfigValue(key) {
+    return configLocator.getConfigManager().getConfig().get(key);
+}
+
+function flushRedis() {
+    return new Promise(function (resolve, reject) {
+        getRedisClient().flushdb(function (err) {
+            if (err) {
+                return reject(err);
+            }
+            return resolve();
+        });
+    });
+}
+
+function quitRedis() {
+    return new Promise(function (resolve, reject) {
+        getRedisClient().quit(function (err) {
+            if (err) {
+                return reject(err);
+            }
+            return resolve();
+        });
+    });
+}
+
+var redisClient;
+
+/**
+ * @returns {Object}
+ */
+function getRedisClient() {
+    if (!redisClient) {
+        redisClient = redis.createClient(
+            getConfigValue('queue.redis')
+        );
+    }
+    return redisClient;
 }
