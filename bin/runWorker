@@ -1,8 +1,13 @@
 #!/usr/bin/env node
 
+var program = require('commander');
 var baserequire = require('base-require');
-var locator = baserequire('src/queue/queueLocator');
-var createWorker = locator.getCreateWorker();
+var queueLocator = baserequire('src/queue/queueLocator');
 
-// TODO
-// Create worker - run
+program
+    .version('0.0.1')
+    .description('Run worker to process video backup jobs from the queue')
+    .parse(process.argv);
+
+// TODO Should capture and log queue/worker errors
+queueLocator.getQueueManager().getWorker().run();

@@ -1,4 +1,3 @@
-var Queue = require('bee-queue');
 var baserequire = require('base-require');
 var configLocator = baserequire('src/config/configLocator');
 var storageLocator = baserequire('src/storage/storageLocator');

@@ -5,11 +5,6 @@ var baserequire = require('base-require');
 var locator = baserequire('src/backupper/backupperLocator');
 
 function handleCommand(playlistId) {
-    // TODO
-    // Implement using QueueBackupper
-
-
-
     locator.getBackupperManager().getQueueBackupper().run(playlistId)
         .then(function (errors) {
             if (errors && errors.length > 0) {
