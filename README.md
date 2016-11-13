@@ -2,16 +2,32 @@
 
 [![Build Status](https://travis-ci.org/hugo-cardenas/video-backupper.svg?branch=master)](https://travis-ci.org/hugo-cardenas/video-backupper)
 
-Makes backups of videos from a Youtube playlist, saving them into a persistent storage.
+Make backups of videos from Youtube, saving them into a persistent storage (Amazon S3 or Dropbox). 
+
+Uses a queue ([bee-queue](https://github.com/LewisJEllis/bee-queue)) based on Redis for storing and processing the backup jobs.
 
 # Usage
 ```
-VIDEOBACKUPPER_CONFIG=/path/to/config.json backup myPlaylistId42
+VIDEOBACKUPPER_CONFIG=/path/to/config.json bin/backup myPlaylistId42
 ```
 ```  
 Usage: backup [options] <playlist-id>
 
-Backup videos from a youtube playlist
+Create backup jobs for all videos in a Youtube playlist
+
+Options:
+
+  -h, --help     output usage information
+  -V, --version  output the version number
+```
+
+```
+VIDEOBACKUPPER_CONFIG=/path/to/config.json bin/runWorker
+```
+```  
+Usage: backup [options] <playlist-id>
+
+Process backup jobs from the queue
 
 Options:
 
@@ -31,6 +47,14 @@ Example of the project config.json:
         "youtube": {
             "email": "my-service-account@developer.gserviceaccount.com",
             "keyFile": "/path/to/google/api/private.pem"
+        }
+    },
+    "queue": {
+        "redis": {
+            "host": "127.0.0.1",
+            "port": 6379,
+            "db": 0,
+            "options": {}
         }
     },
     "storage": {
