@@ -83,6 +83,11 @@ Tests are written with [tape](https://github.com/substack/tape)
 npm test
 ```
 
+For running integration tests, a separate testing config.json should be used.
+Integration tests will run only if this config contains the setting  `"integrationTestEnabled": true`.
+
+Note that they will delete all the contents from the S3 bucket and the Dropbox account, and will flush the Redis DB specified from the config.
+
 # license
 
 MIT
