@@ -11,28 +11,18 @@ Uses a queue ([bee-queue](https://github.com/LewisJEllis/bee-queue)) based on Re
 VIDEOBACKUPPER_CONFIG=/path/to/config.json bin/backup myPlaylistId42
 ```
 ```  
-Usage: backup [options] <playlist-id>
+Usage: backup <playlist-id>
 
 Create backup jobs for all videos in a Youtube playlist
-
-Options:
-
-  -h, --help     output usage information
-  -V, --version  output the version number
 ```
 
 ```
 VIDEOBACKUPPER_CONFIG=/path/to/config.json bin/runWorker
 ```
 ```  
-Usage: backup [options] <playlist-id>
+Usage: runWorker
 
 Process backup jobs from the queue
-
-Options:
-
-  -h, --help     output usage information
-  -V, --version  output the version number
 ```
 
 # Config
@@ -72,6 +62,11 @@ Example of the project config.json:
 For fetching the videos from the playlist, it's necessary to configure Google API service account credentials: https://developers.google.com/identity/protocols/OAuth2ServiceAccount
 
 The email and private key have to be specified in the `provider`.`youtube` section.
+
+#### Queue
+
+Redis config for the queue is specified in `queue`.`redis`. 
+The whole `queue` section is passed through to `bee-queue` config: https://github.com/LewisJEllis/bee-queue#settings so other settings for the queue can be specified also.
 
 #### Storage
 
