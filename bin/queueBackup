@@ -21,7 +21,7 @@ function handleCommand(playlistId) {
 
 program
     .version('0.0.1')
-    .description('Backup videos from a youtube playlist')
+    .description('Create backup jobs for all videos in a Youtube playlist')
     .arguments('backup <playlist-id>')
     .action(handleCommand)
     .parse(process.argv);

@@ -56,6 +56,10 @@ module.exports = function (provider, queue, displayOutput) {
      */
     function run(playlistId) {
         return getVideoItems(playlistId)
+            .then(function (videoItems) {
+                displayOutput.outputLine('Found ' + videoItems.length + ' video items');
+                return videoItems;
+            })
             .then(queueVideoItems)
             .catch(function (err) {
                 return Promise.reject(createError(playlistId, err));

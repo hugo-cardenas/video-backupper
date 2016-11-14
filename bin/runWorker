@@ -6,7 +6,7 @@ var queueLocator = baserequire('src/queue/queueLocator');
 
 program
     .version('0.0.1')
-    .description('Run worker to process video backup jobs from the queue')
+    .description('Process backup jobs from the queue')
     .parse(process.argv);
 
 // TODO Should capture and log queue/worker errors

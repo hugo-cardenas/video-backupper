@@ -3,7 +3,6 @@ module.exports = function (queue, handler, displayOutput) {
         queue.process(processJob);
         /* TODO Why on('ready') does not trigger in test
         queue.on('ready', function () {
-            console.log('READY');
             queue.process(processJob);
         });
         */

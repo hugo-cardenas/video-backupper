@@ -1,12 +1,10 @@
 var baserequire = require('base-require');
 var configLocator = baserequire('src/config/configLocator');
+var outputLocator = baserequire('src/output/outputLocator');
 var storageLocator = baserequire('src/storage/storageLocator');
-var createDisplayOutput = baserequire('src/output/displayOutput');
 var createQueueManager = baserequire('src/queue/queueManager');
 
-
 var _ytdl;
-var _displayOutput;
 var _queueManager;
 
 /**
@@ -19,6 +17,13 @@ function getQueueManager() {
         );
     }
     return _queueManager;
+}
+
+/**
+ * @param {Object} queueManager
+ */
+function setQueueManager(queueManager) {
+    _queueManager = queueManager;
 }
 
 /**
@@ -42,19 +47,10 @@ function getConfig() {
  * @returns {DisplayOutput}
  */
 function getDisplayOutput() {
-    if (!_displayOutput) {
-        _displayOutput = createDisplayOutput();
-    }
-    return _displayOutput;
-}
-
-/**
- * @param {DisplayOutput} displayOutput
- */
-function setDisplayOutput(displayOutput) {
-    _displayOutput = displayOutput;
+    return outputLocator.getDisplayOutput();
 }
 
 module.exports = {
-    getQueueManager: getQueueManager
+    getQueueManager: getQueueManager,
+    setQueueManager: setQueueManager
 };

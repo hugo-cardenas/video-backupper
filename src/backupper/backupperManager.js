@@ -1,6 +1,5 @@
 var VError = require('verror');
 var baserequire = require('base-require');
-var createBackupper = baserequire('src/backupper/backupper');
 var createQueueBackupper = baserequire('src/backupper/queueBackupper');
 
 /**
@@ -18,22 +17,8 @@ var createQueueBackupper = baserequire('src/backupper/queueBackupper');
  * @param {DisplayOutput} displayOutput
  * @returns {BackupperManager}
  */
-module.exports = function (config, provider, ytdl, storageManager, queue, displayOutput) {
-    var CONFIG_BACKUPPER_STORAGE = 'backupper.storage';
-
-    var backupper;
+module.exports = function (provider, queue, displayOutput) {
     var queueBackupper;
-
-    /**
-     * @returns {Backupper}
-     * @throws {Error} If backupper config is invalid
-     */
-    function getBackupper() {
-        if (!backupper) {
-            backupper = createBackupper(provider, ytdl, getStorage(), displayOutput);
-        }
-        return backupper;
-    }
 
     /**
      * @returns {QueueBackupper}
@@ -45,20 +30,7 @@ module.exports = function (config, provider, ytdl, storageManager, queue, displa
         return queueBackupper;
     }
 
-    /**
-     * @returns {StorageInterface}
-     * @throws {Error} If backupper config is invalid
-     */
-    function getStorage() {
-        try {
-            return storageManager.getStorage(config.get(CONFIG_BACKUPPER_STORAGE));
-        } catch (err) {
-            throw new VError(err, 'Unable to create backupper');
-        }
-    }
-
     return {
-        getBackupper: getBackupper,
         getQueueBackupper: getQueueBackupper
     };
 };
