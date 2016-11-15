@@ -46,6 +46,7 @@ module.exports = function (provider, queue, displayOutput) {
     function queueVideoItems(videoItems) {
         videoItems.forEach(function (videoItem) {
             queue.createJob(videoItem).save();
+            displayOutput.outputLine('Created job ' + JSON.stringify(videoItem));
         });
     }
 
