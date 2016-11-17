@@ -2,21 +2,27 @@
 
 [![Build Status](https://travis-ci.org/hugo-cardenas/video-backupper.svg?branch=master)](https://travis-ci.org/hugo-cardenas/video-backupper)
 
-Makes backups of videos from a Youtube playlist, saving them into a persistent storage.
+Make backups of videos from Youtube, saving them into a persistent storage (Amazon S3 or Dropbox). 
+
+Uses a queue ([bee-queue](https://github.com/LewisJEllis/bee-queue)) based on Redis for storing and processing the backup jobs.
 
 # Usage
 ```
-VIDEOBACKUPPER_CONFIG=/path/to/config.json backup myPlaylistId42
+VIDEOBACKUPPER_CONFIG=/path/to/config.json bin/backup myPlaylistId42
 ```
 ```  
-Usage: backup [options] <playlist-id>
+Usage: backup <playlist-id>
 
-Backup videos from a youtube playlist
+Create backup jobs for all videos in a Youtube playlist
+```
 
-Options:
+```
+VIDEOBACKUPPER_CONFIG=/path/to/config.json bin/runWorker
+```
+```  
+Usage: runWorker
 
-  -h, --help     output usage information
-  -V, --version  output the version number
+Process backup jobs from the queue
 ```
 
 # Config
@@ -31,6 +37,14 @@ Example of the project config.json:
         "youtube": {
             "email": "my-service-account@developer.gserviceaccount.com",
             "keyFile": "/path/to/google/api/private.pem"
+        }
+    },
+    "queue": {
+        "redis": {
+            "host": "127.0.0.1",
+            "port": 6379,
+            "db": 0,
+            "options": {}
         }
     },
     "storage": {
@@ -49,6 +63,11 @@ For fetching the videos from the playlist, it's necessary to configure Google AP
 
 The email and private key have to be specified in the `provider`.`youtube` section.
 
+#### Queue
+
+Redis config for the queue is specified in `queue`.`redis`. 
+The whole `queue` section is passed through to `bee-queue` config: https://github.com/LewisJEllis/bee-queue#settings so other settings for the queue can be specified also.
+
 #### Storage
 
 There are two storages available for saving the videos: Amazon S3 and Dropbox. The storage to be used is specified in the `backupper` section.
@@ -63,6 +82,11 @@ Tests are written with [tape](https://github.com/substack/tape)
 ```
 npm test
 ```
+
+For running integration tests, a separate testing config.json should be used.
+Integration tests will run only if this config contains the setting  `"integrationTestEnabled": true`.
+
+Note that they will delete all the contents from the S3 bucket and the Dropbox account, and will flush the Redis DB specified from the config.
 
 # license
 
