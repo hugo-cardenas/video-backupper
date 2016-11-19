@@ -6,11 +6,9 @@ var createBackupper = baserequire('src/backupper/queueBackupper');
 test('queueBackupper - run - succeeds', function (t) {
     var playlistId = 'myPlaylist42';
 
-    var videoId1 = 'foo42';
-    var videoId2 = 'bar44';
     var videoItems = [
-        { title: 'foo', resourceId: { kind: 'youtube#video', videoId: videoId1 } },
-        { title: 'bar', resourceId: { kind: 'youtube#video', videoId: videoId2 } }
+        { videoId: 'foo42' },
+        { videoId: 'bar44' }
     ];
 
     var provider = {
@@ -34,10 +32,10 @@ test('queueBackupper - run - succeeds', function (t) {
     };
 
     queue.createJob
-        .withArgs({ playlistId: playlistId, videoId: videoId1 })
+        .withArgs(videoItems[0])
         .returns(queueJob1);
     queue.createJob
-        .withArgs({ playlistId: playlistId, videoId: videoId2 })
+        .withArgs(videoItems[1])
         .returns(queueJob2);
 
     var backupper = createBackupper(provider, queue, displayOutput);
@@ -108,11 +106,9 @@ test('queueBackupper - run - provider fails', function (t) {
 test('queueBackupper - run - queue fails', function (t) {
     var playlistId = 'myPlaylist42';
 
-    var videoId1 = 'foo42';
-    var videoId2 = 'bar44';
     var videoItems = [
-        { title: 'foo', resourceId: { kind: 'youtube#video', videoId: videoId1 } },
-        { title: 'bar', resourceId: { kind: 'youtube#video', videoId: videoId2 } }
+        { videoId: 'foo42' },
+        { videoId: 'bar44' }
     ];
 
     var provider = {
@@ -130,7 +126,7 @@ test('queueBackupper - run - queue fails', function (t) {
         createJob: sinon.stub()
     };
     queue.createJob
-        .withArgs({ playlistId: playlistId, videoId: videoId1 })
+        .withArgs(videoItems[0])
         .throws(new Error(errorMessage));
 
     var backupper = createBackupper(provider, queue, displayOutput);
