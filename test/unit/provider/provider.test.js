@@ -58,13 +58,7 @@ test('provider - getItems - succeeds', function (t) {
         keyFile: '/path/to/private/key.pem'
     };
 
-    var jwtClient = {
-        authorize: function (callback) {
-            var err = null;
-            var tokens = [];
-            callback(err, tokens);
-        }
-    };
+    var jwtClient = createJwtClient(null);
 
     var expectedPlaylistOptions = {
         id: playlistId,
@@ -126,13 +120,7 @@ test('provider - getItems - authorization error', function (t) {
     };
 
     var errorMessage = 'Jwt client authorization has failed';
-    var jwtClient = {
-        authorize: function (callback) {
-            var err = new Error(errorMessage);
-            var tokens = [];
-            callback(err, tokens);
-        }
-    };
+    var jwtClient = createJwtClient(new Error(errorMessage));
 
     var google = {
         auth: {
@@ -178,13 +166,7 @@ test('provider - getItems - playlists resource error', function (t) {
         keyFile: '/path/to/private/key.pem'
     };
 
-    var jwtClient = {
-        authorize: function (callback) {
-            var err = null;
-            var tokens = [];
-            callback(err, tokens);
-        }
-    };
+    var jwtClient = createJwtClient(null);
 
     var expectedPlaylistOptions = {
         id: playlistId,
@@ -277,13 +259,7 @@ playlistsResourceInvalidResponseData.forEach(function (playlistsResponseData, in
             keyFile: '/path/to/private/key.pem'
         };
 
-        var jwtClient = {
-            authorize: function (callback) {
-                var err = null;
-                var tokens = [];
-                callback(err, tokens);
-            }
-        };
+        var jwtClient = createJwtClient(null);
 
         var expectedPlaylistOptions = {
             id: playlistId,
@@ -352,13 +328,7 @@ test('provider - getItems - playlistItems resource error', function (t) {
         keyFile: '/path/to/private/key.pem'
     };
 
-    var jwtClient = {
-        authorize: function (callback) {
-            var err = null;
-            var tokens = [];
-            callback(err, tokens);
-        }
-    };
+    var jwtClient = createJwtClient(null);
 
     var expectedPlaylistOptions = {
         id: playlistId,
@@ -472,13 +442,7 @@ playlistItemsResourceInvalidResponseData.forEach(function (playlistItemsResponse
             keyFile: '/path/to/private/key.pem'
         };
 
-        var jwtClient = {
-            authorize: function (callback) {
-                var err = null;
-                var tokens = [];
-                callback(err, tokens);
-            }
-        };
+        var jwtClient = createJwtClient(null);
 
         var expectedPlaylistOptions = {
             id: playlistId,
@@ -634,5 +598,18 @@ function createPlaylistItemsResponseData(videos) {
                 }
             };
         })
+    };
+}
+
+/**
+ * @param {Error|null} err
+ * @returns {Object} JWT client object
+ */
+function createJwtClient(err) {
+    return {
+        authorize: function (callback) {
+            var tokens = [];
+            callback(err, tokens);
+        }
     };
 }
