@@ -24,7 +24,7 @@ test('queueBackupper - backup - succeeds with Dropbox storage', options, functio
     var videoId3 = '5y5MQMJmCxI';
 
     return redisHelper.flushDb()
-        .then(dropboxHelper.deleteAllFiles())
+        .then(dropboxHelper.deleteAllFiles)
         .then(function () {
             // Queue all jobs for the playlist videos
             return getQueueBackupper().run(playlistId);
