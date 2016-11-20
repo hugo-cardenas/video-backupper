@@ -389,7 +389,6 @@ test('provider - getItems - playlistItems resource error', function (t) {
 var playlistItemsResourceInvalidResponseData = [
     {},
     { items: 'foo' },
-    // { items: [] }, // TODO THis should actually be OK
     { items: [{}] },
     {
         items: [{ snippet: {} }]

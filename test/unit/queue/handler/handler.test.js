@@ -42,8 +42,6 @@ var invalidJobs = [
     {},
     { foo: 123 },
     { data: {} }
-    // { data: { playlistId: 42 } },
-    // { data: { videoId: 44 } }
 ];
 
 invalidJobs.forEach(function (job, index) {
