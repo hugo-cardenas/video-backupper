@@ -11,8 +11,8 @@ module.exports = function (ytdl, storage, displayOutput) {
     function handle(job) {
         return Promise.resolve()
             .then(function () {
-                var jobData = getValidatedJobData(job);
-                return backup(jobData.playlistId, jobData.videoId);
+                var videoItem = getValidatedVideoItem(job);
+                return backup(videoItem);
             })
             .catch(function (err) {
                 return Promise.reject(createError(job, err));
@@ -22,12 +22,12 @@ module.exports = function (ytdl, storage, displayOutput) {
     /**
      * Backup one specific video (download and save)
      *
-     * @param {string} playlistId Playlist to which the video belongs
-     * @param {string} videoId
+     * @param {Object} videoItem
      * @returns {Promise}
      */
-    function backup(playlistId, videoId) {
+    function backup(videoItem) {
         return new Promise(function (resolve, reject) {
+            var videoId = videoItem.videoId;
             try {
                 var url = buildVideoUrl(videoId);
                 var stream = ytdl(url);
@@ -35,7 +35,7 @@ module.exports = function (ytdl, storage, displayOutput) {
                 return reject(createError(videoId, err));
             }
 
-            return storage.save(stream, playlistId, videoId)
+            return storage.save(stream, videoItem)
                 .then(function () {
                     displayOutput.outputLine('Saved video ' + videoId);
                     return resolve();
@@ -50,9 +50,9 @@ module.exports = function (ytdl, storage, displayOutput) {
      * @param {Object} job
      * @returns {Object}
      */
-    function getValidatedJobData(job) {
+    function getValidatedVideoItem(job) {
         validateProperties(job, ['data']);
-        validateProperties(job.data, ['videoId', 'playlistId']);
+        validateProperties(job.data, ['videoId']);
         return job.data;
     }
 
