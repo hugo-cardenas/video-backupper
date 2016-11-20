@@ -26,18 +26,31 @@ test('dropboxStorage - save - succeeds', options, function (t) {
     var stream2 = fs.createReadStream(file2);
     var stream3 = fs.createReadStream(file3);
 
-    var playlistId1 = 'playlistId1';
-    var playlistId2 = 'playlistId2';
-    var videoId1 = 'videoId1';
-    var videoId2 = 'videoId2';
-    var videoId3 = 'videoId3';
+    var playlistName1 = 'playlist 1';
+    var playlistName2 = 'playlist 2';
+    var videoName1 = 'video 1';
+    var videoName2 = 'video 2';
+    var videoName3 = 'video 3';
 
-    var folder1 = '/' + playlistId1.toLowerCase();
-    var folder2 = '/' + playlistId2.toLowerCase();
+    var videoItem1 = {
+        playlistName: playlistName1,
+        videoName: videoName1
+    };
+    var videoItem2 = {
+        playlistName: playlistName1,
+        videoName: videoName2
+    };
+    var videoItem3 = {
+        playlistName: playlistName2,
+        videoName: videoName3
+    };
 
-    var dropboxFilePath1 = folder1 + '/' + videoId1.toLowerCase() + '.' + extension;
-    var dropboxFilePath2 = folder1 + '/' + videoId2.toLowerCase() + '.' + extension;
-    var dropboxFilePath3 = folder2 + '/' + videoId3.toLowerCase() + '.' + extension;
+    var folder1 = '/' + playlistName1.toLowerCase();
+    var folder2 = '/' + playlistName2.toLowerCase();
+
+    var dropboxFilePath1 = folder1 + '/' + videoName1.toLowerCase() + '.' + extension;
+    var dropboxFilePath2 = folder1 + '/' + videoName2.toLowerCase() + '.' + extension;
+    var dropboxFilePath3 = folder2 + '/' + videoName3.toLowerCase() + '.' + extension;
 
     var dropbox = getDropbox();
 
@@ -56,9 +69,9 @@ test('dropboxStorage - save - succeeds', options, function (t) {
         // Save 3 elements
         .then(function () {
             return Promise.all([
-                storage.save(stream1, playlistId1, videoId1),
-                storage.save(stream2, playlistId1, videoId2),
-                storage.save(stream3, playlistId2, videoId3)
+                storage.save(stream1, videoItem1),
+                storage.save(stream2, videoItem2),
+                storage.save(stream3, videoItem3)
             ]);
         })
         // Assert they are succesfully stored
@@ -92,10 +105,14 @@ test('dropboxStorage - save - overwrite file', options, function (t) {
     var stream1 = fs.createReadStream(file1);
     var stream2 = fs.createReadStream(file2);
 
-    var playlistId1 = 'playlistId1';
-    var videoId1 = 'videoId1';
+    var playlistName1 = 'playlist 1';
+    var videoName1 = 'video 1';
+    var videoItem1 = {
+        playlistName: playlistName1,
+        videoName: videoName1
+    };
 
-    var dropboxFilePath1 = '/' + playlistId1.toLowerCase() + '/' + videoId1.toLowerCase() + '.' + extension;
+    var dropboxFilePath1 = '/' + playlistName1.toLowerCase() + '/' + videoName1.toLowerCase() + '.' + extension;
     var dropbox = getDropbox();
 
     return listFiles(dropbox, '')
@@ -112,11 +129,11 @@ test('dropboxStorage - save - overwrite file', options, function (t) {
         })
         // Save video1
         .then(function () {
-            return storage.save(stream1, playlistId1, videoId1);
+            return storage.save(stream1, videoItem1);
         })
         // Save a different stream on the same video id
         .then(function () {
-            return storage.save(stream2, playlistId1, videoId1);
+            return storage.save(stream2, videoItem1);
         })
         // Assert the file contents
         .then(function () {

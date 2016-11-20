@@ -1,10 +1,12 @@
+var VError = require('verror');
+var baserequire = require('base-require');
+var validateVideoItem = baserequire('src/storage/videoItemValidator');
+
 /**
  * @typedef {Object} Storage
  *
  * @property {function} save Save a stream in Dropbox
  */
-
-var VError = require('verror');
 
 /**
  * Create an Dropbox storage
@@ -35,11 +37,11 @@ module.exports = function (dropbox) {
     }
 
     /**
-     * @param {string} playlistId
+     * @param {string} playlistName
      * @returns {Promise<string>}
      */
-    function getDirPath(playlistId) {
-        var path = '/' + playlistId;
+    function getDirPath(playlistName) {
+        var path = '/' + playlistName;
         var arg = {
             path: path
         };
@@ -83,27 +85,22 @@ module.exports = function (dropbox) {
     }
 
     /**
-     * @param {string} playlistId
-     * @param {string} videoId
+     * @param {Object} videoItem
      * @returns {Promise<string>}
      */
-    function getDropboxPath(playlistId, videoId) {
-        return getDirPath(playlistId)
+    function getDropboxPath(videoItem) {
+        return getDirPath(videoItem.playlistName)
             .then(function (dirPath) {
-                return Promise.resolve(dirPath + '/' + videoId + '.' + extension);
+                return Promise.resolve(dirPath + '/' + videoItem.videoName + '.' + extension);
             });
     }
     /**
-     * @param {string} playlistId
-     * @param {string} videoId
-     *
+     * @param {Object} videoItem
      * @param {Error} err
      * @returns {Error}
      */
-    function createError(playlistId, videoId, err) {
-        var message = 'Dropbox storage unable to save stream for playlistId ' + playlistId +
-            ', videoId ' + videoId;
-        return new VError(err, message);
+    function createError(videoItem, err) {
+        return new VError(err, 'Dropbox storage unable to save stream for videoItem %s', JSON.stringify(videoItem));
     }
 
     /**
@@ -117,7 +114,7 @@ module.exports = function (dropbox) {
             .then(function (buffer) {
                 var arg = {
                     contents: buffer,
-                    mode: {'.tag': 'overwrite'},
+                    mode: { '.tag': 'overwrite' },
                     path: dropboxPath
                 };
                 return dropbox.filesUpload(arg);
@@ -129,17 +126,22 @@ module.exports = function (dropbox) {
 
     /**
      * @param {Stream} stream
-     * @param {string} playlistId
-     * @param {string} videoId
+     * @param {Object} videoItem
      * @returns {Promise}
      */
-    function save(stream, playlistId, videoId) {
-        return getDropboxPath(playlistId, videoId)
+    function save(stream, videoItem) {
+        return Promise.resolve()
+            .then(function () {
+                validateVideoItem(videoItem);
+            })
+            .then(function () {
+                return getDropboxPath(videoItem);
+            })
             .then(function (dropboxPath) {
                 return saveStream(dropboxPath, stream);
             })
             .catch(function (err) {
-                return Promise.reject(createError(playlistId, videoId, err));
+                return Promise.reject(createError(videoItem, err));
             });
     }
 

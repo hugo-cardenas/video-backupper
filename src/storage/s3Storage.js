@@ -1,5 +1,6 @@
 var VError = require('verror');
-var _ = require('lodash');
+var baserequire = require('base-require');
+var validateVideoItem = baserequire('src/storage/videoItemValidator');
 
 /**
  * @typedef {Object} Storage
@@ -42,17 +43,6 @@ module.exports = function (s3, config) {
     }
 
     /**
-     * @param {Object} videoItem
-     */
-    function validateVideoItem(videoItem) {
-        var keys = ['videoName', 'playlistName'];
-        var missingKeys = _.difference(keys, Object.keys(videoItem));
-        if (missingKeys.length > 0) {
-            throw new VError('Invalid videoItem %s, missing keys [%s]', JSON.stringify(videoItem), missingKeys.join(', '));
-        }
-    }
-
-    /**
      * @param {Object} params
      * @returns {Promise}
      */
@@ -73,7 +63,7 @@ module.exports = function (s3, config) {
      * @returns {Error}
      */
     function createError(videoItem, err) {
-        return new VError(err, 'Unable to save stream for videoItem %s in s3 storage', JSON.stringify(videoItem));
+        return new VError(err, 'S3 storage unable to save stream for videoItem %s', JSON.stringify(videoItem));
     }
 
     /**
