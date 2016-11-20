@@ -1,3 +1,7 @@
+var VError = require('verror');
+var baserequire = require('base-require');
+var validateVideoItem = baserequire('src/storage/videoItemValidator');
+
 /**
  * @typedef {Object} Storage
  *
@@ -24,19 +28,42 @@ module.exports = function (s3, config) {
      */
     function validateConfig(config) {
         if (!config.bucket) {
-            throw new Error('Invalid config.bucket value: ' + config.bucket);
+            throw new VError('Error creating s3 storage: Invalid config.bucket value %s ', JSON.stringify(config.bucket));
         }
     }
 
     /**
      * Build the S3 key (path)
      *
-     * @param {string} playlistId
-     * @param {string} videoId
+     * @param {Object} videoItem
      * @returns {string}
      */
-    function buildKey(playlistId, videoId) {
-        return playlistId + '/' + videoId + '.' + extension;
+    function buildKey(videoItem) {
+        return videoItem.playlistName + '/' + videoItem.videoName + '.' + extension;
+    }
+
+    /**
+     * @param {Object} params
+     * @returns {Promise}
+     */
+    function s3Upload(params) {
+        return new Promise(function (resolve, reject) {
+            s3.upload(params, function (err, data) {
+                if (err) {
+                    return reject(err);
+                }
+                return resolve();
+            });
+        });
+    }
+
+    /**
+     * @param {Object} videoItem
+     * @param {Error} err
+     * @returns {Error}
+     */
+    function createError(videoItem, err) {
+        return new VError(err, 'S3 storage unable to save stream for videoItem %s', JSON.stringify(videoItem));
     }
 
     /**
@@ -47,24 +74,24 @@ module.exports = function (s3, config) {
      * @param {string} videoId
      * @returns {Promise}
      */
-    function save(stream, playlistId, videoId) {
+    function save(stream, videoItem) {
         // TODO Get list of stored files
         // Only if not stored already, save
-
-        var params = {
-            Bucket: config.bucket,
-            Key: buildKey(playlistId, videoId),
-            Body: stream
-        };
-
-        return new Promise(function (resolve, reject) {
-            s3.upload(params, function (err, data) {
-                if (err) {
-                    return reject(err);
-                }
-                return resolve();
+        return Promise.resolve()
+            .then(function () {
+                validateVideoItem(videoItem);
+            })
+            .then(function () {
+                var params = {
+                    Bucket: config.bucket,
+                    Key: buildKey(videoItem),
+                    Body: stream
+                };
+                return s3Upload(params);
+            })
+            .catch(function (err) {
+                return Promise.reject(createError(videoItem, err));
             });
-        });
     }
 
     return {

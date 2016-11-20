@@ -27,16 +27,7 @@ module.exports = function (provider, queue, displayOutput) {
      * @returns {Promise<string[]>} Resolves with array of video items
      */
     function getVideoItems(playlistId) {
-        return provider.getVideoItems(playlistId)
-            .then(function (videoItems) {
-                return videoItems.map(function (videoItem) {
-                    // TODO This responsibility should be moved to provider
-                    return {
-                        videoId: videoItem.resourceId.videoId,
-                        playlistId: playlistId
-                    };
-                });
-            });
+        return provider.getVideoItems(playlistId);
     }
 
     /**

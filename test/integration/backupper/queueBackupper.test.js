@@ -19,12 +19,14 @@ test('queueBackupper - backup - succeeds with Dropbox storage', options, functio
     enableDropboxStorage();
 
     var playlistId = 'PLWcOakfYWxVM_wvoM_bKxEiuGwvgYCvOE';
-    var videoId1 = '40T4IrLiCiU';
-    var videoId2 = 'egjumMGKZCg';
-    var videoId3 = '5y5MQMJmCxI';
+
+    var playlistName = 'nyancat playlist';
+    var videoName1 = 'video 1';
+    var videoName2 = 'video 2';
+    var videoName3 = 'video 3';
 
     return redisHelper.flushDb()
-        .then(dropboxHelper.deleteAllFiles())
+        .then(dropboxHelper.deleteAllFiles)
         .then(function () {
             // Queue all jobs for the playlist videos
             return getQueueBackupper().run(playlistId);
@@ -38,12 +40,12 @@ test('queueBackupper - backup - succeeds with Dropbox storage', options, functio
             return waitForSuccededJobs(3);
         })
         .then(function () {
-            return dropboxHelper.listFiles('/' + playlistId);
+            return dropboxHelper.listFiles('/' + playlistName);
         })
         .then(function (files) {
-            t.ok(files.includes(buildDropboxPath(playlistId, videoId1)));
-            t.ok(files.includes(buildDropboxPath(playlistId, videoId2)));
-            t.ok(files.includes(buildDropboxPath(playlistId, videoId3)));
+            t.ok(files.includes(buildDropboxPath(playlistName, videoName1)));
+            t.ok(files.includes(buildDropboxPath(playlistName, videoName2)));
+            t.ok(files.includes(buildDropboxPath(playlistName, videoName3)));
             resetLocators();
         })
         .then(redisHelper.quit);
@@ -53,9 +55,11 @@ test('queueBackupper - backup - succeeds with S3 storage', options, function (t)
     enableS3Storage();
 
     var playlistId = 'PLWcOakfYWxVM_wvoM_bKxEiuGwvgYCvOE';
-    var videoId1 = '40T4IrLiCiU';
-    var videoId2 = 'egjumMGKZCg';
-    var videoId3 = '5y5MQMJmCxI';
+
+    var playlistName = 'nyancat playlist';
+    var videoName1 = 'video 1';
+    var videoName2 = 'video 2';
+    var videoName3 = 'video 3';
 
     return redisHelper.flushDb()
         .then(s3Helper.deleteAllKeys)
@@ -74,9 +78,9 @@ test('queueBackupper - backup - succeeds with S3 storage', options, function (t)
         .then(s3Helper.listKeys)
         .then(function (s3Keys) {
             t.equal(s3Keys.length, 3);
-            t.ok(s3Keys.includes(buildS3Key(playlistId, videoId1)));
-            t.ok(s3Keys.includes(buildS3Key(playlistId, videoId2)));
-            t.ok(s3Keys.includes(buildS3Key(playlistId, videoId3)));
+            t.ok(s3Keys.includes(buildS3Key(playlistName, videoName1)));
+            t.ok(s3Keys.includes(buildS3Key(playlistName, videoName2)));
+            t.ok(s3Keys.includes(buildS3Key(playlistName, videoName3)));
             resetLocators();
         })
         .then(redisHelper.quit);
@@ -103,21 +107,21 @@ function waitForSuccededJobs(numJobs) {
 }
 
 /**
- * @param {string} playlistId
- * @param {string} videoId
+ * @param {string} playlistName
+ * @param {string} videoName
  * @returns {string}
  */
-function buildDropboxPath(playlistId, videoId) {
-    return ('/' + playlistId + '/' + videoId + '.mp4').toLowerCase();
+function buildDropboxPath(playlistName, videoName) {
+    return ('/' + playlistName + '/' + videoName + '.mp4').toLowerCase();
 }
 
 /**
- * @param {string} playlistId
- * @param {string} videoId
+ * @param {string} playlistName
+ * @param {string} videoName
  * @returns {string}
  */
-function buildS3Key(playlistId, videoId) {
-    return playlistId + '/' + videoId + '.mp4';
+function buildS3Key(playlistName, videoName) {
+    return playlistName + '/' + videoName + '.mp4';
 }
 
 /**

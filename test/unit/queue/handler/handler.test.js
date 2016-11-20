@@ -4,9 +4,11 @@ var baserequire = require('base-require');
 var createHandler = baserequire('src/queue/handler/handler');
 
 test('handler - handle - succeeds', function (t) {
-    var playlistId = 'playlist42';
     var videoId = 'foo42';
     var stream = 'myStream42';
+    var videoItem = {
+        videoId: videoId
+    };
 
     var baseVideoUrl = 'https://www.youtube.com/watch?v=';
     var expectedVideoUrl = baseVideoUrl + videoId;
@@ -17,7 +19,7 @@ test('handler - handle - succeeds', function (t) {
 
     var storage = { save: sinon.stub() };
     storage.save
-        .withArgs(stream, playlistId, videoId)
+        .withArgs(stream, videoItem)
         .returns(Promise.resolve());
 
     var displayOutput = {
@@ -25,16 +27,13 @@ test('handler - handle - succeeds', function (t) {
     };
 
     var job = {
-        data: {
-            videoId: videoId,
-            playlistId: playlistId
-        }
+        data: videoItem
     };
 
     var handler = createHandler(ytdl, storage, displayOutput);
     return handler.handle(job)
         .then(function () {
-            t.ok(storage.save.calledWith(stream, playlistId, videoId));
+            t.ok(storage.save.calledWith(stream, videoItem));
             t.ok(displayOutput.outputLine.calledWith(sinon.match(/Saved video foo42/)));
         });
 });
@@ -42,9 +41,7 @@ test('handler - handle - succeeds', function (t) {
 var invalidJobs = [
     {},
     { foo: 123 },
-    { data: {} },
-    { data: { playlistId: 42 } },
-    { data: { videoId: 44 } }
+    { data: {} }
 ];
 
 invalidJobs.forEach(function (job, index) {
@@ -67,8 +64,10 @@ invalidJobs.forEach(function (job, index) {
 });
 
 test('handler - handle - ytdl fails', function (t) {
-    var playlistId = 'playlist42';
     var videoId = 'foo42';
+    var videoItem = {
+        videoId: videoId
+    };
 
     var baseVideoUrl = 'https://www.youtube.com/watch?v=';
     var expectedVideoUrl = baseVideoUrl + videoId;
@@ -85,10 +84,7 @@ test('handler - handle - ytdl fails', function (t) {
     };
 
     var job = {
-        data: {
-            videoId: videoId,
-            playlistId: playlistId
-        }
+        data: videoItem
     };
 
     var handler = createHandler(ytdl, storage, displayOutput);
@@ -104,9 +100,11 @@ test('handler - handle - ytdl fails', function (t) {
 });
 
 test('handler - handle - storage fails', function (t) {
-    var playlistId = 'playlist42';
     var videoId = 'foo42';
     var stream = 'myStream42';
+    var videoItem = {
+        videoId: videoId
+    };
 
     var baseVideoUrl = 'https://www.youtube.com/watch?v=';
     var expectedVideoUrl = baseVideoUrl + videoId;
@@ -118,7 +116,7 @@ test('handler - handle - storage fails', function (t) {
     var errorMessage = 'Storage failed';
     var storage = { save: sinon.stub() };
     storage.save
-        .withArgs(stream, playlistId, videoId)
+        .withArgs(stream, videoItem)
         .returns(Promise.reject(new Error(errorMessage)));
 
     var displayOutput = {
@@ -126,10 +124,7 @@ test('handler - handle - storage fails', function (t) {
     };
 
     var job = {
-        data: {
-            videoId: videoId,
-            playlistId: playlistId
-        }
+        data: videoItem
     };
 
     var handler = createHandler(ytdl, storage, displayOutput);
