@@ -18,6 +18,8 @@ var validateVideoItem = baserequire('src/storage/videoItemValidator');
 module.exports = function (s3, config) {
     var extension = 'mp4';
 
+    var storedVideoItems;
+
     validateConfig(config);
 
     /**
@@ -70,8 +72,7 @@ module.exports = function (s3, config) {
      * Save the stream identified by the specified playlistId and videoId
      *
      * @param {Stream} stream
-     * @param {string} playlistId
-     * @param {string} videoId
+     * @param {Object} videoItem
      * @returns {Promise}
      */
     function save(stream, videoItem) {
@@ -94,7 +95,93 @@ module.exports = function (s3, config) {
             });
     }
 
+    /**
+     * @param {Object} videoItem
+     * @returns {Promise<boolean>}
+     */
+    function isStored(videoItem) {
+        return getStoredVideoItems()
+            .then(function (storedVideoItems) {
+                return storedVideoItems.filter(function (storedVideoItem) {
+                    return storedVideoItem.videoName === videoItem.videoName;
+                }).length !== 0;
+            });
+    }
+
+    /**
+     * @returns {Promise<Object[]>} Resolves with array of stored video items
+     */
+    function getStoredVideoItems() {
+        if (storedVideoItems !== undefined) {
+            return Promise.resolve(storedVideoItems);
+        }
+        return getAllKeys()
+            .then(function (keys) {
+                storedVideoItems = keys.map(buildVideoItemFromKey);
+                return storedVideoItems;
+            });
+    }
+
+    /**
+     * @returns {Promise<string[]>} Resolves with list of S3 keys
+     */
+    function getAllKeys() {
+        var params = { Bucket: config.bucket };
+        return s3List(params)
+            .then(parseListKeysResponseData);
+    }
+
+    /**
+     * @param {Object} data Response data from S3 client
+     * @returns {string[]} Array of S3 keys
+     */
+    function parseListKeysResponseData(data) {
+        try {
+            return data.Contents.map(function (elem, index) {
+                var key = elem.Key;
+                if (key === '') {
+                    throw new VError('Invalid empty key at index %d', index);
+                }
+                return key;
+            });
+        } catch (err) {
+            throw new VError(err, 'Unable to parse list response data %s', JSON.stringify(data));
+        }
+    }
+
+    /**
+     * @param {Object} params
+     * @returns {Promise<Object>} Resolves with response data object from S3 client
+     */
+    function s3List(params) {
+        return new Promise(function (resolve, reject) {
+            s3.listObjectsV2(params, function (err, data) {
+                if (err) {
+                    return reject(err);
+                }
+                return resolve(data);
+            });
+        });
+    }
+
+    function buildVideoItemFromKey(key) {
+        var parts = key.split('/');
+        // Example: /playlistFoo/videoBar
+        if (parts[1] && parts[2]) {
+            return {
+                playlistName: parts[1],
+                videoName: parts[2]
+            };
+        }
+        // TODO Throw error
+    }
+
+    function createIsStoredError(videoItem, err) {
+        return new VError(err, 'S3 storage unable to check is stored videoItem %s', JSON.stringify(videoItem));
+    }
+
     return {
+        isStored: isStored,
         save: save
     };
 };
