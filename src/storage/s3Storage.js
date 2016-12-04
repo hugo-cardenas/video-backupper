@@ -18,8 +18,6 @@ var validateVideoItem = baserequire('src/storage/videoItemValidator');
 module.exports = function (s3, config) {
     var extension = 'mp4';
 
-    var storedVideoItems;
-
     validateConfig(config);
 
     /**
@@ -64,7 +62,7 @@ module.exports = function (s3, config) {
      * @param {Error} err
      * @returns {Error}
      */
-    function createError(videoItem, err) {
+    function createSaveError(videoItem, err) {
         return new VError(err, 'S3 storage unable to save stream for videoItem %s', JSON.stringify(videoItem));
     }
 
@@ -76,8 +74,6 @@ module.exports = function (s3, config) {
      * @returns {Promise}
      */
     function save(stream, videoItem) {
-        // TODO Get list of stored files
-        // Only if not stored already, save
         return Promise.resolve()
             .then(function () {
                 validateVideoItem(videoItem);
@@ -91,34 +87,20 @@ module.exports = function (s3, config) {
                 return s3Upload(params);
             })
             .catch(function (err) {
-                return Promise.reject(createError(videoItem, err));
-            });
-    }
-
-    /**
-     * @param {Object} videoItem
-     * @returns {Promise<boolean>}
-     */
-    function isStored(videoItem) {
-        return getStoredVideoItems()
-            .then(function (storedVideoItems) {
-                return storedVideoItems.filter(function (storedVideoItem) {
-                    return storedVideoItem.videoName === videoItem.videoName;
-                }).length !== 0;
+                return Promise.reject(createSaveError(videoItem, err));
             });
     }
 
     /**
      * @returns {Promise<Object[]>} Resolves with array of stored video items
      */
-    function getStoredVideoItems() {
-        if (storedVideoItems !== undefined) {
-            return Promise.resolve(storedVideoItems);
-        }
+    function getAllVideoItems() {
         return getAllKeys()
             .then(function (keys) {
-                storedVideoItems = keys.map(buildVideoItemFromKey);
-                return storedVideoItems;
+                return keys.map(buildVideoItemFromKey);
+            })
+            .catch(function (err) {
+                return Promise.reject(createGetAllVideoItemsError(err));
             });
     }
 
@@ -139,7 +121,7 @@ module.exports = function (s3, config) {
         try {
             return data.Contents.map(function (elem, index) {
                 var key = elem.Key;
-                if (key === '') {
+                if (key === '' || key === undefined) {
                     throw new VError('Invalid empty key at index %d', index);
                 }
                 return key;
@@ -176,12 +158,16 @@ module.exports = function (s3, config) {
         // TODO Throw error
     }
 
-    function createIsStoredError(videoItem, err) {
-        return new VError(err, 'S3 storage unable to check is stored videoItem %s', JSON.stringify(videoItem));
+    /**
+     * @param {Error} err
+     * @returns {Error}
+     */
+    function createGetAllVideoItemsError(err) {
+        return new VError(err, 'S3 storage unable to get all video items');
     }
 
     return {
-        isStored: isStored,
+        getAllVideoItems: getAllVideoItems,
         save: save
     };
 };

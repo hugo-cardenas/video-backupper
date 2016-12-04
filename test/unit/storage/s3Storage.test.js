@@ -117,9 +117,7 @@ test('s3Storage - save - s3 client fails', function (t) {
         });
 });
 
-test.only('s3Storage - isStored - succeeds', function (t) {
-    // TODO Test it does only one single call to S3, then cache the stored files
-    // TODO When saving, delete the local cached list
+test('s3Storage - getAllVideoItems - succeeds', function (t) {
     var bucket = 'bucketFoo';
     var config = {
         bucket: bucket
@@ -127,11 +125,10 @@ test.only('s3Storage - isStored - succeeds', function (t) {
     var playlistName = 'playlistName';
     var videoName1 = 'videoName1';
     var videoName2 = 'videoName2';
-    var videoName3 = 'videoName3';
 
     var videoItem1 = createVideoItem(videoName1, playlistName);
     var videoItem2 = createVideoItem(videoName2, playlistName);
-    var videoItem3 = createVideoItem(videoName3, playlistName);
+    var expectedVideoItems = [videoItem1, videoItem2];
 
     var expectedParams = {
         Bucket: bucket
@@ -140,8 +137,7 @@ test.only('s3Storage - isStored - succeeds', function (t) {
     var s3ClientResponseData = {
         Contents: [
             { Key: '/' + playlistName + '/' + videoName1 },
-            { Key: '/' + playlistName + '/' + videoName2 },
-            { Key: '/irrelevantPlaylist/irrelevantVideo' }
+            { Key: '/' + playlistName + '/' + videoName2 }
         ]
     };
 
@@ -152,42 +148,106 @@ test.only('s3Storage - isStored - succeeds', function (t) {
             callback(err, s3ClientResponseData);
         }
     };
-    var s3ListObjectsSpy = sinon.spy(s3, 'listObjectsV2');
-
     var storage = createStorage(s3, config);
 
-    // First call is done separately to ensure that the list gets cached before calling others
-    return storage.isStored(videoItem1)
-        .then(function (isStored) {
-            t.ok(isStored);
-        })
-        .then(function () {
-            return Promise.all([
-                storage.isStored(videoItem2),
-                storage.isStored(videoItem3)
-            ]);
-        })
-        .then(function (values) {
-            t.ok(values[0]);
-            t.notOk(values[1]);
-            t.ok(s3ListObjectsSpy.calledOnce);
+    return storage.getAllVideoItems()
+        .then(function (videoItems) {
+            t.deepEqual(videoItems, expectedVideoItems);
         });
 });
 
-test('s3Storage - isStored - cleans cached list after save', function () {
+test('s3Storage - getAllVideoItems - s3 client fails', function (t) {
+    var bucket = 'bucketFoo';
+    var config = {
+        bucket: bucket
+    };
+    var expectedParams = {
+        Bucket: bucket
+    };
 
+    var errorMessage = 'Error listing objects';
+    var s3 = {
+        listObjectsV2: function (params, callback) {
+            t.deepEqual(params, expectedParams);
+            var err = new Error(errorMessage);
+            callback(err, {});
+        }
+    };
+    var storage = createStorage(s3, config);
+
+    return storage.getAllVideoItems()
+        .then(function () {
+            t.fail();
+        })
+        .catch(function (err) {
+            t.ok(err.message.includes('unable to get all video items'));
+            t.ok(err.message.includes(errorMessage));
+        });
 });
 
-test('s3Storage - isStored - s3 client fails', function (t) {
+var invalidResponses = [
+    {},
+    { foo: 'bar' },
+    {
+        Contents: 'foo'
+    },
+    {
+        Contents: [
+            { Key: '/foo/bar' },
+            'foo'
+        ]
+    },
+    {
+        Contents: [
+            { Key: '/foo/bar' },
+            {}
+        ]
+    },
+    {
+        Contents: [
+            { Key: '/foo/bar' },
+            { foo: 'bar' }
+        ]
+    }
+];
 
+invalidResponses.forEach(function (invalidResponse, index) {
+    test('s3Storage - getAllVideoItems - s3 client returns invalid response #' + index, function (t) {
+        var bucket = 'bucketFoo';
+        var config = {
+            bucket: bucket
+        };
+        var expectedParams = {
+            Bucket: bucket
+        };
+
+        var s3 = {
+            listObjectsV2: function (params, callback) {
+                t.deepEqual(params, expectedParams);
+                var err = null;
+                callback(err, invalidResponse);
+            }
+        };
+        var storage = createStorage(s3, config);
+
+        return storage.getAllVideoItems()
+            .then(function () {
+                t.fail();
+            })
+            .catch(function (err) {
+                console.log(err);
+                t.ok(err.message.includes('unable to get all video items'));
+                t.ok(err.message.includes(JSON.stringify(invalidResponse)));
+            });
+    });
 });
 
-test('s3Storage - isStored - s3 client returns invalid response', function (t) {
+var invalidKeys = [];
 
-});
+invalidKeys.forEach(function (invalidKey, index) {
+    test('s3Storage - getAllVideoItems - s3 client returns invalid key', function (t) {
 
-test('s3Storage - isStored - s3 client returns invalid key', function (t) {
-
+    });
 });
 
 /**
