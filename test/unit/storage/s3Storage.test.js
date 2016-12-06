@@ -234,7 +234,6 @@ invalidResponses.forEach(function (invalidResponse, index) {
                 t.fail();
             })
             .catch(function (err) {
-                console.log(err);
                 t.ok(err.message.includes('unable to get all video items'));
                 t.ok(err.message.includes(JSON.stringify(invalidResponse)));
             });
@@ -285,7 +284,6 @@ invalidKeys.forEach(function (invalidKey, index) {
                 t.fail();
             })
             .catch(function (err) {
-                console.log(err);
                 t.ok(err.message.includes('unable to get all video items'));
                 t.ok(err.message.includes(JSON.stringify(invalidKey)));
             });
