@@ -1,5 +1,4 @@
 var test = require('blue-tape');
-var sinon = require('sinon');
 var baserequire = require('base-require');
 var createStorage = baserequire('src/storage/s3Storage');
 
@@ -242,11 +241,54 @@ invalidResponses.forEach(function (invalidResponse, index) {
     });
 });
 
-var invalidKeys = [];
+var invalidKeys = [
+    '',
+    '/',
+    '//',
+    '///',
+    'foo',
+    '//foo',
+    'foo//',
+    '/foo/',
+    '//foo/',
+    '/foo//'
+];
 
 invalidKeys.forEach(function (invalidKey, index) {
-    test('s3Storage - getAllVideoItems - s3 client returns invalid key', function (t) {
+    test('s3Storage - getAllVideoItems - s3 response contains invalid key #' + index, function (t) {
+        var bucket = 'bucketFoo';
+        var config = {
+            bucket: bucket
+        };
+        var expectedParams = {
+            Bucket: bucket
+        };
 
+        var s3ClientResponseData = {
+            Contents: [
+                { Key: '/foo/bar' },
+                { Key: invalidKey }
+            ]
+        };
+
+        var s3 = {
+            listObjectsV2: function (params, callback) {
+                t.deepEqual(params, expectedParams);
+                var err = null;
+                callback(err, s3ClientResponseData);
+            }
+        };
+        var storage = createStorage(s3, config);
+
+        return storage.getAllVideoItems()
+            .then(function () {
+                t.fail();
+            })
+            .catch(function (err) {
+                console.log(err);
+                t.ok(err.message.includes('unable to get all video items'));
+                t.ok(err.message.includes(JSON.stringify(invalidKey)));
+            });
     });
 });
 

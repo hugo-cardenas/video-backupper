@@ -121,8 +121,8 @@ module.exports = function (s3, config) {
         try {
             return data.Contents.map(function (elem, index) {
                 var key = elem.Key;
-                if (key === '' || key === undefined) {
-                    throw new VError('Invalid empty key at index %d', index);
+                if (key === undefined) {
+                    throw new VError('Undefined key at index %d', index);
                 }
                 return key;
             });
@@ -146,6 +146,10 @@ module.exports = function (s3, config) {
         });
     }
 
+    /**
+     * @param {any} key
+     * @returns {Object} Video item object
+     */
     function buildVideoItemFromKey(key) {
         var parts = key.split('/');
         // Example: /playlistFoo/videoBar
@@ -155,7 +159,7 @@ module.exports = function (s3, config) {
                 videoName: parts[2]
             };
         }
-        // TODO Throw error
+        throw new VError('Invalid key "%s"', JSON.stringify(key));
     }
 
     /**
