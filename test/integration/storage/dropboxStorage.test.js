@@ -54,18 +54,7 @@ test('dropboxStorage - save - succeeds', options, function (t) {
 
     var dropbox = getDropbox();
 
-    return listFiles(dropbox, '')
-        // Clean test dropbox dir
-        .then(function (files) {
-            var deleteFilePromises = files.map(function (file) {
-                return deleteFile(dropbox, file);
-            });
-            return Promise.all(deleteFilePromises);
-        })
-        // Verify that dir is empty after cleaning
-        .then(function () {
-            return assertFiles(t, dropbox, '', []);
-        })
+    return cleanDropboxFiles(t)
         // Save 3 elements
         .then(function () {
             return Promise.all([
@@ -115,6 +104,59 @@ test('dropboxStorage - save - overwrite file', options, function (t) {
     var dropboxFilePath1 = '/' + playlistName1.toLowerCase() + '/' + videoName1.toLowerCase() + '.' + extension;
     var dropbox = getDropbox();
 
+    return cleanDropboxFiles(t)
+        // Save video1
+        .then(function () {
+            return storage.save(stream1, videoItem1);
+        })
+        // Save a different stream on the same video id
+        .then(function () {
+            return storage.save(stream2, videoItem1);
+        })
+        // Assert the file contents
+        .then(function () {
+            return assertFileContents(t, dropbox, dropboxFilePath1, file2);
+        })
+        .then(function () {
+            cleanTmpFiles();
+            return Promise.resolve();
+        });
+});
+
+test.skip('dropboxStorage - save and getAllVideoItems - succeeds', options, function (t) {
+    var storage = storageLocator.getStorageManager().getStorage('dropbox');
+
+    var file1 = './test/integration/storage/video1.mp4';
+    var file2 = './test/integration/storage/video2.mp4';
+    var file3 = './test/integration/storage/video3.mp4';
+
+    var stream1 = fs.createReadStream(file1);
+    var stream2 = fs.createReadStream(file2);
+    var stream3 = fs.createReadStream(file3);
+
+    var playlistName1 = 'playlist 1';
+    var playlistName2 = 'playlist 2';
+    var videoName1 = 'video 1';
+    var videoName2 = 'video 2';
+    var videoName3 = 'video 3';
+
+    var videoItem1 = {
+        playlistName: playlistName1,
+        videoName: videoName1
+    };
+    var videoItem2 = {
+        playlistName: playlistName1,
+        videoName: videoName2
+    };
+    var videoItem3 = {
+        playlistName: playlistName2,
+        videoName: videoName3
+    };
+
+    var expectedVideoItems = [videoItem1, videoItem2, videoItem3];
+
+    var dropbox = getDropbox();
+
     return listFiles(dropbox, '')
         // Clean test dropbox dir
         .then(function (files) {
@@ -127,17 +169,23 @@ test('dropboxStorage - save - overwrite file', options, function (t) {
         .then(function () {
             return assertFiles(t, dropbox, '', []);
         })
-        // Save video1
+        // Save 3 elements
         .then(function () {
-            return storage.save(stream1, videoItem1);
+            return Promise.all([
+                storage.save(stream1, videoItem1),
+                storage.save(stream2, videoItem2),
+                storage.save(stream3, videoItem3)
+            ]);
         })
-        // Save a different stream on the same video id
+        // Assert getAllVideoItems returns all stored video items
         .then(function () {
-            return storage.save(stream2, videoItem1);
+            return storage.getAllVideoItems();
         })
-        // Assert the file contents
-        .then(function () {
-            return assertFileContents(t, dropbox, dropboxFilePath1, file2);
+        .then(function (storedVideoItems) {
+            t.equal(expectedVideoItems.length, storedVideoItems.length);
+            expectedVideoItems.forEach(function (expectedVideoItem) {
+                t.ok(storedVideoItems.includes(expectedVideoItem));
+            });
         })
         .then(function () {
             cleanTmpFiles();
@@ -282,6 +330,26 @@ function getDropbox() {
         });
     }
     return dropbox;
+}
+
+/**
+ * @param {Object} t Tape test object
+ * @returns {Promise}
+ */
+function cleanDropboxFiles(t) {
+    var dropbox = getDropbox();
+    return listFiles(dropbox, '')
+        // Clean test dropbox dir
+        .then(function (files) {
+            var deleteFilePromises = files.map(function (file) {
+                return deleteFile(dropbox, file);
+            });
+            return Promise.all(deleteFilePromises);
+        })
+        // Verify that dir is empty after cleaning
+        .then(function () {
+            return assertFiles(t, dropbox, '', []);
+        });
 }
 
 /**

@@ -125,6 +125,28 @@ module.exports = function (dropbox) {
     }
 
     /**
+     * return {Promise<string[]>}
+     */
+    function filesListFolder() {
+
+    }
+
+    /**
+     * @param {string} playlistName
+     * @returns {Promise<Object[]>} Resolves with array of video items
+     */
+    function getPlaylistVideoItems(playlistName) {
+
+    }
+
+    /**
+     * @returns {Promise<Object[]>} Resolves with array of stored video items
+     */
+    function getAllVideoItems() {
+        return [];
+    }
+
+    /**
      * @param {Stream} stream
      * @param {Object} videoItem
      * @returns {Promise}
@@ -146,6 +168,7 @@ module.exports = function (dropbox) {
     }
 
     return {
+        getAllVideoItems: getAllVideoItems,
         save: save
     };
 };
