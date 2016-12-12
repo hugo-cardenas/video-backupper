@@ -1,5 +1,6 @@
 var test = require('blue-tape');
 var sinon = require('sinon');
+var _ = require('lodash');
 var VError = require('verror');
 var Readable = require('stream').Readable;
 var baserequire = require('base-require');
@@ -280,6 +281,53 @@ test('dropboxStorage - save - upload fails with non parsable error', function (t
         });
 });
 
+test.only('dropboxStorage - getAllVideoItems - succeeds', function (t) {
+    var playlistName1 = 'playlist1';
+    var playlistName2 = 'playlist2';
+    var videoName1 = 'video1';
+    var videoName2 = 'video2';
+    var videoName3 = 'video3';
+
+    var videoItems = [
+        createVideoItem(playlistName1, videoName1),
+        createVideoItem(playlistName1, videoName2),
+        createVideoItem(playlistName2, videoName3)
+    ];
+
+    var dropbox = {
+        filesListFolder: function () {}
+    };
+
+    var expectedArg = {
+        path: '',
+        recursive: true
+    };
+
+    var dropboxResponse = createDropboxListFolderResponse(videoItems);
+
+    sinon.mock(dropbox).expects('filesListFolder')
+        .withArgs(expectedArg)
+        .returns(Promise.resolve(dropboxResponse));
+
+    var storage = createDropboxStorage(dropbox);
+    return storage.getAllVideoItems()
+        .then(function (storedVideoItems) {
+            t.deepEqual(storedVideoItems, videoItems);
+        });
+});
+
+test('dropboxStorage - getAllVideoItems - succeeds with multiple pages', function (t) {});
+
+test('dropboxStorage - getAllVideoItems - list folder fails', function (t) {});
+
+test('dropboxStorage - getAllVideoItems - list folder fails with non parsable error', function (t) {});
+
+test('dropboxStorage - getAllVideoItems - list folder fails after the first successful page', function (t) {});
+
+test('dropboxStorage - getAllVideoItems - list folder contains invalid name', function (t) {});
+
+test('dropboxStorage - getAllVideoItems - list folder contains invalid path', function (t) {});
+
 /**
  * Create a readable stream with the specified contents
  * @param {string} contents
@@ -290,4 +338,79 @@ function createReadableStream(contents) {
     stream.push(contents);
     stream.push(null);
     return stream;
+}
+
+/**
+ * @param {string} playlistName
+ * @param {string} videoName
+ * @returns {Object} Video item
+ */
+function createVideoItem(playlistName, videoName) {
+    return {
+        playlistName: playlistName,
+        videoName: videoName
+    };
+}
+
+/**
+ * @param {Object[]} videoItems
+ * @param {string} cursor Optional parameter
+ * @returns
+ */
+function createDropboxListFolderResponse(videoItems, cursor) {
+    var response = {
+        entries: createListFolderResponseEntries(videoItems),
+        hasMore: false
+    };
+    if (cursor) {
+        response.cursor = cursor;
+        response.hasMore = true;
+    }
+    return response;
+}
+
+/**
+ * @param {Object[]} videoItems
+ * @returns {Object[]}
+ */
+function createListFolderResponseEntries(videoItems) {
+    var playlistNames = _.uniq(
+        videoItems.map(function (videoItem) {
+            return videoItem.playlistName;
+        })
+    );
+
+    var fileEntries = videoItems.map(function (videoItem) {
+        return createResponseFileEntry(videoItem);
+    });
+    var folderEntries = playlistNames.map(function (playlistName) {
+        return createResponseFolderEntry(playlistName);
+    });
+
+    return _.shuffle(fileEntries.concat(folderEntries));
+}
+
+/**
+ * @param {Object} videoItem
+ * @returns {Object}
+ */
+function createResponseFileEntry(videoItem) {
+    var name = videoItem.videoName + '.foo';
+    var pathDisplay = '/' + videoItem.playlistName + '/' + name;
+    return {
+        '.tag': 'file',
+        name: name,
+        path_display: pathDisplay
+    };
+}
+
+/**
+ * @param {string} playlistName
+ * @returns {Object}
+ */
+function createResponseFolderEntry(playlistName) {
+    return {
+        '.tag': 'folder',
+        name: playlistName
+    };
 }

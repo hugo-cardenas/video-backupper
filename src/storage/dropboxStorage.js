@@ -99,8 +99,16 @@ module.exports = function (dropbox) {
      * @param {Error} err
      * @returns {Error}
      */
-    function createError(videoItem, err) {
+    function createSaveError(videoItem, err) {
         return new VError(err, 'Dropbox storage unable to save stream for videoItem %s', JSON.stringify(videoItem));
+    }
+
+    /**
+     * @param {Error} err
+     * @returns {Error}
+     */
+    function createGetAllVideoItemsError(err) {
+        return new VError(err, 'Dropbox storage unable to get all video items');
     }
 
     /**
@@ -128,22 +136,78 @@ module.exports = function (dropbox) {
      * return {Promise<string[]>}
      */
     function filesListFolder() {
-
+        var arg = {
+            path: '',
+            recursive: true
+        };
+        return dropbox.filesListFolder(arg);
     }
 
     /**
-     * @param {string} playlistName
-     * @returns {Promise<Object[]>} Resolves with array of video items
+     * @param {Object} response
+     * @returns {Object[]}
      */
-    function getPlaylistVideoItems(playlistName) {
+    function getVideoItemsFromResponse(response) {
+        return response.entries
+            .filter(function (entry) {
+                validateNonFalsyProperties(entry, ['.tag']);
+                return entry['.tag'] === 'file';
+            })
+            .map(getVideoItemFromResponseEntry);
+    }
 
+    /**
+     * @param {Object} entry
+     * @returns {Object}
+     */
+    function getVideoItemFromResponseEntry(entry) {
+        validateNonFalsyProperties(entry, ['name', 'path_display']);
+        return {
+            videoName: entry.name,
+            playlistName: getPlaylistNameFromPath(entry.path_display)
+        };
+    }
+
+    function getVideoNameFromEntryName(name) {
+        // Example: /playlistFoo/videoBar.foo
+        var parts = name.split('.');
+    }
+
+    /**
+     * @param {string} path
+     * @returns {string}
+     */
+    function getPlaylistNameFromPath(path) {
+        // Example: /playlistFoo/videoBar.foo
+        var parts = path.split('/');
+        if (parts[1] && parts[2]) {
+            return parts[1];
+        }
+        throw new VError('Invalid path "%s"', JSON.stringify(path));
+    }
+
+    /**
+     * @param {Object} object
+     * @param {string[]} properties
+     */
+    function validateNonFalsyProperties(object, properties) {
+        var missingProperties = properties.filter(function (property) {
+            return !object[property];
+        });
+        if (missingProperties.length > 0) {
+            throw new VError('Missing or empty properties %s in object %s', JSON.stringify(missingProperties), JSON.stringify(object));
+        }
     }
 
     /**
      * @returns {Promise<Object[]>} Resolves with array of stored video items
      */
     function getAllVideoItems() {
-        return [];
+        return filesListFolder()
+            .then(getVideoItemsFromResponse)
+            .catch(function (err) {
+                throw createGetAllVideoItemsError(err);
+            });
     }
 
     /**
@@ -163,7 +227,7 @@ module.exports = function (dropbox) {
                 return saveStream(dropboxPath, stream);
             })
             .catch(function (err) {
-                return Promise.reject(createError(videoItem, err));
+                return Promise.reject(createSaveError(videoItem, err));
             });
     }
 

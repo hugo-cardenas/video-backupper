@@ -123,7 +123,7 @@ test('dropboxStorage - save - overwrite file', options, function (t) {
         });
 });
 
-test.skip('dropboxStorage - save and getAllVideoItems - succeeds', options, function (t) {
+test.only('dropboxStorage - save and getAllVideoItems - succeeds', options, function (t) {
     var storage = storageLocator.getStorageManager().getStorage('dropbox');
 
     var file1 = './test/integration/storage/video1.mp4';
@@ -155,20 +155,7 @@ test.skip('dropboxStorage - save and getAllVideoItems - succeeds', options, func
 
     var expectedVideoItems = [videoItem1, videoItem2, videoItem3];
 
-    var dropbox = getDropbox();
-
-    return listFiles(dropbox, '')
-        // Clean test dropbox dir
-        .then(function (files) {
-            var deleteFilePromises = files.map(function (file) {
-                return deleteFile(dropbox, file);
-            });
-            return Promise.all(deleteFilePromises);
-        })
-        // Verify that dir is empty after cleaning
-        .then(function () {
-            return assertFiles(t, dropbox, '', []);
-        })
+    return cleanDropboxFiles(t)
         // Save 3 elements
         .then(function () {
             return Promise.all([
@@ -186,10 +173,6 @@ test.skip('dropboxStorage - save and getAllVideoItems - succeeds', options, func
             expectedVideoItems.forEach(function (expectedVideoItem) {
                 t.ok(storedVideoItems.includes(expectedVideoItem));
             });
-        })
-        .then(function () {
-            cleanTmpFiles();
-            return Promise.resolve();
         });
 });
 
