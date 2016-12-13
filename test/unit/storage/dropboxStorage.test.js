@@ -282,11 +282,11 @@ test('dropboxStorage - save - upload fails with non parsable error', function (t
 });
 
 test.only('dropboxStorage - getAllVideoItems - succeeds', function (t) {
-    var playlistName1 = 'playlist1';
-    var playlistName2 = 'playlist2';
-    var videoName1 = 'video1';
-    var videoName2 = 'video2';
-    var videoName3 = 'video3';
+    var playlistName1 = 'Playlist 1';
+    var playlistName2 = 'Playlist 2';
+    var videoName1 = 'Video 1';
+    var videoName2 = 'Video 2';
+    var videoName3 = 'Video 3';
 
     var videoItems = [
         createVideoItem(playlistName1, videoName1),
@@ -312,7 +312,7 @@ test.only('dropboxStorage - getAllVideoItems - succeeds', function (t) {
     var storage = createDropboxStorage(dropbox);
     return storage.getAllVideoItems()
         .then(function (storedVideoItems) {
-            t.deepEqual(storedVideoItems, videoItems);
+            assertVideoItems(t, storedVideoItems, videoItems);
         });
 });
 
@@ -327,6 +327,8 @@ test('dropboxStorage - getAllVideoItems - list folder fails after the first succ
 test('dropboxStorage - getAllVideoItems - list folder contains invalid name', function (t) {});
 
 test('dropboxStorage - getAllVideoItems - list folder contains invalid path', function (t) {});
+
+test('dropboxStorage - getAllVideoItems - list folder is missing folder entry', function (t) {});
 
 /**
  * Create a readable stream with the specified contents
@@ -396,11 +398,13 @@ function createListFolderResponseEntries(videoItems) {
  */
 function createResponseFileEntry(videoItem) {
     var name = videoItem.videoName + '.foo';
-    var pathDisplay = '/' + videoItem.playlistName + '/' + name;
+    var pathDisplay = '/' + videoItem.playlistName.toLowerCase() + '/' + name;
+    var pathLower = pathDisplay.toLowerCase();
     return {
         '.tag': 'file',
         name: name,
-        path_display: pathDisplay
+        path_display: pathDisplay,
+        path_lower: pathLower
     };
 }
 
@@ -413,4 +417,17 @@ function createResponseFolderEntry(playlistName) {
         '.tag': 'folder',
         name: playlistName
     };
+}
+
+/**
+ * @param {Object} t Tape test object
+ * @param {Object[]} videoItems
+ * @param {Object[]} expectedVideoItems
+ */
+function assertVideoItems(t, videoItems, expectedVideoItems) {
+    t.equal(expectedVideoItems.length, videoItems.length);
+    // TODO Assert video items contained in any order
+    expectedVideoItems.forEach(function (expectedVideoItem) {
+        t.ok(videoItems.includes(expectedVideoItem));
+    });
 }

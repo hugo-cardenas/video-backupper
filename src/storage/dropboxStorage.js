@@ -148,29 +148,80 @@ module.exports = function (dropbox) {
      * @returns {Object[]}
      */
     function getVideoItemsFromResponse(response) {
-        return response.entries
-            .filter(function (entry) {
-                validateNonFalsyProperties(entry, ['.tag']);
-                return entry['.tag'] === 'file';
-            })
-            .map(getVideoItemFromResponseEntry);
+        console.log(response);
+        var entries = response.entries;
+        var playlistNames = getPlaylistNamesFromEntries(entries);
+        return getVideoItemsFromEntries(entries, playlistNames);
+    }
+
+    /**
+     * @param {Object[]} entries
+     * @returns {string[]}
+     */
+    function getPlaylistNamesFromEntries(entries) {
+        return filterEntries(entries, 'folder')
+            .map(function (entry) {
+                return entry.name;
+            });
+    };
+
+    function getVideoItemsFromEntries(entries, playlistNames) {
+        return filterEntries(entries, 'file')
+            .map(function (entry) {
+                return getVideoItemFromResponseEntry(entry, playlistNames);
+            });
+    }
+
+    /**
+     * @param {Object[]} entries
+     * @param {string} type
+     * @returns {Object[]}
+     */
+    function filterEntries(entries, type) {
+        return entries.filter(function (entry) {
+            validateNonFalsyProperties(entry, ['.tag']);
+            return entry['.tag'] === type;
+        });
     }
 
     /**
      * @param {Object} entry
      * @returns {Object}
      */
-    function getVideoItemFromResponseEntry(entry) {
+    function getVideoItemFromResponseEntry(entry, playlistNames) {
         validateNonFalsyProperties(entry, ['name', 'path_display']);
+
+        var lowerCasePlaylistName = getPlaylistNameFromPath(entry.path_display);
+        var playlistName = playlistNames.find(function (playlistName) {
+            return playlistName.toLowerCase() === lowerCasePlaylistName;
+        });
+        if (!playlistName) {
+            throw new VError(
+                'Playlist name not found for entry %s and playlist names %s',
+                JSON.stringify(entry),
+                JSON.stringify(playlistNames)
+            );
+        }
+
+        var videoName = getVideoNameFromEntryName(entry.name);
+
         return {
-            videoName: entry.name,
-            playlistName: getPlaylistNameFromPath(entry.path_display)
+            videoName: videoName,
+            playlistName: playlistName
         };
     }
 
+    /**
+     * @param {string} name
+     * @returns {string}
+     */
     function getVideoNameFromEntryName(name) {
-        // Example: /playlistFoo/videoBar.foo
+        // Example: videoBar.foo
         var parts = name.split('.');
+        if (parts.length >= 2) {
+            return parts[parts.length - 2];
+        }
+        throw new VError('Invalid video name "%s"', name);
     }
 
     /**

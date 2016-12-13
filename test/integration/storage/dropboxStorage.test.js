@@ -134,11 +134,11 @@ test.only('dropboxStorage - save and getAllVideoItems - succeeds', options, func
     var stream2 = fs.createReadStream(file2);
     var stream3 = fs.createReadStream(file3);
 
-    var playlistName1 = 'playlist 1';
-    var playlistName2 = 'playlist 2';
-    var videoName1 = 'video 1';
-    var videoName2 = 'video 2';
-    var videoName3 = 'video 3';
+    var playlistName1 = 'PlayList 1';
+    var playlistName2 = 'PlayList 2';
+    var videoName1 = 'Video 1';
+    var videoName2 = 'Video 2';
+    var videoName3 = 'Video 3';
 
     var videoItem1 = {
         playlistName: playlistName1,
