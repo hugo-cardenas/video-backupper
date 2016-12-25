@@ -18,6 +18,36 @@ module.exports = function (dropbox) {
     var extension = 'mp4';
 
     /**
+     * @param {Stream} stream
+     * @param {Object} videoItem
+     * @returns {Promise}
+     */
+    function save(stream, videoItem) {
+        return Promise.resolve()
+            .then(function () {
+                validateVideoItem(videoItem);
+            })
+            .then(function () {
+                return getDropboxPath(videoItem);
+            })
+            .then(function (dropboxPath) {
+                return saveStream(dropboxPath, stream);
+            })
+            .catch(function (err) {
+                return Promise.reject(createSaveError(videoItem, err));
+            });
+    }
+
+    /**
+     * @param {Object} videoItem
+     * @param {Error} err
+     * @returns {Error}
+     */
+    function createSaveError(videoItem, err) {
+        return new VError(err, 'Dropbox storage unable to save stream for videoItem %s', JSON.stringify(videoItem));
+    }
+
+    /**
      * @param {Readable} stream
      * @returns {Promise<Buffer, Error>} Resolves with a buffer containing the stream contents
      */
@@ -94,23 +124,7 @@ module.exports = function (dropbox) {
                 return Promise.resolve(dirPath + '/' + videoItem.videoName + '.' + extension);
             });
     }
-    /**
-     * @param {Object} videoItem
-     * @param {Error} err
-     * @returns {Error}
-     */
-    function createSaveError(videoItem, err) {
-        return new VError(err, 'Dropbox storage unable to save stream for videoItem %s', JSON.stringify(videoItem));
-    }
-
-    /**
-     * @param {Error} err
-     * @returns {Error}
-     */
-    function createGetAllVideoItemsError(err) {
-        return new VError(err, 'Dropbox storage unable to get all video items');
-    }
-
+    
     /**
      * Save file contents to dropbox path
      * @param {string} dropboxPath
@@ -133,7 +147,52 @@ module.exports = function (dropbox) {
     }
 
     /**
-     * return {Promise<string[]>}
+     * @returns {Promise<Object[]>} Resolves with array of stored video items
+     */
+    function getAllVideoItems() {
+        return getFolderEntries()
+            .then(getVideoItemsFromEntries)
+            .catch(function (err) {
+                throw createGetAllVideoItemsError(err);
+            });
+    }
+
+    /**
+     * @param {Error} err
+     * @returns {Error}
+     */
+    function createGetAllVideoItemsError(err) {
+        return new VError(err, 'Dropbox storage unable to get all video items');
+    }
+
+    /**
+     * @returns {Promise<Object[]>}
+     */
+    function getFolderEntries() {
+        return filesListFolder()
+            .then(getEntriesFromResponse);
+    }
+
+    /**
+     * @param {Object} response
+     * @returns {Promise<Object[]>}
+     */
+    function getEntriesFromResponse(response) {
+        var entries = response.entries;
+
+        if (!response.hasMore) {
+            return Promise.resolve(entries);
+        }
+
+        return filesListFolderContinue(response.cursor)
+            .then(getEntriesFromResponse)
+            .then(function (additionalEntries) {
+                return entries.concat(additionalEntries);
+            });
+    }
+
+    /**
+     * returns {Promise}
      */
     function filesListFolder() {
         var arg = {
@@ -144,14 +203,21 @@ module.exports = function (dropbox) {
     }
 
     /**
-     * @param {Object} response
+     * @param {string} cursor
+     * @returns {Promise}
+     */
+    function filesListFolderContinue(cursor) {
+        var arg = { cursor: cursor };
+        return dropbox.filesListFolderContinue(arg);
+    }
+
+    /**
+     * @param {Object[]} entries
      * @returns {Object[]}
      */
-    function getVideoItemsFromResponse(response) {
-        console.log(response);
-        var entries = response.entries;
+    function getVideoItemsFromEntries(entries) {
         var playlistNames = getPlaylistNamesFromEntries(entries);
-        return getVideoItemsFromEntries(entries, playlistNames);
+        return getVideoItemsFromEntriesAndPlaylistNames(entries, playlistNames);
     }
 
     /**
@@ -165,7 +231,12 @@ module.exports = function (dropbox) {
             });
     };
 
-    function getVideoItemsFromEntries(entries, playlistNames) {
+    /**
+     * @param {Object[]} entries
+     * @param {string[]} playlistNames
+     * @returns {Object[]}
+     */
+    function getVideoItemsFromEntriesAndPlaylistNames(entries, playlistNames) {
         return filterEntries(entries, 'file')
             .map(function (entry) {
                 return getVideoItemFromResponseEntry(entry, playlistNames);
@@ -248,38 +319,6 @@ module.exports = function (dropbox) {
         if (missingProperties.length > 0) {
             throw new VError('Missing or empty properties %s in object %s', JSON.stringify(missingProperties), JSON.stringify(object));
         }
-    }
-
-    /**
-     * @returns {Promise<Object[]>} Resolves with array of stored video items
-     */
-    function getAllVideoItems() {
-        return filesListFolder()
-            .then(getVideoItemsFromResponse)
-            .catch(function (err) {
-                throw createGetAllVideoItemsError(err);
-            });
-    }
-
-    /**
-     * @param {Stream} stream
-     * @param {Object} videoItem
-     * @returns {Promise}
-     */
-    function save(stream, videoItem) {
-        return Promise.resolve()
-            .then(function () {
-                validateVideoItem(videoItem);
-            })
-            .then(function () {
-                return getDropboxPath(videoItem);
-            })
-            .then(function (dropboxPath) {
-                return saveStream(dropboxPath, stream);
-            })
-            .catch(function (err) {
-                return Promise.reject(createSaveError(videoItem, err));
-            });
     }
 
     return {

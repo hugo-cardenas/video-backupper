@@ -281,7 +281,7 @@ test('dropboxStorage - save - upload fails with non parsable error', function (t
         });
 });
 
-test.only('dropboxStorage - getAllVideoItems - succeeds', function (t) {
+test('dropboxStorage - getAllVideoItems - succeeds', function (t) {
     var playlistName1 = 'Playlist 1';
     var playlistName2 = 'Playlist 2';
     var videoName1 = 'Video 1';
@@ -316,10 +316,99 @@ test.only('dropboxStorage - getAllVideoItems - succeeds', function (t) {
         });
 });
 
-test('dropboxStorage - getAllVideoItems - succeeds with multiple pages', function (t) {});
+test('dropboxStorage - getAllVideoItems - succeeds with multiple pages', function (t) {
+    var playlistName1 = 'Playlist 1';
+    var playlistName2 = 'Playlist 2';
+    var playlistName3 = 'Playlist 3';
+    var videoName1 = 'Video 1';
+    var videoName2 = 'Video 2';
+    var videoName3 = 'Video 3';
+    var videoName4 = 'Video 4';
+    var videoName5 = 'Video 5';
+    var videoName6 = 'Video 6';
 
-test('dropboxStorage - getAllVideoItems - list folder fails', function (t) {});
+    var videoItems = [
+        createVideoItem(playlistName1, videoName1),
+        createVideoItem(playlistName1, videoName2),
+        createVideoItem(playlistName2, videoName3),
+        createVideoItem(playlistName2, videoName4),
+        createVideoItem(playlistName3, videoName5),
+        createVideoItem(playlistName3, videoName6)
+    ];
 
+    var cursor1 = 'cursor1';
+    var cursor2 = 'cursor2';
+
+    var expectedArg1 = {
+        path: '',
+        recursive: true
+    };
+    var expectedArg2 = { cursor: cursor1 };
+    var expectedArg3 = { cursor: cursor2 };
+
+    var dropboxResponse1 = createDropboxListFolderResponse(videoItems.slice(0, 2), cursor1);
+    var dropboxResponse2 = createDropboxListFolderResponse(videoItems.slice(2, 4), cursor2);
+    var dropboxResponse3 = createDropboxListFolderResponse(videoItems.slice(4, 6));
+
+    var dropbox = {
+        filesListFolder: sinon.stub(),
+        filesListFolderContinue: sinon.stub()
+    };
+    dropbox.filesListFolder
+        .withArgs(expectedArg1)
+        .returns(Promise.resolve(dropboxResponse1));
+    dropbox.filesListFolderContinue
+        .withArgs(expectedArg2)
+        .returns(Promise.resolve(dropboxResponse2));
+    dropbox.filesListFolderContinue
+        .withArgs(expectedArg3)
+        .returns(Promise.resolve(dropboxResponse3));
+
+    var storage = createDropboxStorage(dropbox);
+    return storage.getAllVideoItems()
+        .then(function (storedVideoItems) {
+            assertVideoItems(t, storedVideoItems, videoItems);
+        });
+});
+
+test.skip('dropboxStorage - getAllVideoItems - list folder fails', function (t) {
+    t.end();
+    return;
+
+    var playlistName1 = 'Playlist 1';
+    var playlistName2 = 'Playlist 2';
+    var videoName1 = 'Video 1';
+    var videoName2 = 'Video 2';
+    var videoName3 = 'Video 3';
+
+    var videoItems = [
+        createVideoItem(playlistName1, videoName1),
+        createVideoItem(playlistName1, videoName2),
+        createVideoItem(playlistName2, videoName3)
+    ];
+
+    var dropbox = {
+        filesListFolder: function () {}
+    };
+
+    var expectedArg = {
+        path: '',
+        recursive: true
+    };
+
+    var dropboxResponse = createDropboxListFolderResponse(videoItems);
+
+    sinon.mock(dropbox).expects('filesListFolder')
+        .withArgs(expectedArg)
+        .returns(Promise.resolve(dropboxResponse));
+
+    var storage = createDropboxStorage(dropbox);
+    return storage.getAllVideoItems()
+        .then(function (storedVideoItems) {
+            assertVideoItems(t, storedVideoItems, videoItems);
+        });
+});
+/*
 test('dropboxStorage - getAllVideoItems - list folder fails with non parsable error', function (t) {});
 
 test('dropboxStorage - getAllVideoItems - list folder fails after the first successful page', function (t) {});
@@ -329,7 +418,7 @@ test('dropboxStorage - getAllVideoItems - list folder contains invalid name', fu
 test('dropboxStorage - getAllVideoItems - list folder contains invalid path', function (t) {});
 
 test('dropboxStorage - getAllVideoItems - list folder is missing folder entry', function (t) {});
-
+*/
 /**
  * Create a readable stream with the specified contents
  * @param {string} contents
@@ -426,8 +515,10 @@ function createResponseFolderEntry(playlistName) {
  */
 function assertVideoItems(t, videoItems, expectedVideoItems) {
     t.equal(expectedVideoItems.length, videoItems.length);
-    // TODO Assert video items contained in any order
     expectedVideoItems.forEach(function (expectedVideoItem) {
-        t.ok(videoItems.includes(expectedVideoItem));
+        t.ok(videoItems.find(function (videoItem) {
+            return (videoItem.playlistName === expectedVideoItem.playlistName &&
+                videoItem.videoName === expectedVideoItem.videoName);
+        }));
     });
 }
