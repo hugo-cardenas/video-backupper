@@ -105,7 +105,7 @@ invalidVideoItems.forEach(function (videoItem, index) {
                 t.fail();
             })
             .catch(function (err) {
-                t.ok(err.message.includes(JSON.stringify(videoItem)));
+                assertSaveError(t, err, videoItem);
             });
     });
 });
@@ -140,8 +140,7 @@ test('dropboxStorage - save - folder creation fails with non solvable error', fu
             t.fail('Should throw error');
         })
         .catch(function (err) {
-            t.ok(err.message.includes('unable to save stream'));
-            t.ok(err.message.includes(JSON.stringify(videoItem)));
+            assertSaveError(t, err, videoItem);
             t.ok(err.message.includes(errorMessage));
             t.equal(VError.info(VError.cause(err)).responseError, JSON.stringify(promiseError));
             return Promise.resolve();
@@ -175,8 +174,7 @@ test('dropboxStorage - save - folder creation fails with non parsable error', fu
             t.fail('Should throw error');
         })
         .catch(function (err) {
-            t.ok(err.message.includes('unable to save stream'));
-            t.ok(err.message.includes(JSON.stringify(videoItem)));
+            assertSaveError(t, err, videoItem);
             t.ok(err.message.includes('Unable to parse response error'));
             t.equal(VError.info(VError.cause(err)).responseError, JSON.stringify(promiseError));
             return Promise.resolve();
@@ -227,8 +225,7 @@ test('dropboxStorage - save - upload fails', function (t) {
             t.fail('Should throw error');
         })
         .catch(function (err) {
-            t.ok(err.message.includes('unable to save stream'));
-            t.ok(err.message.includes(JSON.stringify(videoItem)));
+            assertSaveError(t, err, videoItem);
             t.ok(err.message.includes(errorMessage));
             t.equal(VError.info(VError.cause(err)).responseError, JSON.stringify(promiseError));
             return Promise.resolve();
@@ -273,8 +270,7 @@ test('dropboxStorage - save - upload fails with non parsable error', function (t
     var storage = createDropboxStorage(dropbox);
     return storage.save(stream, videoItem)
         .catch(function (err) {
-            t.ok(err.message.includes('unable to save stream'));
-            t.ok(err.message.includes(JSON.stringify(videoItem)));
+            assertSaveError(t, err, videoItem);
             t.ok(err.message.includes('Unable to parse response error'));
             t.equal(VError.info(VError.cause(err)).responseError, JSON.stringify(promiseError));
             return Promise.resolve();
@@ -371,24 +367,9 @@ test('dropboxStorage - getAllVideoItems - succeeds with multiple pages', functio
         });
 });
 
-test.skip('dropboxStorage - getAllVideoItems - list folder fails', function (t) {
-    t.end();
-    return;
-
-    var playlistName1 = 'Playlist 1';
-    var playlistName2 = 'Playlist 2';
-    var videoName1 = 'Video 1';
-    var videoName2 = 'Video 2';
-    var videoName3 = 'Video 3';
-
-    var videoItems = [
-        createVideoItem(playlistName1, videoName1),
-        createVideoItem(playlistName1, videoName2),
-        createVideoItem(playlistName2, videoName3)
-    ];
-
+test('dropboxStorage - getAllVideoItems - list folder fails', function (t) {
     var dropbox = {
-        filesListFolder: function () {}
+        filesListFolder: sinon.stub()
     };
 
     var expectedArg = {
@@ -396,29 +377,190 @@ test.skip('dropboxStorage - getAllVideoItems - list folder fails', function (t) 
         recursive: true
     };
 
-    var dropboxResponse = createDropboxListFolderResponse(videoItems);
+    var errorMessage = 'FilesListFolder failed';
+    dropbox.filesListFolder
+        .withArgs(expectedArg)
+        .returns(Promise.reject(new Error(errorMessage)));
 
-    sinon.mock(dropbox).expects('filesListFolder')
+    var storage = createDropboxStorage(dropbox);
+    return storage.getAllVideoItems()
+        .then(function () {
+            t.fail();
+        })
+        .catch(function (err) {
+            assertGetAllVideoItemsError(t, err);
+            t.ok(err.message.includes(errorMessage));
+        });
+});
+
+test('dropboxStorage - getAllVideoItems - list folder fails after the first successful page', function (t) {
+    var playlistName1 = 'Playlist 1';
+    var playlistName2 = 'Playlist 2';
+    var playlistName3 = 'Playlist 3';
+    var videoName1 = 'Video 1';
+    var videoName2 = 'Video 2';
+    var videoName3 = 'Video 3';
+    var videoName4 = 'Video 4';
+    var videoName5 = 'Video 5';
+    var videoName6 = 'Video 6';
+
+    var videoItems = [
+        createVideoItem(playlistName1, videoName1),
+        createVideoItem(playlistName1, videoName2),
+        createVideoItem(playlistName2, videoName3),
+        createVideoItem(playlistName2, videoName4),
+        createVideoItem(playlistName3, videoName5),
+        createVideoItem(playlistName3, videoName6)
+    ];
+
+    var cursor1 = 'cursor1';
+
+    var expectedArg1 = {
+        path: '',
+        recursive: true
+    };
+    var expectedArg2 = { cursor: cursor1 };
+
+    var dropboxResponse1 = createDropboxListFolderResponse(videoItems.slice(0, 2), cursor1);
+
+    var errorMessage = 'FilesListFolderContinue failed';
+    var dropbox = {
+        filesListFolder: sinon.stub(),
+        filesListFolderContinue: sinon.stub()
+    };
+    dropbox.filesListFolder
+        .withArgs(expectedArg1)
+        .returns(Promise.resolve(dropboxResponse1));
+    dropbox.filesListFolderContinue
+        .withArgs(expectedArg2)
+        .returns(Promise.reject(new Error(errorMessage)));
+
+    var storage = createDropboxStorage(dropbox);
+    return storage.getAllVideoItems()
+        .then(function () {
+            t.fail();
+        })
+        .catch(function (err) {
+            assertGetAllVideoItemsError(t, err);
+            t.ok(err.message.includes(errorMessage));
+        });
+});
+
+test('dropboxStorage - getAllVideoItems - list folder contains invalid path', function (t) {
+    var playlistName1 = 'Playlist 1';
+    var videoName1 = 'Video 1';
+
+    var dropbox = {
+        filesListFolder: sinon.stub()
+    };
+
+    var expectedArg = {
+        path: '',
+        recursive: true
+    };
+
+    var path = '/foo';
+    var entries = [
+        createResponseFileEntry(videoName1 + '.foo', path),
+        createResponseFolderEntry(playlistName1)
+    ];
+    var dropboxResponse = createDropboxListFolderResponseWithEntries(entries);
+
+    dropbox.filesListFolder
         .withArgs(expectedArg)
         .returns(Promise.resolve(dropboxResponse));
 
     var storage = createDropboxStorage(dropbox);
     return storage.getAllVideoItems()
-        .then(function (storedVideoItems) {
-            assertVideoItems(t, storedVideoItems, videoItems);
+        .then(function () {
+            t.fail();
+        })
+        .catch(function (err) {
+            assertGetAllVideoItemsError(t, err);
+            t.ok(err.message.includes('Invalid path'));
+            t.ok(err.message.includes(path));
         });
 });
-/*
-test('dropboxStorage - getAllVideoItems - list folder fails with non parsable error', function (t) {});
 
-test('dropboxStorage - getAllVideoItems - list folder fails after the first successful page', function (t) {});
+test('dropboxStorage - getAllVideoItems - list folder contains invalid name', function (t) {
+    var playlistName1 = 'Playlist 1';
+    var videoName1 = 'Video 1';
 
-test('dropboxStorage - getAllVideoItems - list folder contains invalid name', function (t) {});
+    var dropbox = {
+        filesListFolder: sinon.stub()
+    };
 
-test('dropboxStorage - getAllVideoItems - list folder contains invalid path', function (t) {});
+    var expectedArg = {
+        path: '',
+        recursive: true
+    };
 
-test('dropboxStorage - getAllVideoItems - list folder is missing folder entry', function (t) {});
-*/
+    var entries = [
+        createResponseFileEntry(
+            videoName1, // File name is missing extension
+            ('/' + playlistName1 + '/' + videoName1).toLowerCase()
+        ),
+        createResponseFolderEntry(playlistName1)
+    ];
+    var dropboxResponse = createDropboxListFolderResponseWithEntries(entries);
+
+    dropbox.filesListFolder
+        .withArgs(expectedArg)
+        .returns(Promise.resolve(dropboxResponse));
+
+    var storage = createDropboxStorage(dropbox);
+    return storage.getAllVideoItems()
+        .then(function () {
+            t.fail();
+        })
+        .catch(function (err) {
+            assertGetAllVideoItemsError(t, err);
+            t.ok(err.message.includes('Invalid video name'));
+            t.ok(err.message.includes(videoName1));
+        });
+});
+
+test('dropboxStorage - getAllVideoItems - list folder is missing folder entry', function (t) {
+    var playlistName2 = 'Playlist 2';
+    var videoName1 = 'Video 1';
+
+    var dropbox = {
+        filesListFolder: sinon.stub()
+    };
+
+    var expectedArg = {
+        path: '',
+        recursive: true
+    };
+
+    var fileEntry = createResponseFileEntry(
+        videoName1 + '.foo',
+        '/playlist 1/bar'
+    );
+    var entries = [
+        fileEntry,
+        // Missing corresponding folder entry for the file entry
+        createResponseFolderEntry(playlistName2)
+    ];
+    var dropboxResponse = createDropboxListFolderResponseWithEntries(entries);
+
+    dropbox.filesListFolder
+        .withArgs(expectedArg)
+        .returns(Promise.resolve(dropboxResponse));
+
+    var storage = createDropboxStorage(dropbox);
+    return storage.getAllVideoItems()
+        .then(function () {
+            t.fail();
+        })
+        .catch(function (err) {
+            assertGetAllVideoItemsError(t, err);
+            t.ok(err.message.includes('Playlist name not found for entry'));
+            t.ok(err.message.includes(JSON.stringify(fileEntry)));
+            t.ok(err.message.includes(JSON.stringify([playlistName2])));
+        });
+});
+
 /**
  * Create a readable stream with the specified contents
  * @param {string} contents
@@ -446,11 +588,22 @@ function createVideoItem(playlistName, videoName) {
 /**
  * @param {Object[]} videoItems
  * @param {string} cursor Optional parameter
- * @returns
+ * @returns {Object}
  */
 function createDropboxListFolderResponse(videoItems, cursor) {
+    return createDropboxListFolderResponseWithEntries(
+        createListFolderResponseEntries(videoItems), cursor
+    );
+}
+
+/**
+ * @param {Object[]} entries
+ * @param {string} cursor Optional parameter
+ * @returns {Object}
+ */
+function createDropboxListFolderResponseWithEntries(entries, cursor) {
     var response = {
-        entries: createListFolderResponseEntries(videoItems),
+        entries: entries,
         hasMore: false
     };
     if (cursor) {
@@ -472,7 +625,7 @@ function createListFolderResponseEntries(videoItems) {
     );
 
     var fileEntries = videoItems.map(function (videoItem) {
-        return createResponseFileEntry(videoItem);
+        return createResponseFileEntryFromVideoItem(videoItem);
     });
     var folderEntries = playlistNames.map(function (playlistName) {
         return createResponseFolderEntry(playlistName);
@@ -485,9 +638,18 @@ function createListFolderResponseEntries(videoItems) {
  * @param {Object} videoItem
  * @returns {Object}
  */
-function createResponseFileEntry(videoItem) {
+function createResponseFileEntryFromVideoItem(videoItem) {
     var name = videoItem.videoName + '.foo';
     var pathDisplay = '/' + videoItem.playlistName.toLowerCase() + '/' + name;
+    return createResponseFileEntry(name, pathDisplay);
+}
+
+/**
+ * @param {string} name
+ * @param {string} pathDisplay
+ * @returns {Object}
+ */
+function createResponseFileEntry(name, pathDisplay) {
     var pathLower = pathDisplay.toLowerCase();
     return {
         '.tag': 'file',
@@ -521,4 +683,22 @@ function assertVideoItems(t, videoItems, expectedVideoItems) {
                 videoItem.videoName === expectedVideoItem.videoName);
         }));
     });
+}
+
+/**
+ * @param {Object} t Tape test object
+ * @param {Error} error
+ * @param {Object} videoItem
+ */
+function assertSaveError(t, error, videoItem) {
+    t.ok(error.message.includes('unable to save stream'));
+    t.ok(error.message.includes(JSON.stringify(videoItem)));
+}
+
+/**
+ * @param {Object} t Tape test object
+ * @param {Error} error
+ */
+function assertGetAllVideoItemsError(t, error) {
+    t.ok(error.message.includes('unable to get all video items'));
 }

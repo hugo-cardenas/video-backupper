@@ -124,7 +124,7 @@ module.exports = function (dropbox) {
                 return Promise.resolve(dirPath + '/' + videoItem.videoName + '.' + extension);
             });
     }
-    
+
     /**
      * Save file contents to dropbox path
      * @param {string} dropboxPath
@@ -262,9 +262,10 @@ module.exports = function (dropbox) {
     function getVideoItemFromResponseEntry(entry, playlistNames) {
         validateNonFalsyProperties(entry, ['name', 'path_display']);
 
-        var lowerCasePlaylistName = getPlaylistNameFromPath(entry.path_display);
+        // This should already be lower case always
+        var pathPlaylistName = getPlaylistNameFromPath(entry.path_display);
         var playlistName = playlistNames.find(function (playlistName) {
-            return playlistName.toLowerCase() === lowerCasePlaylistName;
+            return playlistName.toLowerCase() === pathPlaylistName.toLowerCase();
         });
         if (!playlistName) {
             throw new VError(
