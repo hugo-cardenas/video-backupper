@@ -85,7 +85,7 @@ test('dropboxStorage - save - succeeds', options, function (t) {
         });
 });
 
-test('dropboxStorage - save - overwrite file', options, function (t) {
+test.skip('dropboxStorage - save - overwrite file', options, function (t) {
     var storage = storageLocator.getStorageManager().getStorage('dropbox');
     var extension = 'mp4';
 
@@ -123,7 +123,7 @@ test('dropboxStorage - save - overwrite file', options, function (t) {
         });
 });
 
-test.only('dropboxStorage - save and getAllVideoItems - succeeds', options, function (t) {
+test.skip('dropboxStorage - save and getAllVideoItems - succeeds', options, function (t) {
     var storage = storageLocator.getStorageManager().getStorage('dropbox');
 
     var file1 = './test/integration/storage/video1.mp4';
