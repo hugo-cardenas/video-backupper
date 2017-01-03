@@ -1,14 +1,16 @@
 var VError = require('verror');
+var _ = require('lodash');
 
 /**
  * Create a backupper
  *
  * @param {Provider} provider Provider of video items
- * @param {Object} queue
+ * @param {Storage} storage Video storage
+ * @param {Object} queue Job queue
  * @param {DisplayOutput} displayOutput Object to output messages
  * @returns {Backupper}
  */
-module.exports = function (provider, queue, displayOutput) {
+module.exports = function (provider, storage, queue, displayOutput) {
     /**
      * Create a backup specific error
      * @param {string} playlistId
@@ -31,6 +33,26 @@ module.exports = function (provider, queue, displayOutput) {
     }
 
     /**
+     * Filter provided video items, excluding those which are already stored
+     *
+     * @param {Object[]} videoItems
+     * @returns {Promise<Object[]>}
+     */
+    function filterVideoItems(videoItems) {
+        console.log(videoItems);
+        if (videoItems.length === 0) {
+            return Promise.resolve([]);
+        }
+        return storage.getAllVideoItems()
+            .then(function (storedVideoItems) {
+                return _.differenceWith(videoItems, storedVideoItems, function (videoItem, storedVideoItem) {
+                    return videoItem.playlistName === storedVideoItem.playlistName &&
+                        videoItem.videoName === storedVideoItem.videoName;
+                });
+            });
+    }
+
+    /**
      * Create jobs for backupping list of video items, add jobs to queue
      * @param {Object[]} videoItems
      */
@@ -50,6 +72,11 @@ module.exports = function (provider, queue, displayOutput) {
         return getVideoItems(playlistId)
             .then(function (videoItems) {
                 displayOutput.outputLine('Found ' + videoItems.length + ' video items');
+                return videoItems;
+            })
+            .then(filterVideoItems)
+            .then(function (videoItems) {
+                displayOutput.outputLine('Creating save jobs for ' + videoItems.length + ' video items');
                 return videoItems;
             })
             .then(queueVideoItems)
