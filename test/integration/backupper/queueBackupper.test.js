@@ -5,6 +5,7 @@ var baseTest = baserequire('test/integration/baseTest');
 var backupperLocator = baserequire('src/backupper/backupperLocator');
 var queueLocator = baserequire('src/queue/queueLocator');
 var configLocator = baserequire('src/config/configLocator');
+var storageLocator = baserequire('src/backupper/storageLocator');
 var createConfig = baserequire('src/config/config');
 var dropboxHelper = baserequire('test/integration/helper/dropboxHelper');
 var redisHelper = baserequire('test/integration/helper/redisHelper');
@@ -51,7 +52,7 @@ test('queueBackupper - backup - succeeds with Dropbox storage', options, functio
         .then(redisHelper.quit);
 });
 
-test.skip('queueBackupper - backup - succeeds with S3 storage', options, function (t) {
+test('queueBackupper - backup - succeeds with S3 storage', options, function (t) {
     enableS3Storage();
 
     var playlistId = 'PLWcOakfYWxVM_wvoM_bKxEiuGwvgYCvOE';
@@ -135,6 +136,7 @@ function resetLocators() {
     backupperLocator.setBackupperManager(null);
     configLocator.setConfigManager(null);
     queueLocator.setQueueManager(null);
+    storageLocator.setBackupperStorageManager(null);
 }
 
 /**

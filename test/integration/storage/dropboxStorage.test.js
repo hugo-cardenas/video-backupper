@@ -1,5 +1,6 @@
 var test = require('blue-tape');
 var fs = require('fs');
+var _ = require('lodash');
 var request = require('request');
 var tmp = require('tmp');
 var Dropbox = require('dropbox');
@@ -85,7 +86,7 @@ test('dropboxStorage - save - succeeds', options, function (t) {
         });
 });
 
-test.skip('dropboxStorage - save - overwrite file', options, function (t) {
+test('dropboxStorage - save - overwrite file', options, function (t) {
     var storage = storageLocator.getStorageManager().getStorage('dropbox');
     var extension = 'mp4';
 
@@ -123,7 +124,7 @@ test.skip('dropboxStorage - save - overwrite file', options, function (t) {
         });
 });
 
-test.skip('dropboxStorage - save and getAllVideoItems - succeeds', options, function (t) {
+test('dropboxStorage - save and getAllVideoItems - succeeds', options, function (t) {
     var storage = storageLocator.getStorageManager().getStorage('dropbox');
 
     var file1 = './test/integration/storage/video1.mp4';
@@ -171,7 +172,10 @@ test.skip('dropboxStorage - save and getAllVideoItems - succeeds', options, func
         .then(function (storedVideoItems) {
             t.equal(expectedVideoItems.length, storedVideoItems.length);
             expectedVideoItems.forEach(function (expectedVideoItem) {
-                t.ok(storedVideoItems.includes(expectedVideoItem));
+                var foundItem = storedVideoItems.find(function (storedItem) {
+                    return _.isEqual(expectedVideoItem, storedItem);
+                });
+                t.ok(foundItem, 'Item ' + JSON.stringify(expectedVideoItem) + ' is found in stored items');
             });
         });
 });
