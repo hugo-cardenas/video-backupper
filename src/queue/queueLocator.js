@@ -1,7 +1,7 @@
 var baserequire = require('base-require');
 var configLocator = baserequire('src/config/configLocator');
 var outputLocator = baserequire('src/output/outputLocator');
-var storageLocator = baserequire('src/storage/storageLocator');
+var storageLocator = baserequire('src/backupper/storageLocator');
 var createQueueManager = baserequire('src/queue/queueManager');
 
 var _ytdl;
@@ -13,7 +13,7 @@ var _queueManager;
 function getQueueManager() {
     if (!_queueManager) {
         _queueManager = createQueueManager(
-            getConfig(), getYtdl(), storageLocator.getStorageManager(), getDisplayOutput()
+            getConfig(), getYtdl(), getStorage(), getDisplayOutput()
         );
     }
     return _queueManager;
@@ -27,6 +27,13 @@ function setQueueManager(queueManager) {
 }
 
 /**
+ * @returns {Config}
+ */
+function getConfig() {
+    return configLocator.getConfigManager().getConfig();
+}
+
+/**
  * @returns {Object} Ytdl library method
  */
 function getYtdl() {
@@ -37,10 +44,10 @@ function getYtdl() {
 }
 
 /**
- * @returns {Config}
+ * @returns {Object}
  */
-function getConfig() {
-    return configLocator.getConfigManager().getConfig();
+function getStorage() {
+    return storageLocator.getBackupperStorageManager().getBackupperStorage();
 }
 
 /**

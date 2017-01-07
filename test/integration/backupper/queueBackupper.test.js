@@ -51,7 +51,7 @@ test('queueBackupper - backup - succeeds with Dropbox storage', options, functio
         .then(redisHelper.quit);
 });
 
-test('queueBackupper - backup - succeeds with S3 storage', options, function (t) {
+test.skip('queueBackupper - backup - succeeds with S3 storage', options, function (t) {
     enableS3Storage();
 
     var playlistId = 'PLWcOakfYWxVM_wvoM_bKxEiuGwvgYCvOE';

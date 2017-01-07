@@ -4,8 +4,7 @@ var baserequire = require('base-require');
 var createHandler = baserequire('src/queue/handler/handler');
 var createWorker = baserequire('src/queue/worker/worker');
 
-module.exports = function (config, ytdl, storageManager, displayOutput) {
-    const CONFIG_BACKUPPER_STORAGE = 'backupper.storage';
+module.exports = function (config, ytdl, storage, displayOutput) {
     const CONFIG_QUEUE = 'queue';
     const QUEUE_BACKUPPER = 'video-backupper';
 
@@ -55,7 +54,7 @@ module.exports = function (config, ytdl, storageManager, displayOutput) {
      * @returns {Object}
      */
     function _createHandler() {
-        return createHandler(ytdl, getStorage(), displayOutput);
+        return createHandler(ytdl, storage, displayOutput);
     }
 
     /**
@@ -72,15 +71,6 @@ module.exports = function (config, ytdl, storageManager, displayOutput) {
      */
     function createQueueError(err) {
         return new VError(err, 'Unable to create queue');
-    }
-
-    /**
-     * @returns {Object}
-     */
-    function getStorage() {
-        return storageManager.getStorage(
-            config.get(CONFIG_BACKUPPER_STORAGE)
-        );
     }
 
     return {

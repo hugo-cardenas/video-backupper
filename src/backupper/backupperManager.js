@@ -1,4 +1,3 @@
-var VError = require('verror');
 var baserequire = require('base-require');
 var createQueueBackupper = baserequire('src/backupper/queueBackupper');
 
@@ -9,15 +8,13 @@ var createQueueBackupper = baserequire('src/backupper/queueBackupper');
  */
 
 /**
- * @param {Config} config
  * @param {Provider} provider
- * @param {Object} ytdl
- * @param {StorageManager} storageManager
+ * @param {Storage} storage
  * @param {Queue} BeeQueue queue
  * @param {DisplayOutput} displayOutput
  * @returns {BackupperManager}
  */
-module.exports = function (provider, queue, displayOutput) {
+module.exports = function (provider, storage, queue, displayOutput) {
     var queueBackupper;
 
     /**
@@ -25,7 +22,7 @@ module.exports = function (provider, queue, displayOutput) {
      */
     function getQueueBackupper() {
         if (!queueBackupper) {
-            queueBackupper = createQueueBackupper(provider, queue, displayOutput);
+            queueBackupper = createQueueBackupper(provider, storage, queue, displayOutput);
         }
         return queueBackupper;
     }

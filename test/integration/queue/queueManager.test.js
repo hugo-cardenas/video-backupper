@@ -15,35 +15,23 @@ var options = {
  */
 
 test('queueManager - getWorker - succeeds', options, function (t) {
-    var storageName = 'storageFoo';
     var config = {
         get: sinon.stub()
     };
-    config.get
-        .withArgs('backupper.storage')
-        .returns(storageName);
     config.get
         .withArgs('queue')
         .returns(getConfigValue('queue'));
 
     var ytdl = { name: 'ytdl' };
-
-    var storage = { name: 'storage' };
-    var storageManager = {
-        getStorage: sinon.stub()
-    };
-    storageManager.getStorage
-        .withArgs(storageName)
-        .returns(storage);
+    var storage = {};
 
     var displayOutput = { name: 'displayOutput' };
 
-    var queueManager = createQueueManager(config, ytdl, storageManager, displayOutput);
+    var queueManager = createQueueManager(config, ytdl, storage, displayOutput);
     var worker = queueManager.getWorker();
 
     t.ok(worker.hasOwnProperty('run'));
-    t.ok(config.get.calledWith('backupper.storage'));
-    t.ok(storageManager.getStorage.calledWith(storageName));
+    t.ok(config.get.calledWith('queue'));
 
     // Need to close the queue
     queueManager.getQueue().close();
@@ -56,66 +44,21 @@ test('queueManager - getWorker - missing config', options, function (t) {
     };
     var errorMessage = 'Missing config key';
     config.get
-        .withArgs('backupper.storage')
-        .throws(new Error(errorMessage));
-    config.get
         .withArgs('queue')
-        .returns(getConfigValue('queue'));
+        .throws(new Error(errorMessage));
 
     var ytdl = { name: 'ytdl' };
-
-    var storageManager = {
-        getStorage: sinon.stub()
-    };
+    var storage = {};
 
     var displayOutput = { name: 'displayOutput' };
 
-    var queueManager = createQueueManager(config, ytdl, storageManager, displayOutput);
+    var queueManager = createQueueManager(config, ytdl, storage, displayOutput);
     try {
         queueManager.getWorker();
         t.fail();
     } catch (err) {
         t.ok(err.message.includes('Unable to create queue worker'));
         t.ok(err.message.includes(errorMessage));
-        // Need to close the queue
-        queueManager.getQueue().close();
-        t.end();
-    }
-});
-
-test('queueManager - getWorker - invalid storage name', options, function (t) {
-    var storageName = 'storageFoo';
-    var config = {
-        get: sinon.stub()
-    };
-    config.get
-        .withArgs('backupper.storage')
-        .returns(storageName);
-    config.get
-        .withArgs('queue')
-        .returns(getConfigValue('queue'));
-
-    var ytdl = { name: 'ytdl' };
-
-    var errorMessage = 'Invalid storage name';
-    var storageManager = {
-        getStorage: sinon.stub()
-    };
-    storageManager.getStorage
-        .withArgs(storageName)
-        .throws(new Error(errorMessage));
-
-    var displayOutput = { name: 'displayOutput' };
-
-    var queueManager = createQueueManager(config, ytdl, storageManager, displayOutput);
-    try {
-        queueManager.getWorker();
-        t.fail();
-    } catch (err) {
-        t.ok(err.message.includes('Unable to create queue worker'));
-        t.ok(err.message.includes(errorMessage));
-        // Need to close the queue
-        queueManager.getQueue().close();
         t.end();
     }
 });

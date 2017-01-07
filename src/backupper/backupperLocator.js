@@ -2,6 +2,7 @@ var baserequire = require('base-require');
 var outputLocator = baserequire('src/output/outputLocator');
 var providerLocator = baserequire('src/provider/providerLocator');
 var queueLocator = baserequire('src/queue/queueLocator');
+var storageLocator = baserequire('src/backupper/storageLocator');
 var createBackupperManager = baserequire('src/backupper/backupperManager');
 
 var _backupperManager;
@@ -28,12 +29,22 @@ function getQueue() {
 }
 
 /**
+ * @returns {Object}
+ */
+function getStorage() {
+    return storageLocator.getBackupperStorageManager().getBackupperStorage();
+}
+
+/**
  * @returns {BackupperManager}
  */
 function getBackupperManager() {
     if (!_backupperManager) {
         _backupperManager = createBackupperManager(
-            getProvider(), getQueue(), getDisplayOutput()
+            getProvider(),
+            getStorage(),
+            getQueue(),
+            getDisplayOutput()
         );
     }
     return _backupperManager;

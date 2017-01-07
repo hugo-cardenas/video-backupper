@@ -39,7 +39,6 @@ module.exports = function (provider, storage, queue, displayOutput) {
      * @returns {Promise<Object[]>}
      */
     function filterVideoItems(videoItems) {
-        console.log(videoItems);
         if (videoItems.length === 0) {
             return Promise.resolve([]);
         }
