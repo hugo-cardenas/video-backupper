@@ -121,9 +121,9 @@ test('s3Storage - getAllVideoItems - succeeds', function (t) {
     var config = {
         bucket: bucket
     };
-    var playlistName = 'playlistName';
-    var videoName1 = 'videoName1';
-    var videoName2 = 'videoName2';
+    var playlistName = 'playlist Name';
+    var videoName1 = 'video Name 1';
+    var videoName2 = 'video Name 2.hello';
 
     var videoItem1 = createVideoItem(videoName1, playlistName);
     var videoItem2 = createVideoItem(videoName2, playlistName);
@@ -135,8 +135,8 @@ test('s3Storage - getAllVideoItems - succeeds', function (t) {
 
     var s3ClientResponseData = {
         Contents: [
-            { Key: playlistName + '/' + videoName1 },
-            { Key: playlistName + '/' + videoName2 }
+            { Key: playlistName + '/' + videoName1 + '.foo' },
+            { Key: playlistName + '/' + videoName2 + '.foo' }
         ]
     };
 
@@ -192,19 +192,19 @@ var invalidResponses = [
     },
     {
         Contents: [
-            { Key: 'foo/bar' },
+            { Key: 'foo/bar.baz' },
             'foo'
         ]
     },
     {
         Contents: [
-            { Key: 'foo/bar' },
+            { Key: 'foo/bar.baz' },
             {}
         ]
     },
     {
         Contents: [
-            { Key: 'foo/bar' },
+            { Key: 'foo/bar.baz' },
             { foo: 'bar' }
         ]
     }
@@ -254,7 +254,8 @@ var invalidKeys = [
     '//foo/',
     '/foo//',
     '/foo/bar',
-    '/foo/bar/'
+    '/foo/bar/',
+    'foo/bar' // Missing file extension
 ];
 
 invalidKeys.forEach(function (invalidKey, index) {
@@ -269,7 +270,7 @@ invalidKeys.forEach(function (invalidKey, index) {
 
         var s3ClientResponseData = {
             Contents: [
-                { Key: 'foo/bar' },
+                { Key: 'foo/bar.baz' },
                 { Key: invalidKey }
             ]
         };

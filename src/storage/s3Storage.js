@@ -152,12 +152,16 @@ module.exports = function (s3, config) {
      */
     function buildVideoItemFromKey(key) {
         var parts = key.split('/');
-        // Example: /playlistFoo/videoBar
+        // Example: playlistFoo/videoBar.baz
         if (parts.length === 2 && parts[0] && parts[1]) {
-            return {
-                playlistName: parts[0],
-                videoName: parts[1]
-            };
+            var file = parts[1];
+            var fileParts = file.split('.');
+            if (fileParts.length > 1) {
+                return {
+                    playlistName: parts[0],
+                    videoName: fileParts.slice(0, -1).join('.')
+                };
+            }
         }
         throw new VError('Invalid key "%s"', JSON.stringify(key));
     }
