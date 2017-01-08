@@ -135,8 +135,8 @@ test('s3Storage - getAllVideoItems - succeeds', function (t) {
 
     var s3ClientResponseData = {
         Contents: [
-            { Key: '/' + playlistName + '/' + videoName1 },
-            { Key: '/' + playlistName + '/' + videoName2 }
+            { Key: playlistName + '/' + videoName1 },
+            { Key: playlistName + '/' + videoName2 }
         ]
     };
 
@@ -192,19 +192,19 @@ var invalidResponses = [
     },
     {
         Contents: [
-            { Key: '/foo/bar' },
+            { Key: 'foo/bar' },
             'foo'
         ]
     },
     {
         Contents: [
-            { Key: '/foo/bar' },
+            { Key: 'foo/bar' },
             {}
         ]
     },
     {
         Contents: [
-            { Key: '/foo/bar' },
+            { Key: 'foo/bar' },
             { foo: 'bar' }
         ]
     }
@@ -246,11 +246,15 @@ var invalidKeys = [
     '//',
     '///',
     'foo',
+    '/foo',
+    'foo/',
     '//foo',
     'foo//',
     '/foo/',
     '//foo/',
-    '/foo//'
+    '/foo//',
+    '/foo/bar',
+    '/foo/bar/'
 ];
 
 invalidKeys.forEach(function (invalidKey, index) {
@@ -265,7 +269,7 @@ invalidKeys.forEach(function (invalidKey, index) {
 
         var s3ClientResponseData = {
             Contents: [
-                { Key: '/foo/bar' },
+                { Key: 'foo/bar' },
                 { Key: invalidKey }
             ]
         };
@@ -281,11 +285,11 @@ invalidKeys.forEach(function (invalidKey, index) {
 
         return storage.getAllVideoItems()
             .then(function () {
-                t.fail();
+                t.fail('Should throw Error');
             })
             .catch(function (err) {
-                t.ok(err.message.includes('unable to get all video items'));
-                t.ok(err.message.includes(JSON.stringify(invalidKey)));
+                t.ok(err.message.includes('unable to get all video items'), 'Includes main error message');
+                t.ok(err.message.includes(JSON.stringify(invalidKey)), 'Includes invalid key ' + invalidKey);
             });
     });
 });
