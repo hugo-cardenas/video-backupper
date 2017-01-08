@@ -78,5 +78,6 @@ function deleteAllFiles() {
 
 module.exports = {
     deleteAllFiles: deleteAllFiles,
+    deleteFile: deleteFile,
     listFiles: listFiles
 };

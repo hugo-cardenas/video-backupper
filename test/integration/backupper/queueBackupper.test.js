@@ -29,26 +29,67 @@ test('queueBackupper - backup - succeeds with Dropbox storage', options, functio
     return redisHelper.flushDb()
         .then(dropboxHelper.deleteAllFiles)
         .then(function () {
-            // Queue all jobs for the playlist videos
-            return getQueueBackupper().run(playlistId);
-        })
-        .then(function () {
-            // Run workers to process the jobs
-            getWorker().run();
-        })
-        .then(function () {
-            // Wait until jobs are finished
-            return waitForSuccededJobs(3);
+            // Queue all jobs for the playlist videos, run worker and wait until jobs are finished
+            return runBackupAndWaitForSucceededJobs(playlistId, 3, true);
         })
         .then(function () {
             return dropboxHelper.listFiles('/' + playlistName);
         })
         .then(function (files) {
+            t.equal(files.length, 3, 'There are 3 files stored');
             t.ok(files.includes(buildDropboxPath(playlistName, videoName1)));
             t.ok(files.includes(buildDropboxPath(playlistName, videoName2)));
             t.ok(files.includes(buildDropboxPath(playlistName, videoName3)));
-            resetLocators();
         })
+        .then(function () {
+            getQueue().close();
+        })
+        .then(resetLocators)
+        .then(redisHelper.quit);
+});
+
+test('queueBackupper - backup - succeeds with Dropbox storage, skips already backed up videos', options, function (t) {
+    enableDropboxStorage();
+
+    var playlistId = 'PLWcOakfYWxVM_wvoM_bKxEiuGwvgYCvOE';
+
+    var playlistName = 'nyancat playlist';
+    var videoName1 = 'video 1';
+    var videoName2 = 'video 2';
+    var videoName3 = 'video 3';
+
+    var queue = getQueue();
+    var queueSpy = sinon.spy(queue, 'createJob');
+
+    return redisHelper.flushDb()
+        .then(dropboxHelper.deleteAllFiles)
+        .then(function () {
+            // Queue all jobs for the playlist videos, run worker and wait until jobs are finished
+            return runBackupAndWaitForSucceededJobs(playlistId, 3, true);
+        })
+        .then(function () {
+            // Delete one stored file and backup again - should create only 1 job
+            return dropboxHelper.deleteFile(buildDropboxPath(playlistName, videoName2));
+        })
+        .then(function () {
+            // Run backup again for one single video, wait until the single job is finished
+            return runBackupAndWaitForSucceededJobs(playlistId, 1, false);
+        })
+        .then(function () {
+            return dropboxHelper.listFiles('/' + playlistName);
+        })
+        .then(function (files) {
+            // Check that only 4 jobs are created - 3 original video files + 1 saved again
+            t.equal(queueSpy.callCount, 4, 'Queue createJob is called only 4 times (3+1 videos)');
+            t.equal(files.length, 3, 'There are 3 files stored');
+            t.ok(files.includes(buildDropboxPath(playlistName, videoName1)));
+            t.ok(files.includes(buildDropboxPath(playlistName, videoName2)));
+            t.ok(files.includes(buildDropboxPath(playlistName, videoName3)));
+        })
+        .then(function () {
+            getQueue().close();
+        })
+        .then(resetLocators)
         .then(redisHelper.quit);
 });
 
@@ -65,16 +106,8 @@ test('queueBackupper - backup - succeeds with S3 storage', options, function (t)
     return redisHelper.flushDb()
         .then(s3Helper.deleteAllKeys)
         .then(function () {
-            // Queue all jobs for the playlist videos
-            return getQueueBackupper().run(playlistId);
-        })
-        .then(function () {
-            // Run workers to process the jobs
-            getWorker().run();
-        })
-        .then(function () {
-            // Wait until jobs are finished
-            return waitForSuccededJobs(3);
+            // Queue all jobs for the playlist videos, run worker and wait until jobs are finished
+            return runBackupAndWaitForSucceededJobs(playlistId, 3, true);
         })
         .then(s3Helper.listKeys)
         .then(function (s3Keys) {
@@ -82,17 +115,71 @@ test('queueBackupper - backup - succeeds with S3 storage', options, function (t)
             t.ok(s3Keys.includes(buildS3Key(playlistName, videoName1)));
             t.ok(s3Keys.includes(buildS3Key(playlistName, videoName2)));
             t.ok(s3Keys.includes(buildS3Key(playlistName, videoName3)));
-            resetLocators();
         })
+        .then(function () {
+            getQueue().close();
+        })
+        .then(resetLocators)
+        .then(redisHelper.quit);
+});
+
+test('queueBackupper - backup - succeeds with S3 storage, skips already backed up videos', options, function (t) {
+    enableS3Storage();
+
+    var playlistId = 'PLWcOakfYWxVM_wvoM_bKxEiuGwvgYCvOE';
+
+    var playlistName = 'nyancat playlist';
+    var videoName1 = 'video 1';
+    var videoName2 = 'video 2';
+    var videoName3 = 'video 3';
+
+    var queue = getQueue();
+    var queueSpy = sinon.spy(queue, 'createJob');
+
+    return redisHelper.flushDb()
+        .then(s3Helper.deleteAllKeys)
+        .then(function () {
+            // Queue all jobs for the playlist videos, run worker and wait until jobs are finished
+            return runBackupAndWaitForSucceededJobs(playlistId, 3, true);
+        })
+        .then(function () {
+            // Delete one stored file and backup again - should create only 1 job
+            return s3Helper.deleteKeys([buildS3Key(playlistName, videoName2)]);
+        })
+        .then(function () {
+            // Run backup again for one single video, wait until the single job is finished
+            return runBackupAndWaitForSucceededJobs(playlistId, 1, false);
+        })
+        .then(s3Helper.listKeys)
+        .then(function (s3Keys) {
+            // Check that only 4 jobs are created - 3 original video files + 1 saved again
+            t.equal(queueSpy.callCount, 4, 'Queue createJob is called only 4 times (3+1 videos)');
+            t.equal(s3Keys.length, 3);
+            t.ok(s3Keys.includes(buildS3Key(playlistName, videoName1)));
+            t.ok(s3Keys.includes(buildS3Key(playlistName, videoName2)));
+            t.ok(s3Keys.includes(buildS3Key(playlistName, videoName3)));
+        })
+        .then(function () {
+            getQueue().close();
+        })
+        .then(resetLocators)
         .then(redisHelper.quit);
 });
 
 /**
+ * @returns {Object}
+ */
+function getWorker() {
+    return queueLocator.getQueueManager().getWorker();
+}
+
+/**
  * Wait until the number specified of jobs have succeeded
  * @param {number} numJobs
+ * @param {boolean} runWorker Launch worker after setting the wait for succeeded jobs
  * @returns {Promise}
  */
-function waitForSuccededJobs(numJobs) {
+function runBackupAndWaitForSucceededJobs(playlistId, numJobs, runWorker) {
     // Wait until jobs are finished
     var queue = getQueue();
     var numSucceeded = 0;
@@ -100,10 +187,13 @@ function waitForSuccededJobs(numJobs) {
         queue.on('succeeded', function () {
             numSucceeded++;
             if (numSucceeded === numJobs) {
-                queue.close();
                 return resolve();
             }
         });
+        if (runWorker) {
+            getWorker().run();
+        }
+        getQueueBackupper().run(playlistId);
     });
 }
 
@@ -142,17 +232,16 @@ function resetLocators() {
 /**
  * @returns {Object}
  */
-function getWorker() {
-    return queueLocator.getQueueManager().getWorker();
+function getQueue() {
+    return queueLocator.getQueueManager().getQueue();
 }
 
 /**
  * @returns {Object}
  */
-function getQueue() {
-    return queueLocator.getQueueManager().getQueue();
+function getBackupperStorage() {
+    return storageLocator.getBackupperStorageManager().getBackupperStorage();
 }
-
 
 function enableDropboxStorage() {
     enableBackupperStorage('dropbox');

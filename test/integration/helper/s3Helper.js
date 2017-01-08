@@ -90,5 +90,6 @@ function getConfigValue(key) {
 
 module.exports = {
     deleteAllKeys: deleteAllKeys,
+    deleteKeys: deleteKeys,
     listKeys: listKeys
 };
