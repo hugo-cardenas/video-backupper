@@ -68,7 +68,7 @@ test('provider - getItems - succeeds', function (t) {
     var expectedPlaylistItemsOptions = {
         playlistId: playlistId,
         part: ['snippet'],
-        maxResults: 5
+        maxResults: 50
     };
 
     var youtube = {
@@ -176,7 +176,7 @@ test('provider - getItems - playlists resource error', function (t) {
     var expectedPlaylistItemsOptions = {
         playlistId: playlistId,
         part: ['snippet'],
-        maxResults: 5
+        maxResults: 50
     };
 
     var errorMessage = 'Client has failed to request playlists resource';
@@ -269,7 +269,7 @@ playlistsResourceInvalidResponseData.forEach(function (playlistsResponseData, in
         var expectedPlaylistItemsOptions = {
             playlistId: playlistId,
             part: ['snippet'],
-            maxResults: 5
+            maxResults: 50
         };
 
         var youtube = {
@@ -338,7 +338,7 @@ test('provider - getItems - playlistItems resource error', function (t) {
     var expectedPlaylistItemsOptions = {
         playlistId: playlistId,
         part: ['snippet'],
-        maxResults: 5
+        maxResults: 50
     };
 
     var errorMessage = 'Client has failed to request playlistItems resource';
@@ -451,7 +451,7 @@ playlistItemsResourceInvalidResponseData.forEach(function (playlistItemsResponse
         var expectedPlaylistItemsOptions = {
             playlistId: playlistId,
             part: ['snippet'],
-            maxResults: 5
+            maxResults: 50
         };
 
         var youtube = {
@@ -557,7 +557,7 @@ function createPlaylistItemsResponseData(videos) {
         kind: 'kind',
         etag: 'etag',
         pageInfo: {
-            totalResults: 5,
+            totalResults: videos.length,
             resultsPerPage: 50
         },
         items: videos.map(function (video) {

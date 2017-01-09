@@ -101,7 +101,7 @@ module.exports = function (google, config) {
                 var options = {
                     playlistId: playlistId,
                     part: ['snippet'],
-                    maxResults: 5
+                    maxResults: 50
                 };
                 return listPlaylistItems(youtubeClient, options);
             })
