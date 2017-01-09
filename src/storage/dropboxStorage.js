@@ -1,4 +1,5 @@
 var VError = require('verror');
+// var fs = require('fs');
 var baserequire = require('base-require');
 var validateVideoItem = baserequire('src/storage/videoItemValidator');
 
@@ -52,6 +53,31 @@ module.exports = function (dropbox) {
      * @returns {Promise<Buffer, Error>} Resolves with a buffer containing the stream contents
      */
     function getStreamBuffer(stream) {
+        // TODO Fix - decide best solution
+        /*
+        return new Promise(function (resolve, reject) {
+                var tmpFile = '/workspace/dropboxVideo' + Math.random().toString() + '.mp4';
+                var writeStream = fs.createWriteStream(tmpFile, { flags: 'w' });
+                stream.pipe(writeStream);
+                writeStream.on('error', function (err) {
+                    return reject(err);
+                });
+                writeStream.on('close', function () {
+                    return resolve(tmpFile);
+                });
+            })
+            .then(function (tmpFile) {
+                return new Promise(function (resolve, reject) {
+                    fs.readFile(tmpFile, function (err, data) {
+                        if (err) {
+                            return reject(err);
+                        }
+                        return resolve(data);
+                    });
+                });
+            });
+            */
+
         return new Promise(function (resolve, reject) {
             var chunks = [];
             stream.on('data', function (chunk) {
@@ -290,8 +316,8 @@ module.exports = function (dropbox) {
     function getVideoNameFromEntryName(name) {
         // Example: videoBar.foo
         var parts = name.split('.');
-        if (parts.length >= 2) {
-            return parts[parts.length - 2];
+        if (parts.length > 1) {
+            return parts.slice(0, -1).join('.');
         }
         throw new VError('Invalid video name "%s"', name);
     }

@@ -282,7 +282,7 @@ test('dropboxStorage - getAllVideoItems - succeeds', function (t) {
     var playlistName2 = 'Playlist 2';
     var videoName1 = 'Video 1';
     var videoName2 = 'Video 2';
-    var videoName3 = 'Video 3';
+    var videoName3 = 'Video 3.hello.bar';
 
     var videoItems = [
         createVideoItem(playlistName1, videoName1),
