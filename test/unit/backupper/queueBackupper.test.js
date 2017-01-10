@@ -56,6 +56,107 @@ test('queueBackupper - run - succeeds', function (t) {
         });
 });
 
+var videoItemsWithInvalidChars = [{
+    original: createVideoItem('playlistIdIrrelevant', '/', 'videoIdIrrelevant', '/'),
+    formatted: createVideoItem('playlistIdIrrelevant', '-', 'videoIdIrrelevant', '-')
+}, {
+    original: createVideoItem('playlistIdIrrelevant', '/playlist//name///', 'videoIdIrrelevant', '/video//name///'),
+    formatted: createVideoItem('playlistIdIrrelevant', '-playlist--name---', 'videoIdIrrelevant', '-video--name---')
+}];
+
+videoItemsWithInvalidChars.forEach(function (videos, index) {
+    test('queueBackupper - run - formats videoName and playlistName, replacing invalid chars', function (t) {
+        var originalVideoItem = videos.original;
+        var formattedVideoItem = videos.formatted;
+
+        var playlistId = 'myPlaylist42';
+
+        var videoItems = [originalVideoItem];
+
+        var storedVideoItems = [];
+
+        var provider = {
+            getVideoItems: sinon.stub()
+                .withArgs(playlistId)
+                .returns(Promise.resolve(videoItems))
+        };
+
+        var storage = {
+            getAllVideoItems: sinon.stub()
+                .returns(Promise.resolve(storedVideoItems))
+        };
+
+        var displayOutput = {
+            outputLine: sinon.stub()
+        };
+
+        var queueJob1 = { save: sinon.stub() };
+
+        var queue = {
+            createJob: sinon.stub()
+        };
+
+        queue.createJob
+            .withArgs(formattedVideoItem)
+            .returns(queueJob1);
+
+        var backupper = createBackupper(provider, storage, queue, displayOutput);
+        return backupper.run(playlistId)
+            .then(function () {
+                t.ok(queueJob1.save.calledOnce);
+            });
+    });
+});
+
+videoItemsWithInvalidChars.forEach(function (videos, index) {
+    test('queueBackupper - run - formats videoName and playlistName before filtering stored videos', function (t) {
+        var originalVideoItem = videos.original;
+        var formattedVideoItem = videos.formatted;
+
+        var playlistId = 'myPlaylist42';
+
+        var videoItems = [
+            originalVideoItem,
+            createVideoItem('playlistId1', 'playlistName1', 'videoId1', 'videoName1') // Other random video to be stored
+        ];
+
+        var storedVideoItems = [
+            formattedVideoItem
+        ];
+
+        var provider = {
+            getVideoItems: sinon.stub()
+                .withArgs(playlistId)
+                .returns(Promise.resolve(videoItems))
+        };
+
+        var storage = {
+            getAllVideoItems: sinon.stub()
+                .returns(Promise.resolve(storedVideoItems))
+        };
+
+        var displayOutput = {
+            outputLine: sinon.stub()
+        };
+
+        var queueJob1 = { save: sinon.stub() };
+
+        var queue = {
+            createJob: sinon.stub()
+        };
+
+        queue.createJob
+            .withArgs(videoItems[1]) // Called only with 2nd video item, 1st is filtered
+            .returns(queueJob1);
+
+        var backupper = createBackupper(provider, storage, queue, displayOutput);
+        return backupper.run(playlistId)
+            .then(function () {
+                t.ok(queueJob1.save.calledOnce);
+            });
+    });
+});
+
 test('queueBackupper - run - succeeds, no stored items', function (t) {
     var playlistId = 'myPlaylist42';
 

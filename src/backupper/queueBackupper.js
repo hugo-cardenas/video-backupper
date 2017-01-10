@@ -31,6 +31,17 @@ module.exports = function (provider, storage, queue, displayOutput) {
     function getVideoItems(playlistId) {
         return provider.getVideoItems(playlistId);
     }
+    
+    function formatVideoItems(videoItems) {
+        return videoItems.map(function (videoItem) {
+            return {
+                videoId: videoItem.videoId,
+                videoName: videoItem.videoName.replace(/\//g, '-'),
+                playlistId: videoItem.playlistId,
+                playlistName: videoItem.playlistName.replace(/\//g, '-')
+            };
+        });
+    }
 
     /**
      * Filter provided video items, excluding those which are already stored
@@ -73,6 +84,7 @@ module.exports = function (provider, storage, queue, displayOutput) {
                 displayOutput.outputLine('Found ' + videoItems.length + ' video items');
                 return videoItems;
             })
+            .then(formatVideoItems) // TODO When filtering videos by id, this won't be needed
             .then(filterVideoItems)
             .then(function (videoItems) {
                 displayOutput.outputLine('Creating save jobs for ' + videoItems.length + ' video items');
