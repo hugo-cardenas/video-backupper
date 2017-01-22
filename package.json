@@ -8,6 +8,7 @@
     "base-require": "hugo-cardenas/base-require",
     "bee-queue": "^0.3.0",
     "blue-tape": "^1.0.0",
+    "diacritics": "^1.3.0",
     "dropbox": "^2.3.0",
     "googleapis": "^13.0.0",
     "jsonfile": "^2.4.0",

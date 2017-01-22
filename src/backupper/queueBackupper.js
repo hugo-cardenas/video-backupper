@@ -1,5 +1,6 @@
 var VError = require('verror');
 var _ = require('lodash');
+var removeDiacritics = require('diacritics').remove;
 
 /**
  * Create a backupper
@@ -31,16 +32,26 @@ module.exports = function (provider, storage, queue, displayOutput) {
     function getVideoItems(playlistId) {
         return provider.getVideoItems(playlistId);
     }
-    
+
     function formatVideoItems(videoItems) {
         return videoItems.map(function (videoItem) {
             return {
                 videoId: videoItem.videoId,
-                videoName: videoItem.videoName.replace(/\//g, '-'),
+                videoName: formatStringToSafeChars(videoItem.videoName),
                 playlistId: videoItem.playlistId,
-                playlistName: videoItem.playlistName.replace(/\//g, '-')
+                playlistName: formatStringToSafeChars(videoItem.playlistName)
             };
         });
+    }
+
+    function formatStringToSafeChars(str) {
+        var charsToEncode = /[\u007f-\uffff]/g;
+        return removeDiacritics(str)
+            .replace(/[\/\\]/g, '-')
+            // https://github.com/dropbox/dropbox-sdk-js/pull/87
+            .replace(charsToEncode, function (c) {
+                return '\\u' + ('000' + c.charCodeAt(0).toString(16)).slice(-4);
+            });
     }
 
     /**
