@@ -58,7 +58,6 @@ invalidJobs.forEach(function (job, index) {
             })
             .catch(function (err) {
                 t.ok(err.message.includes(JSON.stringify(job)));
-                t.ok(displayOutput.outputLine.calledWith(err.message));
             });
     });
 });
@@ -95,7 +94,6 @@ test('handler - handle - ytdl fails', function (t) {
         .catch(function (err) {
             t.ok(err.message.includes(JSON.stringify(job)));
             t.ok(err.message.includes(errorMessage));
-            t.ok(displayOutput.outputLine.calledWith(err.message));
         });
 });
 
@@ -135,6 +133,5 @@ test('handler - handle - storage fails', function (t) {
         .catch(function (err) {
             t.ok(err.message.includes(JSON.stringify(job)));
             t.ok(err.message.includes(errorMessage));
-            t.ok(displayOutput.outputLine.calledWith(err.message));
         });
 });

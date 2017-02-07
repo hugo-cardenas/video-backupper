@@ -33,6 +33,9 @@ module.exports = function (provider, storage, queue, displayOutput) {
         return provider.getVideoItems(playlistId);
     }
 
+    /**
+     * @param {Object[]} videoItems
+     */
     function formatVideoItems(videoItems) {
         return videoItems.map(function (videoItem) {
             return {
@@ -44,6 +47,9 @@ module.exports = function (provider, storage, queue, displayOutput) {
         });
     }
 
+    /**
+     * @param {string} str
+     */
     function formatStringToSafeChars(str) {
         var charsToEncode = /[\u007f-\uffff]/g;
         return removeDiacritics(str)

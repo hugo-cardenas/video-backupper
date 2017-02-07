@@ -1,6 +1,7 @@
 var url = require('url');
 var _ = require('lodash');
 var VError = require('verror');
+var stringify = require('json-stringify-safe');
 
 module.exports = function (ytdl, storage, displayOutput) {
     /**
@@ -26,6 +27,8 @@ module.exports = function (ytdl, storage, displayOutput) {
      * @returns {Promise}
      */
     function backup(videoItem) {
+        // TODO Simplify this. No need to wrap in promise and wrap all errors here.
+        // Just make sure to return promise in each place.
         return new Promise(function (resolve, reject) {
             var videoId = videoItem.videoId;
             try {
@@ -41,7 +44,7 @@ module.exports = function (ytdl, storage, displayOutput) {
                     return resolve();
                 })
                 .catch(function (err) {
-                    return reject(createError(videoId, err));
+                    return reject(err);
                 });
         });
     }
@@ -88,8 +91,7 @@ module.exports = function (ytdl, storage, displayOutput) {
      * @returns {Error}
      */
     function createError(job, err) {
-        var error = new VError(err, 'Unable to handle job %s', JSON.stringify(job));
-        displayOutput.outputLine(error.message);
+        var error = new VError(err, 'Unable to handle job %s', stringify(job));
         return error;
     }
 
