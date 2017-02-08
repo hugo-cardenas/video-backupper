@@ -27,26 +27,19 @@ module.exports = function (ytdl, storage, displayOutput) {
      * @returns {Promise}
      */
     function backup(videoItem) {
-        // TODO Simplify this. No need to wrap in promise and wrap all errors here.
-        // Just make sure to return promise in each place.
-        return new Promise(function (resolve, reject) {
-            var videoId = videoItem.videoId;
-            try {
-                var url = buildVideoUrl(videoId);
-                var stream = ytdl(url);
-            } catch (err) {
-                return reject(createError(videoId, err));
-            }
+        var videoId = videoItem.videoId;
+        try {
+            var url = buildVideoUrl(videoId);
+            var stream = ytdl(url);
+        } catch (err) {
+            return Promise.reject(createError(videoId, err));
+        }
 
-            return storage.save(stream, videoItem)
-                .then(function () {
-                    displayOutput.outputLine('Saved video ' + videoId);
-                    return resolve();
-                })
-                .catch(function (err) {
-                    return reject(err);
-                });
-        });
+        return storage.save(stream, videoItem)
+            .then(function () {
+                displayOutput.outputLine('Saved video ' + videoId);
+                return Promise.resolve();
+            });
     }
 
     /**
