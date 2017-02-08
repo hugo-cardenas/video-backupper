@@ -1,6 +1,7 @@
 var test = require('blue-tape');
 var sinon = require('sinon');
 var _ = require('lodash');
+var util = require('util');
 var VError = require('verror');
 var Readable = require('stream').Readable;
 var baserequire = require('base-require');
@@ -142,7 +143,7 @@ test('dropboxStorage - save - folder creation fails with non solvable error', fu
         .catch(function (err) {
             assertSaveError(t, err, videoItem);
             t.ok(err.message.includes(errorMessage));
-            t.equal(VError.info(VError.cause(err)).responseError, JSON.stringify(promiseError));
+            t.equal(VError.info(VError.cause(err)).responseError, util.inspect(promiseError));
             return Promise.resolve();
         });
 });
@@ -176,7 +177,7 @@ test('dropboxStorage - save - folder creation fails with non parsable error', fu
         .catch(function (err) {
             assertSaveError(t, err, videoItem);
             t.ok(err.message.includes('Unable to parse response error'));
-            t.equal(VError.info(VError.cause(err)).responseError, JSON.stringify(promiseError));
+            t.equal(VError.info(VError.cause(err)).responseError, util.inspect(promiseError));
             return Promise.resolve();
         });
 });
@@ -227,7 +228,7 @@ test('dropboxStorage - save - upload fails', function (t) {
         .catch(function (err) {
             assertSaveError(t, err, videoItem);
             t.ok(err.message.includes(errorMessage));
-            t.equal(VError.info(VError.cause(err)).responseError, JSON.stringify(promiseError));
+            t.equal(VError.info(VError.cause(err)).responseError, util.inspect(promiseError));
             return Promise.resolve();
         });
 });
@@ -272,7 +273,7 @@ test('dropboxStorage - save - upload fails with non parsable error', function (t
         .catch(function (err) {
             assertSaveError(t, err, videoItem);
             t.ok(err.message.includes('Unable to parse response error'));
-            t.equal(VError.info(VError.cause(err)).responseError, JSON.stringify(promiseError));
+            t.equal(VError.info(VError.cause(err)).responseError, util.inspect(promiseError));
             return Promise.resolve();
         });
 });

@@ -1,6 +1,6 @@
 var VError = require('verror');
-var stringify = require('json-stringify-safe');
 // var fs = require('fs');
+var util = require('util');
 var baserequire = require('base-require');
 var validateVideoItem = baserequire('src/storage/videoItemValidator');
 
@@ -121,7 +121,7 @@ module.exports = function (dropbox) {
      */
     function parseResponseError(error) {
         var options = {
-            info: { responseError: stringify(error) }
+            info: { responseError: util.inspect(error) }
         };
         if (error.error) {
             return new VError(options, error.error);

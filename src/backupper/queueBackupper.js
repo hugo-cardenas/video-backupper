@@ -51,13 +51,7 @@ module.exports = function (provider, storage, queue, displayOutput) {
      * @param {string} str
      */
     function formatStringToSafeChars(str) {
-        var charsToEncode = /[\u007f-\uffff]/g;
-        return removeDiacritics(str)
-            .replace(/[\/\\]/g, '-')
-            // https://github.com/dropbox/dropbox-sdk-js/pull/87
-            .replace(charsToEncode, function (c) {
-                return '\\u' + ('000' + c.charCodeAt(0).toString(16)).slice(-4);
-            });
+        return str.replace(/[\/\\]/g, '-');
     }
 
     /**
@@ -101,7 +95,7 @@ module.exports = function (provider, storage, queue, displayOutput) {
                 displayOutput.outputLine('Found ' + videoItems.length + ' video items');
                 return videoItems;
             })
-            .then(formatVideoItems) // TODO When filtering videos by id, this won't be needed
+            .then(formatVideoItems) // TODO Should be moved to storage when comparison is done properly by id
             .then(filterVideoItems)
             .then(function (videoItems) {
                 displayOutput.outputLine('Creating save jobs for ' + videoItems.length + ' video items');

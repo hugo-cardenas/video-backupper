@@ -63,14 +63,8 @@ var videoItemsWithInvalidChars = [{
     original: createVideoItem('playlistIdIrrelevant', '\\', 'videoIdIrrelevant', '\\'),
     formatted: createVideoItem('playlistIdIrrelevant', '-', 'videoIdIrrelevant', '-')
 }, {
-    original: createVideoItem('playlistIdIrrelevant', '单', 'videoIdIrrelevant', '单'),
-    formatted: createVideoItem('playlistIdIrrelevant', '\\u5355', 'videoIdIrrelevant', '\\u5355')
-}, {
     original: createVideoItem('playlistIdIrrelevant', '/playlist//name///', 'videoIdIrrelevant', '/video//name///'),
     formatted: createVideoItem('playlistIdIrrelevant', '-playlist--name---', 'videoIdIrrelevant', '-video--name---')
-}, {
-    original: createVideoItem('playlistIdIrrelevant', 'áéíóúäö', 'videoIdIrrelevant', 'áéíóúäö'),
-    formatted: createVideoItem('playlistIdIrrelevant', 'aeiouao', 'videoIdIrrelevant', 'aeiouao')
 }];
 
 videoItemsWithInvalidChars.forEach(function (videos, index) {
