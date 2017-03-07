@@ -1,0 +1,8 @@
+config
+node_modules
+test
+.dockerignore
+.eslintrc.json
+.gitignore
+.jsbeautifyrc
+.travis.yml
