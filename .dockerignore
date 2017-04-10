@@ -1,8 +1,13 @@
-config
+config/*
+docker
 node_modules
 test
 .dockerignore
+.DS_Store
 .eslintrc.json
 .gitignore
+.git
 .jsbeautifyrc
 .travis.yml
+LICENSE
+README.md
