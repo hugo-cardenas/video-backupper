@@ -1,11 +1,12 @@
 #!/bin/bash
 
-docker run \
-    --env 'VIDEOBACKUPPER_CONFIG=/usr/src/video-backupper/config/dev.config.json' \
-    --tty \
-    --user node \
-    --volume /workspace/projects/video-backupper:/usr/src/video-backupper \
-    --volume /workspace/keys/dev.config.json:/usr/src/video-backupper/config/dev.config.json \
-    --workdir /usr/src/video-backupper \
-    node:7.6 \
+if [ "$*" == "" ]; then
+    echo ""
+    echo "Usage: $0 <command>"
+    exit 1
+fi
+
+docker-compose \
+    --file docker/compose/compose.dev.yml \
+    run --rm -T app \
     "$@"

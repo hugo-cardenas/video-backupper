@@ -1,0 +1,29 @@
+version: "2"
+
+services:
+
+  app:
+    command: bin/runWorker
+    image: ${VIDEO_BACKUPPER_IMAGE}
+    networks:
+      - common
+    restart: on-failure
+    volumes:
+      - "${HOME}/.aws:/home/node/.aws"
+      - "${VIDEO_BACKUPPER_PROJECT_DIR}:/usr/local/src/video-backupper"
+      - "${VIDEO_BACKUPPER_CONFIG}:/usr/local/src/video-backupper/config/config.json"
+      - "${VIDEO_BACKUPPER_YOUTUBE_KEY}:/usr/local/src/video-backupper/config/youtube.pem"
+
+  redis:
+    image: redis:3.2
+    networks:
+      - common
+    restart: on-failure
+    volumes:
+      - redis:/data
+
+networks:
+  common:
+
+volumes:
+  redis:

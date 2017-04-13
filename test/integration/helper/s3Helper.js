@@ -1,3 +1,4 @@
+var VError = require('verror');
 var baserequire = require('base-require');
 var configLocator = baserequire('src/config/configLocator');
 var storageLocator = baserequire('src/storage/storageLocator');
@@ -44,6 +45,9 @@ function deleteKeys(keys) {
         s3.deleteObjects(params, function (err, data) {
             if (err) {
                 return reject(err);
+            }
+            if (data.Errors && data.Errors.length > 0) {
+                return reject(new VError('s3 delete returned errors: %s', JSON.stringify(data.Errors)));
             }
             return resolve(data);
         });
