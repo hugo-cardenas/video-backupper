@@ -1,5 +1,7 @@
-var _ = require('lodash');
-var VError = require('verror');
+const _ = require('lodash');
+const VError = require('verror');
+const baserequire = require('base-require');
+const createVideo = baserequire('src/video/video');
 
 /**
  * @typedef {Object} Provider
@@ -216,8 +218,7 @@ module.exports = function (google, config) {
      */
     function composeResult(videoItems, playlistName) {
         return videoItems.map(function (item) {
-            item.playlistName = playlistName;
-            return item;
+            return createVideo(item.videoId, item.videoName, item.playlistId, playlistName);
         });
     }
 

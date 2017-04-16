@@ -1,6 +1,7 @@
-var VError = require('verror');
-var _ = require('lodash');
-var removeDiacritics = require('diacritics').remove;
+const VError = require('verror');
+const _ = require('lodash');
+const baserequire = require('base-require');
+const createVideo = baserequire('src/video/video');
 
 /**
  * Create a backupper
@@ -38,12 +39,12 @@ module.exports = function (provider, storage, queue, displayOutput) {
      */
     function formatVideoItems(videoItems) {
         return videoItems.map(function (videoItem) {
-            return {
-                videoId: videoItem.videoId,
-                videoName: formatStringToSafeChars(videoItem.videoName),
-                playlistId: videoItem.playlistId,
-                playlistName: formatStringToSafeChars(videoItem.playlistName)
-            };
+            return createVideo(
+                videoItem.videoId,
+                formatStringToSafeChars(videoItem.videoName),
+                videoItem.playlistId,
+                formatStringToSafeChars(videoItem.playlistName)
+            );
         });
     }
 
