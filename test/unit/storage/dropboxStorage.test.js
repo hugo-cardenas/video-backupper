@@ -13,15 +13,13 @@ test('dropboxStorage - save - succeeds', function (t) {
     var stream = createReadableStream(contents);
     var expectedBuffer = Buffer.from(contents);
 
-    var playlistName = 'playlist42';
-    var videoName = 'video44';
-    var videoItem = {
-        videoName: videoName,
-        playlistName: playlistName
-    };
+    var playlistName = 'playlistName';
+    var name = 'videoName';
+    var id = 'videoId';
+    var videoItem = { id, name, playlistName };
 
     var expectedFolderPath = '/' + playlistName;
-    var expectedFilePath = expectedFolderPath + '/' + videoName + '.mp4';
+    var expectedFilePath = `${expectedFolderPath}/${name}_${id}.mp4`;
 
     var dropbox = {
         filesCreateFolder: function () {},
@@ -50,15 +48,14 @@ test('dropboxStorage - save - folder exists', function (t) {
     var stream = createReadableStream(contents);
     var expectedBuffer = Buffer.from(contents);
 
-    var playlistName = 'playlist42';
-    var videoName = 'video44';
-    var videoItem = {
-        videoName: videoName,
-        playlistName: playlistName
-    };
+    var playlistName = 'playlistName';
+    var name = 'videoName';
+    var id = 'videoId';
+
+    var videoItem = { id, name, playlistName };
 
     var expectedFolderPath = '/' + playlistName;
-    var expectedFilePath = expectedFolderPath + '/' + videoName + '.mp4';
+    var expectedFilePath = `${expectedFolderPath}/${name}_${id}.mp4`;
 
     var dropbox = {
         filesCreateFolder: function () {},
@@ -90,8 +87,11 @@ test('dropboxStorage - save - folder exists', function (t) {
 
 var invalidVideoItems = [
     {},
-    { videoName: 'foo' },
-    { playlistName: 'foo' }
+    { id: 'foo' },
+    { name: 'foo' },
+    { id: 'foo', name: 'bar' },
+    { playlistName: 'foo' },
+    { id: 'foo', playlistName: 'bar' }
 ];
 invalidVideoItems.forEach(function (videoItem, index) {
     test('dropboxStorage - save - invalid videoItem #' + index, function (t) {
@@ -113,12 +113,11 @@ invalidVideoItems.forEach(function (videoItem, index) {
 
 test('dropboxStorage - save - folder creation fails with non solvable error', function (t) {
     var stream = {};
-    var playlistName = 'playlist42';
-    var videoName = 'video44';
-    var videoItem = {
-        videoName: videoName,
-        playlistName: playlistName
-    };
+
+    var playlistName = 'playlistName';
+    var name = 'videoName';
+    var id = 'videoId';
+    var videoItem = { id, name, playlistName };
 
     var expectedFolderPath = '/' + playlistName;
 
@@ -150,12 +149,11 @@ test('dropboxStorage - save - folder creation fails with non solvable error', fu
 
 test('dropboxStorage - save - folder creation fails with non parsable error', function (t) {
     var stream = {};
-    var playlistName = 'playlist42';
-    var videoName = 'video44';
-    var videoItem = {
-        videoName: videoName,
-        playlistName: playlistName
-    };
+
+    var playlistName = 'playlistName';
+    var name = 'videoName';
+    var id = 'videoId';
+    var videoItem = { id, name, playlistName };
 
     var expectedFolderPath = '/' + playlistName;
 
@@ -176,7 +174,7 @@ test('dropboxStorage - save - folder creation fails with non parsable error', fu
         })
         .catch(function (err) {
             assertSaveError(t, err, videoItem);
-            t.ok(err.message.includes('Unable to parse response error'));
+            t.ok(err.message.includes('Unable to parse response'));
             t.equal(VError.info(VError.cause(err)).responseError, util.inspect(promiseError));
             return Promise.resolve();
         });
@@ -188,15 +186,13 @@ test('dropboxStorage - save - upload fails', function (t) {
     var stream = createReadableStream(contents);
     var expectedBuffer = Buffer.from(contents);
 
-    var playlistName = 'playlist42';
-    var videoName = 'video44';
-    var videoItem = {
-        videoName: videoName,
-        playlistName: playlistName
-    };
+    var playlistName = 'playlistName';
+    var name = 'videoName';
+    var id = 'videoId';
+    var videoItem = { id, name, playlistName };
 
     var expectedFolderPath = '/' + playlistName;
-    var expectedFilePath = expectedFolderPath + '/' + videoName + '.mp4';
+    var expectedFilePath = `${expectedFolderPath}/${name}_${id}.mp4`;
 
     var dropbox = {
         filesCreateFolder: function () {},
@@ -239,15 +235,13 @@ test('dropboxStorage - save - upload fails with non parsable error', function (t
     var stream = createReadableStream(contents);
     var expectedBuffer = Buffer.from(contents);
 
-    var playlistName = 'playlist42';
-    var videoName = 'video44';
-    var videoItem = {
-        videoName: videoName,
-        playlistName: playlistName
-    };
+    var playlistName = 'playlistName';
+    var name = 'videoName';
+    var id = 'videoId';
+    var videoItem = { id, name, playlistName };
 
     var expectedFolderPath = '/' + playlistName;
-    var expectedFilePath = expectedFolderPath + '/' + videoName + '.mp4';
+    var expectedFilePath = `${expectedFolderPath}/${name}_${id}.mp4`;
 
     var dropbox = {
         filesCreateFolder: function () {},
@@ -272,7 +266,7 @@ test('dropboxStorage - save - upload fails with non parsable error', function (t
     return storage.save(stream, videoItem)
         .catch(function (err) {
             assertSaveError(t, err, videoItem);
-            t.ok(err.message.includes('Unable to parse response error'));
+            t.ok(err.message.includes('Unable to parse response'));
             t.equal(VError.info(VError.cause(err)).responseError, util.inspect(promiseError));
             return Promise.resolve();
         });
@@ -281,14 +275,20 @@ test('dropboxStorage - save - upload fails with non parsable error', function (t
 test('dropboxStorage - getAllVideoItems - succeeds', function (t) {
     var playlistName1 = 'Playlist 1';
     var playlistName2 = 'Playlist 2';
-    var videoName1 = 'Video 1';
-    var videoName2 = 'Video 2';
-    var videoName3 = 'Video 3.hello.bar';
+
+    var id1 = 'videoId1';
+    var name1 = 'video Name 1';
+
+    var id2 = 'videoId2';
+    var name2 = 'video Name 2';
+
+    var id3 = 'videoId3';
+    var name3 = 'video_Name_3'; // Underscores in name should not affect extraction of id
 
     var videoItems = [
-        createVideoItem(playlistName1, videoName1),
-        createVideoItem(playlistName1, videoName2),
-        createVideoItem(playlistName2, videoName3)
+        createVideoItem(id1, name1, playlistName1),
+        createVideoItem(id2, name2, playlistName1),
+        createVideoItem(id3, name3, playlistName2)
     ];
 
     var dropbox = {
@@ -317,20 +317,34 @@ test('dropboxStorage - getAllVideoItems - succeeds with multiple pages', functio
     var playlistName1 = 'Playlist 1';
     var playlistName2 = 'Playlist 2';
     var playlistName3 = 'Playlist 3';
-    var videoName1 = 'Video 1';
-    var videoName2 = 'Video 2';
-    var videoName3 = 'Video 3';
-    var videoName4 = 'Video 4';
-    var videoName5 = 'Video 5';
-    var videoName6 = 'Video 6';
+
+    var id1 = 'id1';
+    var name1 = 'name1';
+
+    var id2 = 'id2';
+    var name2 = 'name2';
+
+    var id3 = 'id3';
+    var name3 = 'name3';
+
+    var id4 = 'id4';
+    var name4 = 'name4';
+
+    var id5 = 'id5';
+    var name5 = 'name5';
+
+    var id6 = 'id6';
+    var name6 = 'name6';
 
     var videoItems = [
-        createVideoItem(playlistName1, videoName1),
-        createVideoItem(playlistName1, videoName2),
-        createVideoItem(playlistName2, videoName3),
-        createVideoItem(playlistName2, videoName4),
-        createVideoItem(playlistName3, videoName5),
-        createVideoItem(playlistName3, videoName6)
+        createVideoItem(id1, name1, playlistName1),
+        createVideoItem(id2, name2, playlistName1),
+
+        createVideoItem(id3, name3, playlistName2),
+        createVideoItem(id4, name4, playlistName2),
+
+        createVideoItem(id5, name5, playlistName3),
+        createVideoItem(id6, name6, playlistName3)
     ];
 
     var cursor1 = 'cursor1';
@@ -575,15 +589,13 @@ function createReadableStream(contents) {
 }
 
 /**
+ * @param {string} id
+ * @param {string} name
  * @param {string} playlistName
- * @param {string} videoName
  * @returns {Object} Video item
  */
-function createVideoItem(playlistName, videoName) {
-    return {
-        playlistName: playlistName,
-        videoName: videoName
-    };
+function createVideoItem(id, name, playlistName) {
+    return { id, name, playlistName };
 }
 
 /**
