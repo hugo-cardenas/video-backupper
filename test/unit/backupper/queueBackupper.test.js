@@ -7,16 +7,17 @@ test('queueBackupper - run - succeeds', function (t) {
     var playlistId = 'myPlaylist42';
 
     var videoItems = [
-        createVideoItem('playlistId1', 'playlistName1', 'videoId1', 'videoName1'),
-        createVideoItem('playlistId2', 'playlistName2', 'videoId2', 'videoName2'),
-        createVideoItem('playlistId3', 'playlistName3', 'videoId3', 'videoName3'),
-        createVideoItem('playlistId4', 'playlistName4', 'videoId4', 'videoName4')
+        createVideoItem('videoId1', 'videoName1', 'playlistName1'),
+        createVideoItem('videoId2', 'videoName2', 'playlistName2'),
+        createVideoItem('videoId3', 'videoName3', 'playlistName3'),
+        createVideoItem('videoId4', 'videoName4', 'playlistName4')
     ];
 
     var storedVideoItems = [
-        createStoredVideoItem('playlistName2', 'videoName2'),
-        createStoredVideoItem('playlistName999', 'videoName999'),
-        createStoredVideoItem('playlistName4', 'videoName4')
+        // Should compare by video id only
+        createVideoItem('videoId2', '', ''),
+        createVideoItem('videoId999', '', ''),
+        createVideoItem('videoId4', '', '')
     ];
 
     var provider = {
@@ -164,8 +165,8 @@ test('queueBackupper - run - succeeds, no stored items', function (t) {
     var playlistId = 'myPlaylist42';
 
     var videoItems = [
-        createVideoItem('playlistId1', 'playlistName1', 'videoId1', 'videoName1'),
-        createVideoItem('playlistId2', 'playlistName2', 'videoId2', 'videoName2')
+        createVideoItem('videoId1', 'videoName1', 'playlistName1'),
+        createVideoItem('videoId2', 'videoName2', 'playlistName2')
     ];
 
     var storedVideoItems = [];
@@ -211,12 +212,12 @@ test('queueBackupper - run - succeeds, no filtered items', function (t) {
     var playlistId = 'myPlaylist42';
 
     var videoItems = [
-        createVideoItem('playlistId1', 'playlistName1', 'videoId1', 'videoName1'),
-        createVideoItem('playlistId2', 'playlistName2', 'videoId2', 'videoName2')
+        createVideoItem('videoId1', 'videoName1', 'playlistName1'),
+        createVideoItem('videoId2', 'videoName2', 'playlistName2')
     ];
 
     var storedVideoItems = [
-        createStoredVideoItem('playlistId3', 'playlistName3', 'videoId3', 'videoName3')
+        createVideoItem('videoId3', '', '')
     ];
 
     var provider = {
@@ -260,14 +261,14 @@ test('queueBackupper - run - succeeds, all items filtered', function (t) {
     var playlistId = 'myPlaylist42';
 
     var videoItems = [
-        createVideoItem('playlistId1', 'playlistName1', 'videoId1', 'videoName1'),
-        createVideoItem('playlistId2', 'playlistName2', 'videoId2', 'videoName2')
+        createVideoItem('videoId1', 'videoName1', 'playlistName1'),
+        createVideoItem('videoId2', 'videoName2', 'playlistName2')
     ];
 
     var storedVideoItems = [
-        createStoredVideoItem('playlistName1', 'videoName1'),
-        createStoredVideoItem('playlistName2', 'videoName2'),
-        createStoredVideoItem('playlistName3', 'videoName3')
+        createVideoItem('videoId1', '', ''),
+        createVideoItem('videoId2', '', ''),
+        createVideoItem('videoId3', '', '')
     ];
 
     var provider = {
@@ -401,12 +402,12 @@ test('queueBackupper - run - queue fails', function (t) {
     var playlistId = 'myPlaylist42';
 
     var videoItems = [
-        createVideoItem('playlistId1', 'playlistName1', 'videoId1', 'videoName1'),
-        createVideoItem('playlistId2', 'playlistName2', 'videoId2', 'videoName2')
+        createVideoItem('videoId1', 'videoName1', 'playlistName1'),
+        createVideoItem('videoId2', 'videoName2', 'playlistName2')
     ];
 
     var storedVideoItems = [
-        createStoredVideoItem('playlistName2', 'videoName2')
+        createVideoItem('videoId2', '', '')
     ];
 
     var provider = {
@@ -444,29 +445,11 @@ test('queueBackupper - run - queue fails', function (t) {
 });
 
 /**
- * @param {string} playlistId
+ * @param {string} id
+ * @param {string} name
  * @param {string} playlistName
- * @param {string} videoId
- * @param {string} videoName
  * @returns {Object}
  */
-function createVideoItem(playlistId, playlistName, videoId, videoName) {
-    return {
-        playlistId: playlistId,
-        playlistName: playlistName,
-        videoId: videoId,
-        videoName: videoName
-    };
-}
-
-/**
- * @param {string} playlistName
- * @param {string} videoName
- * @returns {Object}
- */
-function createStoredVideoItem(playlistName, videoName) {
-    return {
-        playlistName: playlistName,
-        videoName: videoName
-    };
+function createVideoItem(id, name, playlistName) {
+    return { id, name, playlistName };
 }
