@@ -1,5 +1,6 @@
 const _ = require('lodash');
 const VError = require('verror');
+const crypto = require('crypto');
 const baserequire = require('base-require');
 const createVideo = baserequire('src/video/video');
 
@@ -23,6 +24,27 @@ module.exports = function (google, config) {
     var youtubeClient;
 
     /**
+     * Get video items from the specified playlist
+     *
+     * @param {string} playlistId
+     * @returns {Promise<Object[]>} Promise resolving with an array of video items
+     */
+    function getVideoItems(playlistId) {
+        return Promise.all([
+                getItems(playlistId),
+                getPlaylistName(playlistId)
+            ])
+            .then(function (values) {
+                var videoItems = values[0];
+                var playlistName = values[1];
+                return composeResult(videoItems, playlistName);
+            })
+            .catch(function (err) {
+                throw createError(playlistId, err);
+            });
+    }
+
+    /**
      * @throws {Error
      */
     function validateConfig() {
@@ -32,6 +54,60 @@ module.exports = function (google, config) {
             throw new Error('Invalid config. Missing keys: ' + missingKeys.join(','));
         }
     }
+
+    /**
+     * Get all video items from the specified playlist
+     *
+     * @param {Object} jwtClient
+     * @param {string} playlistId
+     * @returns {Promise<Object[]>} Promise resolving with an array of video items
+     */
+    function getItems(playlistId) {
+        return getYoutubeClient()
+            .then(function (youtubeClient) {
+                var options = {
+                    playlistId: playlistId,
+                    part: ['snippet'],
+                    maxResults: 50
+                };
+                return listPlaylistItems(youtubeClient, options);
+            })
+            .then(function (data) {
+                return extractVideoItems(data);
+            });
+    }
+
+    /**
+     * @returns {Promise<Object>} Resolves with Youtube client object
+     */
+    function getYoutubeClient() {
+        if (youtubeClient) {
+            return Promise.resolve(youtubeClient);
+        }
+        return getJwtClient()
+            .then(function (jwtClient) {
+                youtubeClient = google.youtube({
+                    version: 'v3',
+                    auth: jwtClient
+                });
+                return youtubeClient;
+            });
+    }
+
+    /**
+     * @returns {Promise<Object>} Resolves with authenticated JWT client
+     */
+    function getJwtClient() {
+        if (jwtClient) {
+            return Promise.resolve(jwtClient);
+        }
+        return createAuthorizedJwtClient()
+            .then(function (client) {
+                jwtClient = client;
+                return jwtClient;
+            });
+    }
+
     /**
      * @returns {Object} JWT client
      */
@@ -57,59 +133,6 @@ module.exports = function (google, config) {
                 return resolve(jwtClient);
             });
         });
-    }
-
-    /**
-     * @returns {Promise<Object>} Resolves with authenticated JWT client
-     */
-    function getJwtClient() {
-        if (jwtClient) {
-            return Promise.resolve(jwtClient);
-        }
-        return createAuthorizedJwtClient()
-            .then(function (client) {
-                jwtClient = client;
-                return jwtClient;
-            });
-    }
-
-    /**
-     * @returns {Promise<Object>} Resolves with Youtube client object
-     */
-    function getYoutubeClient() {
-        if (youtubeClient) {
-            return Promise.resolve(youtubeClient);
-        }
-        return getJwtClient()
-            .then(function (jwtClient) {
-                youtubeClient = google.youtube({
-                    version: 'v3',
-                    auth: jwtClient
-                });
-                return youtubeClient;
-            });
-    }
-
-    /**
-     * Get all video items from the specified playlist
-     *
-     * @param {Object} jwtClient
-     * @param {string} playlistId
-     * @returns {Promise<Object[]>} Promise resolving with an array of video items
-     */
-    function getItems(playlistId) {
-        return getYoutubeClient()
-            .then(function (youtubeClient) {
-                var options = {
-                    playlistId: playlistId,
-                    part: ['snippet'],
-                    maxResults: 50
-                };
-                return listPlaylistItems(youtubeClient, options);
-            })
-            .then(function (data) {
-                return extractVideoItems(data);
-            });
     }
 
     /**
@@ -218,8 +241,18 @@ module.exports = function (google, config) {
      */
     function composeResult(videoItems, playlistName) {
         return videoItems.map(function (item) {
-            return createVideo(item.videoId, item.videoName, item.playlistId, playlistName);
+            const id = buildVideoId(item.videoId, playlistName);
+            return createVideo(id, item.videoName, playlistName);
         });
+    }
+
+    /**
+     * @param {string} videoId
+     * @param {string} playlistName
+     * @returns {string}
+     */
+    function buildVideoId(videoId, playlistName) {
+        return sha256(videoId + '_' + playlistName);
     }
 
     /**
@@ -232,24 +265,11 @@ module.exports = function (google, config) {
     }
 
     /**
-     * Get video items from the specified playlist
-     *
-     * @param {string} playlistId
-     * @returns {Promise<Object[]>} Promise resolving with an array of video items
+     * @param {string} value
+     * @returns {string}
      */
-    function getVideoItems(playlistId) {
-        return Promise.all([
-                getItems(playlistId),
-                getPlaylistName(playlistId)
-            ])
-            .then(function (values) {
-                var videoItems = values[0];
-                var playlistName = values[1];
-                return composeResult(videoItems, playlistName);
-            })
-            .catch(function (err) {
-                throw createError(playlistId, err);
-            });
+    function sha256(value) {
+        return crypto.createHash('sha256').update(value).digest('hex');
     }
 
     return {

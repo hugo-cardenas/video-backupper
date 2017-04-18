@@ -1,7 +1,7 @@
-var test = require('blue-tape');
-var sinon = require('sinon');
-var baserequire = require('base-require');
-var createProvider = baserequire('src/provider/provider');
+const test = require('blue-tape');
+const crypto = require('crypto');
+const baserequire = require('base-require');
+const createProvider = baserequire('src/provider/provider');
 
 test('provider - create - invalid config', function (t) {
     var google = {};
@@ -40,15 +40,13 @@ test('provider - getItems - succeeds', function (t) {
     }]);
 
     var expectedVideoItem1 = {
-        videoId: videoId1,
-        videoName: videoName1,
-        playlistId: playlistId,
+        id: sha256(videoId1 + '_' + playlistName),
+        name: videoName1,
         playlistName: playlistName
     };
     var expectedVideoItem2 = {
-        videoId: videoId2,
-        videoName: videoName2,
-        playlistId: playlistId,
+        id: sha256(videoId2 + '_' + playlistName),
+        name: videoName2,
         playlistName: playlistName
     };
     var expectedVideoItems = [expectedVideoItem1, expectedVideoItem2];
@@ -611,4 +609,12 @@ function createJwtClient(err) {
             callback(err, tokens);
         }
     };
+}
+
+/**
+ * @param {string} str
+ * @returns {string}
+ */
+function sha256(str) {
+    return crypto.createHash('sha256').update(str).digest('hex');
 }

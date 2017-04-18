@@ -4,23 +4,21 @@ const baserequire = require('base-require');
 const createVideo = baserequire('src/video/video');
 
 test('video - has all properties', function (t) {
-    const videoId = 'videoId';
-    const videoName = 'videoName';
-    const playlistId = 'playlistId';
+    const id = 'videoId';
+    const name = 'videoName';
     const playlistName = 'playlistName';
 
-    const video = createVideo(videoId, videoName, playlistId, playlistName);
-    t.equal(video.videoId, videoId);
-    t.equal(video.videoName, videoName);
-    t.equal(video.playlistId, playlistId);
+    const video = createVideo(id, name, playlistName);
+    t.equal(video.id, id);
+    t.equal(video.name, name);
     t.equal(video.playlistName, playlistName);
     t.end();
 });
 
 const invalidValues = ['', 0, null, undefined, [], false, true];
 const invalidArgs = _.flatten(invalidValues.map(function (val) {
-    return [0, 1, 2, 3].map(function (i) {
-        const arr = ['videoId', 'videoName', 'playlistId', 'playlistName'];
+    return [0, 1, 2].map(function (i) {
+        const arr = ['videoId', 'videoName', 'playlistName'];
         arr[i] = val;
         return arr;
     });
