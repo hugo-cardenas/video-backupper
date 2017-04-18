@@ -1,6 +1,7 @@
 var VError = require('verror');
 var baserequire = require('base-require');
 var validateVideoItem = baserequire('src/storage/videoItemValidator');
+var createVideo = baserequire('src/video/video');
 
 /**
  * @typedef {Object} Storage
@@ -21,49 +22,16 @@ module.exports = function (s3, config) {
     validateConfig(config);
 
     /**
-     * Validate input storage config
-     *
-     * @param {Object} config Plain config object
-     * @throws {Error}
+     * @returns {Promise<Object[]>} Resolves with array of stored video items
      */
-    function validateConfig(config) {
-        if (!config.bucket) {
-            throw new VError('Error creating s3 storage: Invalid config.bucket value %s ', JSON.stringify(config.bucket));
-        }
-    }
-
-    /**
-     * Build the S3 key (path)
-     *
-     * @param {Object} videoItem
-     * @returns {string}
-     */
-    function buildKey(videoItem) {
-        return videoItem.playlistName + '/' + videoItem.videoName + '.' + extension;
-    }
-
-    /**
-     * @param {Object} params
-     * @returns {Promise}
-     */
-    function s3Upload(params) {
-        return new Promise(function (resolve, reject) {
-            s3.upload(params, function (err, data) {
-                if (err) {
-                    return reject(err);
-                }
-                return resolve();
+    function getAllVideoItems() {
+        return getAllKeys()
+            .then(function (keys) {
+                return keys.map(buildVideoItemFromKey);
+            })
+            .catch(function (err) {
+                return Promise.reject(createGetAllVideoItemsError(err));
             });
-        });
-    }
-
-    /**
-     * @param {Object} videoItem
-     * @param {Error} err
-     * @returns {Error}
-     */
-    function createSaveError(videoItem, err) {
-        return new VError(err, 'S3 storage unable to save stream for videoItem %s', JSON.stringify(videoItem));
     }
 
     /**
@@ -92,16 +60,15 @@ module.exports = function (s3, config) {
     }
 
     /**
-     * @returns {Promise<Object[]>} Resolves with array of stored video items
+     * Validate input storage config
+     *
+     * @param {Object} config Plain config object
+     * @throws {Error}
      */
-    function getAllVideoItems() {
-        return getAllKeys()
-            .then(function (keys) {
-                return keys.map(buildVideoItemFromKey);
-            })
-            .catch(function (err) {
-                return Promise.reject(createGetAllVideoItemsError(err));
-            });
+    function validateConfig(config) {
+        if (!config.bucket) {
+            throw new VError('Error creating s3 storage: Invalid config.bucket value %s ', JSON.stringify(config.bucket));
+        }
     }
 
     /**
@@ -111,6 +78,59 @@ module.exports = function (s3, config) {
         var params = { Bucket: config.bucket };
         return s3List(params)
             .then(parseListKeysResponseData);
+    }
+
+    /**
+     * @param {any} key
+     * @returns {Object} Video item object
+     */
+    function buildVideoItemFromKey(key) {
+        // Example: playlistFoo/videoBar_42.baz
+        const regex = /^([^/]+)\/([^/]+)_([0-9a-zA-Z]+)\.[0-9a-zA-Z]+$/;
+        const result = regex.exec(key);
+
+        if (result && result[1] && result[2] && result[3]) {
+            const playlistName = result[1];
+            const name = result[2];
+            const id = result[3];
+            return createVideo(id, name, playlistName);
+        }
+
+        throw new VError('Invalid key "%s"', JSON.stringify(key));
+    }
+
+    /**
+     * Build the S3 key (path)
+     *
+     * @param {Object} videoItem
+     * @returns {string}
+     */
+    function buildKey(videoItem) {
+        return `${videoItem.playlistName}/${videoItem.name}_${videoItem.id}.${extension}`;
+    }
+
+    /**
+     * @param {Object} params
+     * @returns {Promise}
+     */
+    function s3Upload(params) {
+        return new Promise(function (resolve, reject) {
+            s3.upload(params, function (err, data) {
+                if (err) {
+                    return reject(err);
+                }
+                return resolve();
+            });
+        });
+    }
+
+    /**
+     * @param {Object} videoItem
+     * @param {Error} err
+     * @returns {Error}
+     */
+    function createSaveError(videoItem, err) {
+        return new VError(err, 'S3 storage unable to save stream for videoItem %s', JSON.stringify(videoItem));
     }
 
     /**
@@ -144,26 +164,6 @@ module.exports = function (s3, config) {
                 return resolve(data);
             });
         });
-    }
-
-    /**
-     * @param {any} key
-     * @returns {Object} Video item object
-     */
-    function buildVideoItemFromKey(key) {
-        var parts = key.split('/');
-        // Example: playlistFoo/videoBar.baz
-        if (parts.length === 2 && parts[0] && parts[1]) {
-            var file = parts[1];
-            var fileParts = file.split('.');
-            if (fileParts.length > 1) {
-                return {
-                    playlistName: parts[0],
-                    videoName: fileParts.slice(0, -1).join('.')
-                };
-            }
-        }
-        throw new VError('Invalid key "%s"', JSON.stringify(key));
     }
 
     /**
