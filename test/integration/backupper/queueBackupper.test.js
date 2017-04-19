@@ -1,5 +1,6 @@
 var test = require('blue-tape');
 var sinon = require('sinon');
+var crypto = require('crypto');
 var baserequire = require('base-require');
 var baseTest = baserequire('test/integration/baseTest');
 var backupperLocator = baserequire('src/backupper/backupperLocator');
@@ -20,10 +21,15 @@ test('queueBackupper - backup - succeeds with Dropbox storage', options, functio
     enableDropboxStorage();
 
     var playlistId = 'PLWcOakfYWxVM_wvoM_bKxEiuGwvgYCvOE';
-
     var playlistName = 'nyancat playlist';
+
+    var videoId1 = '40T4IrLiCiU';
     var videoName1 = 'video 1';
+
+    var videoId2 = 'egjumMGKZCg';
     var videoName2 = 'video 2';
+
+    var videoId3 = '5y5MQMJmCxI';
     var videoName3 = 'video 3';
 
     return redisHelper.flushDb()
@@ -37,9 +43,14 @@ test('queueBackupper - backup - succeeds with Dropbox storage', options, functio
         })
         .then(function (files) {
             t.equal(files.length, 3, 'There are 3 files stored');
-            t.ok(files.includes(buildDropboxPath(playlistName, videoName1)));
-            t.ok(files.includes(buildDropboxPath(playlistName, videoName2)));
-            t.ok(files.includes(buildDropboxPath(playlistName, videoName3)));
+            var expectedPaths = [
+                buildDropboxPath(playlistName, videoName1, videoId1),
+                buildDropboxPath(playlistName, videoName2, videoId2),
+                buildDropboxPath(playlistName, videoName3, videoId3)
+            ];
+            t.ok(files.includes(expectedPaths[0]), `Stored files contain ${expectedPaths[0]}}`);
+            t.ok(files.includes(expectedPaths[1]), `Stored files contain ${expectedPaths[1]}}`);
+            t.ok(files.includes(expectedPaths[2]), `Stored files contain ${expectedPaths[2]}}`);
         })
         .then(function () {
             getQueue().close();
@@ -52,10 +63,15 @@ test('queueBackupper - backup - succeeds with Dropbox storage, skips already bac
     enableDropboxStorage();
 
     var playlistId = 'PLWcOakfYWxVM_wvoM_bKxEiuGwvgYCvOE';
-
     var playlistName = 'nyancat playlist';
+
+    var videoId1 = '40T4IrLiCiU';
     var videoName1 = 'video 1';
+
+    var videoId2 = 'egjumMGKZCg';
     var videoName2 = 'video 2';
+
+    var videoId3 = '5y5MQMJmCxI';
     var videoName3 = 'video 3';
 
     var queue = getQueue();
@@ -69,7 +85,7 @@ test('queueBackupper - backup - succeeds with Dropbox storage, skips already bac
         })
         .then(function () {
             // Delete one stored file and backup again - should create only 1 job
-            return dropboxHelper.deleteFile(buildDropboxPath(playlistName, videoName2));
+            return dropboxHelper.deleteFile(buildDropboxPath(playlistName, videoName2, videoId2));
         })
         .then(function () {
             // Run backup again for one single video, wait until the single job is finished
@@ -82,9 +98,9 @@ test('queueBackupper - backup - succeeds with Dropbox storage, skips already bac
             // Check that only 4 jobs are created - 3 original video files + 1 saved again
             t.equal(queueSpy.callCount, 4, 'Queue createJob is called only 4 times (3+1 videos)');
             t.equal(files.length, 3, 'There are 3 files stored');
-            t.ok(files.includes(buildDropboxPath(playlistName, videoName1)));
-            t.ok(files.includes(buildDropboxPath(playlistName, videoName2)));
-            t.ok(files.includes(buildDropboxPath(playlistName, videoName3)));
+            t.ok(files.includes(buildDropboxPath(playlistName, videoName1, videoId1)));
+            t.ok(files.includes(buildDropboxPath(playlistName, videoName2, videoId2)));
+            t.ok(files.includes(buildDropboxPath(playlistName, videoName3, videoId3)));
         })
         .then(function () {
             getQueue().close();
@@ -97,10 +113,15 @@ test('queueBackupper - backup - succeeds with S3 storage', options, function (t)
     enableS3Storage();
 
     var playlistId = 'PLWcOakfYWxVM_wvoM_bKxEiuGwvgYCvOE';
-
     var playlistName = 'nyancat playlist';
+
+    var videoId1 = '40T4IrLiCiU';
     var videoName1 = 'video 1';
+
+    var videoId2 = 'egjumMGKZCg';
     var videoName2 = 'video 2';
+
+    var videoId3 = '5y5MQMJmCxI';
     var videoName3 = 'video 3';
 
     return redisHelper.flushDb()
@@ -112,9 +133,9 @@ test('queueBackupper - backup - succeeds with S3 storage', options, function (t)
         .then(s3Helper.listKeys)
         .then(function (s3Keys) {
             t.equal(s3Keys.length, 3);
-            t.ok(s3Keys.includes(buildS3Key(playlistName, videoName1)));
-            t.ok(s3Keys.includes(buildS3Key(playlistName, videoName2)));
-            t.ok(s3Keys.includes(buildS3Key(playlistName, videoName3)));
+            t.ok(s3Keys.includes(buildS3Key(playlistName, videoName1, videoId1)));
+            t.ok(s3Keys.includes(buildS3Key(playlistName, videoName2, videoId2)));
+            t.ok(s3Keys.includes(buildS3Key(playlistName, videoName3, videoId3)));
         })
         .then(function () {
             getQueue().close();
@@ -127,10 +148,15 @@ test('queueBackupper - backup - succeeds with S3 storage, skips already backed u
     enableS3Storage();
 
     var playlistId = 'PLWcOakfYWxVM_wvoM_bKxEiuGwvgYCvOE';
-
     var playlistName = 'nyancat playlist';
+
+    var videoId1 = '40T4IrLiCiU';
     var videoName1 = 'video 1';
+
+    var videoId2 = 'egjumMGKZCg';
     var videoName2 = 'video 2';
+
+    var videoId3 = '5y5MQMJmCxI';
     var videoName3 = 'video 3';
 
     var queue = getQueue();
@@ -144,7 +170,7 @@ test('queueBackupper - backup - succeeds with S3 storage, skips already backed u
         })
         .then(function () {
             // Delete one stored file and backup again - should create only 1 job
-            return s3Helper.deleteKeys([buildS3Key(playlistName, videoName2)]);
+            return s3Helper.deleteKeys([buildS3Key(playlistName, videoName2, videoId2)]);
         })
         .then(function () {
             // Run backup again for one single video, wait until the single job is finished
@@ -155,9 +181,9 @@ test('queueBackupper - backup - succeeds with S3 storage, skips already backed u
             // Check that only 4 jobs are created - 3 original video files + 1 saved again
             t.equal(queueSpy.callCount, 4, 'Queue createJob is called only 4 times (3+1 videos)');
             t.equal(s3Keys.length, 3);
-            t.ok(s3Keys.includes(buildS3Key(playlistName, videoName1)));
-            t.ok(s3Keys.includes(buildS3Key(playlistName, videoName2)));
-            t.ok(s3Keys.includes(buildS3Key(playlistName, videoName3)));
+            t.ok(s3Keys.includes(buildS3Key(playlistName, videoName1, videoId1)));
+            t.ok(s3Keys.includes(buildS3Key(playlistName, videoName2, videoId2)));
+            t.ok(s3Keys.includes(buildS3Key(playlistName, videoName3, videoId3)));
         })
         .then(function () {
             getQueue().close();
@@ -200,10 +226,12 @@ function runBackupAndWaitForSucceededJobs(playlistId, numJobs, runWorker) {
 /**
  * @param {string} playlistName
  * @param {string} videoName
+ * @param {string} videoId
  * @returns {string}
  */
-function buildDropboxPath(playlistName, videoName) {
-    return ('/' + playlistName + '/' + videoName + '.mp4').toLowerCase();
+function buildDropboxPath(playlistName, videoName, videoId) {
+    const id = buildVideoId(videoId, playlistName);
+    return (`/${playlistName}/${videoName}_${id}.mp4`).toLowerCase();
 }
 
 /**
@@ -211,8 +239,18 @@ function buildDropboxPath(playlistName, videoName) {
  * @param {string} videoName
  * @returns {string}
  */
-function buildS3Key(playlistName, videoName) {
-    return playlistName + '/' + videoName + '.mp4';
+function buildS3Key(playlistName, videoName, videoId) {
+    const id = buildVideoId(videoId, playlistName);
+    return `${playlistName}/${videoName}_${id}.mp4`;
+}
+
+/**
+ * @param {string} providerVideoId
+ * @param {string} playlistName
+ * @returns {string}
+ */
+function buildVideoId(providerVideoId, playlistName) {
+    return sha256(providerVideoId + '_' + playlistName);
 }
 
 /**
@@ -262,4 +300,12 @@ function enableBackupperStorage(storageName) {
  */
 function getConfigValue(key) {
     return configLocator.getConfigManager().getConfig().get(key);
+}
+
+/**
+ * @param {string} value
+ * @returns {string}
+ */
+function sha256(value) {
+    return crypto.createHash('sha256').update(value).digest('hex');
 }
