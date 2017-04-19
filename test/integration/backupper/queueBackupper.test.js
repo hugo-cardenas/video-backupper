@@ -16,7 +16,7 @@ var options = {
     skip: !baseTest.isIntegrationTestEnabled()
 };
 
-test('queueBackupper - backup - succeeds with Dropbox storage', options, function (t) {
+test.only('queueBackupper - backup - succeeds with Dropbox storage', options, function (t) {
     enableDropboxStorage();
 
     var playlistId = 'PLWcOakfYWxVM_wvoM_bKxEiuGwvgYCvOE';
@@ -186,6 +186,7 @@ function runBackupAndWaitForSucceededJobs(playlistId, numJobs, runWorker) {
     return new Promise(function (resolve, reject) {
         queue.on('succeeded', function () {
             numSucceeded++;
+            console.log('Succeeded, num: ' + numSucceeded);
             if (numSucceeded === numJobs) {
                 return resolve();
             }
@@ -194,6 +195,7 @@ function runBackupAndWaitForSucceededJobs(playlistId, numJobs, runWorker) {
             getWorker().run();
         }
         getQueueBackupper().run(playlistId);
+        console.log('RUN with playlist id ' + playlistId);
     });
 }
 

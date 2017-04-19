@@ -21,7 +21,7 @@ function isIntegrationTestEnabled() {
 }
 
 function setUp() {
-    disableDisplayOutput();
+    //disableDisplayOutput();
 }
 
 function disableDisplayOutput() {
