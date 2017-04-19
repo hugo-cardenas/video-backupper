@@ -236,13 +236,6 @@ function getQueue() {
     return queueLocator.getQueueManager().getQueue();
 }
 
-/**
- * @returns {Object}
- */
-function getBackupperStorage() {
-    return storageLocator.getBackupperStorageManager().getBackupperStorage();
-}
-
 function enableDropboxStorage() {
     enableBackupperStorage('dropbox');
 }
