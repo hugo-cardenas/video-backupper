@@ -1,4 +1,3 @@
-var url = require('url');
 var _ = require('lodash');
 var VError = require('verror');
 var stringify = require('json-stringify-safe');
@@ -62,19 +61,6 @@ module.exports = function (ytdl, storage, displayOutput) {
         if (missingProperties.length > 0) {
             throw new Error('Missing properties [' + missingProperties.join(', ') + '] in object ' + JSON.stringify(object));
         }
-    }
-
-    /**
-     * @param {string} videoId
-     * @returns {string}
-     */
-    function buildVideoUrl(videoId) {
-        return url.format({
-            protocol: 'https',
-            host: 'www.youtube.com',
-            pathname: 'watch',
-            query: { v: videoId }
-        });
     }
 
     /**
