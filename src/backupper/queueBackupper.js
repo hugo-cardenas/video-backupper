@@ -17,29 +17,42 @@ module.exports = function (provider, storage, queue, displayOutput) {
      * @returns {Promise} No resolve value
      */
     function run(playlistId) {
-        return getVideoItems(playlistId)
-            .then(function (videoItems) {
-                displayOutput.outputLine('Found ' + videoItems.length + ' video items');
-                return videoItems;
-            })
-            .then(formatVideoItems) // TODO Should be moved to storage when comparison is done properly by id
+        return getPlaylistVideoItems(playlistId)
+            .then(processVideoItems)
+            .catch(function (err) {
+                return Promise.reject(createErrorForPlaylist(playlistId, err));
+            });
+    }
+
+    function backupChannel(userId) {
+        return getChannelVideoItems(userId)
+            .then(processVideoItems)
+            .catch(function (err) {
+                return Promise.reject(createErrorForChannel(userId, err));
+            });
+    }
+
+    function processVideoItems(videoItems) {
+        displayOutput.outputLine('Found ' + videoItems.length + ' video items');
+        return formatVideoItems(formatVideoItems) // TODO Should be moved to storage when comparison is done properly by id
             .then(filterVideoItems)
             .then(function (videoItems) {
                 displayOutput.outputLine('Creating save jobs for ' + videoItems.length + ' video items');
                 return videoItems;
             })
-            .then(queueVideoItems)
-            .catch(function (err) {
-                return Promise.reject(createError(playlistId, err));
-            });
+            .then(queueVideoItems);
     }
 
     /**
      * @param {string} playlistId
      * @returns {Promise<string[]>} Resolves with array of video items
      */
-    function getVideoItems(playlistId) {
+    function getPlaylistVideoItems(playlistId) {
         return provider.getVideoItems(playlistId);
+    }
+
+    function getChannelVideoItems(userId) {
+        return Promise.resolve([]);
     }
 
     /**
@@ -96,8 +109,21 @@ module.exports = function (provider, storage, queue, displayOutput) {
      * @param {Error} previousErr
      * @returns {Error}
      */
-    function createError(playlistId, previousErr) {
+    function createErrorForPlaylist(playlistId, previousErr) {
         var message = 'Failed to create backup jobs for playlist id ' + playlistId;
+        var err = new VError(previousErr, message);
+        displayOutput.outputLine(err.message);
+        return err;
+    }
+
+    /**
+     * Create a backup specific error
+     * @param {string} playlistId
+     * @param {Error} previousErr
+     * @returns {Error}
+     */
+    function createErrorForChannel(channelId, previousErr) {
+        var message = 'Failed to create backup jobs for channel id ' + channelId;
         var err = new VError(previousErr, message);
         displayOutput.outputLine(err.message);
         return err;

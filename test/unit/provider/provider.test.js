@@ -17,7 +17,7 @@ test('provider - create - invalid config', function (t) {
     }
 });
 
-test('provider - getItems - succeeds', function (t) {
+test('provider - getPlaylistVideoItems - succeeds', function (t) {
     var playlistId = 'playlistId40';
     var playlistName = 'playlistName40';
 
@@ -39,18 +39,8 @@ test('provider - getItems - succeeds', function (t) {
         playlistId: playlistId
     }]);
 
-    var expectedVideoItem1 = {
-        id: sha256(videoId1 + '_' + playlistName),
-        name: videoName1,
-        playlistName: playlistName,
-        url: 'https://www.youtube.com/watch?v=' + videoId1
-    };
-    var expectedVideoItem2 = {
-        id: sha256(videoId2 + '_' + playlistName),
-        name: videoName2,
-        playlistName: playlistName,
-        url: 'https://www.youtube.com/watch?v=' + videoId2
-    };
+    var expectedVideoItem1 = createProviderVideoItem(videoId1, videoName1, playlistName);
+    var expectedVideoItem2 = createProviderVideoItem(videoId2, videoName2, playlistName);
     var expectedVideoItems = [expectedVideoItem1, expectedVideoItem2];
 
     var config = {
@@ -105,13 +95,13 @@ test('provider - getItems - succeeds', function (t) {
 
     var provider = createProvider(google, config);
 
-    return provider.getVideoItems(playlistId)
+    return provider.getPlaylistVideoItems(playlistId)
         .then(function (items) {
             t.deepEqual(items, expectedVideoItems);
         });
 });
 
-test('provider - getItems - authorization error', function (t) {
+test('provider - getPlaylistVideoItems - authorization error', function (t) {
     var playlistId = 'playlistId42';
 
     var config = {
@@ -132,7 +122,7 @@ test('provider - getItems - authorization error', function (t) {
 
     var provider = createProvider(google, config);
 
-    return provider.getVideoItems(playlistId)
+    return provider.getPlaylistVideoItems(playlistId)
         .then(function () {
             t.fail();
         })
@@ -142,7 +132,7 @@ test('provider - getItems - authorization error', function (t) {
         });
 });
 
-test('provider - getItems - playlists resource error', function (t) {
+test('provider - getPlaylistVideoItems - playlists resource error', function (t) {
     var playlistId = 'playlistId40';
 
     var videoId1 = 'videoId42';
@@ -214,7 +204,7 @@ test('provider - getItems - playlists resource error', function (t) {
 
     var provider = createProvider(google, config);
 
-    return provider.getVideoItems(playlistId)
+    return provider.getPlaylistVideoItems(playlistId)
         .then(function () {
             t.fail();
         })
@@ -306,7 +296,7 @@ playlistsResourceInvalidResponseData.forEach(function (playlistsResponseData, in
 
         var provider = createProvider(google, config);
 
-        return provider.getVideoItems(playlistId)
+        return provider.getPlaylistVideoItems(playlistId)
             .then(function () {
                 t.fail();
             })
@@ -317,7 +307,7 @@ playlistsResourceInvalidResponseData.forEach(function (playlistsResponseData, in
     });
 });
 
-test('provider - getItems - playlistItems resource error', function (t) {
+test('provider - getPlaylistVideoItems - playlistItems resource error', function (t) {
     var playlistId = 'playlistId40';
     var playlistName = 'playlistName40';
 
@@ -376,7 +366,7 @@ test('provider - getItems - playlistItems resource error', function (t) {
 
     var provider = createProvider(google, config);
 
-    return provider.getVideoItems(playlistId)
+    return provider.getPlaylistVideoItems(playlistId)
         .then(function () {
             t.fail();
         })
@@ -421,9 +411,9 @@ var playlistItemsResourceInvalidResponseData = [
             snippet: {
                 title: 'title',
                 playlistId: 'playlistId'
-                    // resourceId: {
-                    //     videoId: 'videoId'
-                    // }
+                // resourceId: {
+                //     videoId: 'videoId'
+                // }
             }
         }]
     }
@@ -488,7 +478,7 @@ playlistItemsResourceInvalidResponseData.forEach(function (playlistItemsResponse
 
         var provider = createProvider(google, config);
 
-        return provider.getVideoItems(playlistId)
+        return provider.getPlaylistVideoItems(playlistId)
             .then(function () {
                 t.fail();
             })
@@ -497,6 +487,100 @@ playlistItemsResourceInvalidResponseData.forEach(function (playlistItemsResponse
                 t.ok(err.message.includes(JSON.stringify(playlistItemsResponseData)));
             });
     });
+});
+
+test.skip('provider - getChannelVideoItems - succeeds', function (t) {
+    var playlistId = 'playlistId40';
+    var playlistName = 'playlistName40';
+
+    var videoId1 = 'videoId42';
+    var videoName1 = 'videoName42';
+
+    var videoId2 = 'videoId44';
+    var videoName2 = 'videoName44';
+
+    var playlistsResponseData = createPlaylistResponseData(playlistId, playlistName);
+
+    var playlistItemsResponseData = createPlaylistItemsResponseData([{
+        videoId: videoId1,
+        videoName: videoName1,
+        playlistId: playlistId
+    }, {
+        videoId: videoId2,
+        videoName: videoName2,
+        playlistId: playlistId
+    }]);
+
+    var expectedVideoItem1 = {
+        id: sha256(videoId1 + '_' + playlistName),
+        name: videoName1,
+        playlistName: playlistName,
+        url: 'https://www.youtube.com/watch?v=' + videoId1
+    };
+    var expectedVideoItem2 = {
+        id: sha256(videoId2 + '_' + playlistName),
+        name: videoName2,
+        playlistName: playlistName,
+        url: 'https://www.youtube.com/watch?v=' + videoId2
+    };
+    var expectedVideoItems = [expectedVideoItem1, expectedVideoItem2];
+
+    var config = {
+        email: 'foo@bar.com',
+        keyFile: '/path/to/private/key.pem'
+    };
+
+    var jwtClient = createJwtClient(null);
+
+    var expectedPlaylistOptions = {
+        id: playlistId,
+        part: ['snippet'],
+        maxResults: 1
+    };
+    var expectedPlaylistItemsOptions = {
+        playlistId: playlistId,
+        part: ['snippet'],
+        maxResults: 50
+    };
+
+    var youtube = {
+        playlists: {
+            list: function (options, params, callback) {
+                t.deepEqual(expectedPlaylistOptions, options);
+                var err = null;
+                var response = [];
+                callback(err, playlistsResponseData, response);
+            }
+        },
+        playlistItems: {
+            list: function (options, params, callback) {
+                t.deepEqual(expectedPlaylistItemsOptions, options);
+                var err = null;
+                var response = [];
+                callback(err, playlistItemsResponseData, response);
+            }
+        }
+    };
+
+    var google = {
+        auth: {
+            JWT: function () {
+                return jwtClient;
+            }
+        },
+        youtube: function (options) {
+            t.equal(options.version, 'v3');
+            t.deepEqual(options.auth, jwtClient);
+            return youtube;
+        }
+    };
+
+    var provider = createProvider(google, config);
+
+    return provider.getPlaylistVideoItems(playlistId)
+        .then(function (items) {
+            t.deepEqual(items, expectedVideoItems);
+        });
 });
 
 /**
@@ -619,4 +703,19 @@ function createJwtClient(err) {
  */
 function sha256(str) {
     return crypto.createHash('sha256').update(str).digest('hex');
+}
+
+/**
+ * @param {string} providerVideoId
+ * @param {string} name
+ * @param {string} playlistName
+ * @returns {Object}
+ */
+function createProviderVideoItem(providerVideoId, name, playlistName) {
+    return {
+        id: sha256(providerVideoId + '_' + playlistName),
+        name: name,
+        playlistName: playlistName,
+        url: 'https://www.youtube.com/watch?v=' + providerVideoId
+    };
 }

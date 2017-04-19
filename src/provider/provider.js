@@ -28,7 +28,7 @@ module.exports = function (google, config) {
      * @param {string} playlistId
      * @returns {Promise<Object[]>} Promise resolving with an array of video items
      */
-    function getVideoItems(playlistId) {
+    function getPlaylistVideoItems(playlistId) {
         return Promise.all([
                 getItems(playlistId),
                 getPlaylistName(playlistId)
@@ -41,6 +41,10 @@ module.exports = function (google, config) {
             .catch(function (err) {
                 throw createError(playlistId, err);
             });
+    }
+
+    function getChannelVideoItems(channelId) {
+        
     }
 
     /**
@@ -298,6 +302,6 @@ module.exports = function (google, config) {
     }
 
     return {
-        getVideoItems: getVideoItems
+        getPlaylistVideoItems: getPlaylistVideoItems
     };
 };
