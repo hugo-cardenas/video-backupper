@@ -1,8 +1,7 @@
 const _ = require('lodash');
 const VError = require('verror');
 const crypto = require('crypto');
-const baserequire = require('base-require');
-const createVideo = baserequire('src/video/video');
+var url = require('url');
 
 /**
  * @typedef {Object} Provider
@@ -241,8 +240,34 @@ module.exports = function (google, config) {
      */
     function composeResult(videoItems, playlistName) {
         return videoItems.map(function (item) {
-            const id = buildVideoId(item.videoId, playlistName);
-            return createVideo(id, item.videoName, playlistName);
+            return buildVideoObject(item, playlistName);
+        });
+    }
+
+    /**
+     * @param {Object} item
+     * @param {string} playlistName
+     * @returns {Object}
+     */
+    function buildVideoObject(item, playlistName) {
+        return {
+            id: buildVideoId(item.videoId, playlistName),
+            name: item.videoName,
+            playlistName: playlistName,
+            url: buildVideoUrl(item.videoId)
+        };
+    }
+
+    /**
+     * @param {string} videoId
+     * @returns {string}
+     */
+    function buildVideoUrl(videoId) {
+        return url.format({
+            protocol: 'https',
+            host: 'www.youtube.com',
+            pathname: 'watch',
+            query: { v: videoId }
         });
     }
 

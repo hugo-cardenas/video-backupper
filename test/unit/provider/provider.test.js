@@ -42,12 +42,14 @@ test('provider - getItems - succeeds', function (t) {
     var expectedVideoItem1 = {
         id: sha256(videoId1 + '_' + playlistName),
         name: videoName1,
-        playlistName: playlistName
+        playlistName: playlistName,
+        url: 'https://www.youtube.com/watch?v=' + videoId1
     };
     var expectedVideoItem2 = {
         id: sha256(videoId2 + '_' + playlistName),
         name: videoName2,
-        playlistName: playlistName
+        playlistName: playlistName,
+        url: 'https://www.youtube.com/watch?v=' + videoId2
     };
     var expectedVideoItems = [expectedVideoItem1, expectedVideoItem2];
 
