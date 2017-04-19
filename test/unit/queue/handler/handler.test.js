@@ -4,14 +4,12 @@ var baserequire = require('base-require');
 var createHandler = baserequire('src/queue/handler/handler');
 
 test('handler - handle - succeeds', function (t) {
-    var videoId = 'foo42';
+    var id = 'foo42';
     var stream = 'myStream42';
-    var videoItem = {
-        videoId: videoId
-    };
+    var videoItem = { id };
 
     var baseVideoUrl = 'https://www.youtube.com/watch?v=';
-    var expectedVideoUrl = baseVideoUrl + videoId;
+    var expectedVideoUrl = baseVideoUrl + id;
 
     var ytdl = sinon.stub()
         .withArgs(expectedVideoUrl)
@@ -33,7 +31,7 @@ test('handler - handle - succeeds', function (t) {
     var handler = createHandler(ytdl, storage, displayOutput);
     return handler.handle(job)
         .then(function () {
-            t.ok(storage.save.calledWith(stream, videoItem));
+            t.ok(storage.save.calledWith(stream, videoItem), `Should call storage with (${stream}, ${JSON.stringify(videoItem)})`);
             t.ok(displayOutput.outputLine.calledWith(sinon.match(/Saved video foo42/)));
         });
 });
@@ -63,13 +61,11 @@ invalidJobs.forEach(function (job, index) {
 });
 
 test('handler - handle - ytdl fails', function (t) {
-    var videoId = 'foo42';
-    var videoItem = {
-        videoId: videoId
-    };
+    var id = 'foo42';
+    var videoItem = { id };
 
     var baseVideoUrl = 'https://www.youtube.com/watch?v=';
-    var expectedVideoUrl = baseVideoUrl + videoId;
+    var expectedVideoUrl = baseVideoUrl + id;
 
     var errorMessage = 'Ytdl failed';
     var ytdl = sinon.stub()
@@ -98,14 +94,12 @@ test('handler - handle - ytdl fails', function (t) {
 });
 
 test('handler - handle - storage fails', function (t) {
-    var videoId = 'foo42';
+    var id = 'foo42';
     var stream = 'myStream42';
-    var videoItem = {
-        videoId: videoId
-    };
+    var videoItem = { id };
 
     var baseVideoUrl = 'https://www.youtube.com/watch?v=';
-    var expectedVideoUrl = baseVideoUrl + videoId;
+    var expectedVideoUrl = baseVideoUrl + id;
 
     var ytdl = sinon.stub()
         .withArgs(expectedVideoUrl)
