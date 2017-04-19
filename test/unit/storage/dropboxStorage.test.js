@@ -412,20 +412,34 @@ test('dropboxStorage - getAllVideoItems - list folder fails after the first succ
     var playlistName1 = 'Playlist 1';
     var playlistName2 = 'Playlist 2';
     var playlistName3 = 'Playlist 3';
-    var videoName1 = 'Video 1';
-    var videoName2 = 'Video 2';
-    var videoName3 = 'Video 3';
-    var videoName4 = 'Video 4';
-    var videoName5 = 'Video 5';
-    var videoName6 = 'Video 6';
+
+    var id1 = 'id1';
+    var name1 = 'name1';
+
+    var id2 = 'id2';
+    var name2 = 'name2';
+
+    var id3 = 'id3';
+    var name3 = 'name3';
+
+    var id4 = 'id4';
+    var name4 = 'name4';
+
+    var id5 = 'id5';
+    var name5 = 'name5';
+
+    var id6 = 'id6';
+    var name6 = 'name6';
 
     var videoItems = [
-        createVideoItem(playlistName1, videoName1),
-        createVideoItem(playlistName1, videoName2),
-        createVideoItem(playlistName2, videoName3),
-        createVideoItem(playlistName2, videoName4),
-        createVideoItem(playlistName3, videoName5),
-        createVideoItem(playlistName3, videoName6)
+        createVideoItem(id1, name1, playlistName1),
+        createVideoItem(id2, name2, playlistName1),
+
+        createVideoItem(id3, name3, playlistName2),
+        createVideoItem(id4, name4, playlistName2),
+
+        createVideoItem(id5, name5, playlistName3),
+        createVideoItem(id6, name6, playlistName3)
     ];
 
     var cursor1 = 'cursor1';
@@ -497,42 +511,49 @@ test('dropboxStorage - getAllVideoItems - list folder contains invalid path', fu
         });
 });
 
-test('dropboxStorage - getAllVideoItems - list folder contains invalid name', function (t) {
-    var playlistName1 = 'Playlist 1';
-    var videoName1 = 'Video 1';
+const invalidEntryNames = [
+    'video 1', // Missing id and extension
+    'video 1_42', // Missing extension
+    'video 1.foo' // Missing id
+];
 
-    var dropbox = {
-        filesListFolder: sinon.stub()
-    };
+invalidEntryNames.forEach(function (entryName, index) {
+    test('dropboxStorage - getAllVideoItems - list folder contains invalid entry name #' + index, function (t) {
+        var playlistName1 = 'Playlist 1';
 
-    var expectedArg = {
-        path: '',
-        recursive: true
-    };
+        var dropbox = {
+            filesListFolder: sinon.stub()
+        };
 
-    var entries = [
-        createResponseFileEntry(
-            videoName1, // File name is missing extension
-            ('/' + playlistName1 + '/' + videoName1).toLowerCase()
-        ),
-        createResponseFolderEntry(playlistName1)
-    ];
-    var dropboxResponse = createDropboxListFolderResponseWithEntries(entries);
+        var expectedArg = {
+            path: '',
+            recursive: true
+        };
 
-    dropbox.filesListFolder
-        .withArgs(expectedArg)
-        .returns(Promise.resolve(dropboxResponse));
+        var entries = [
+            createResponseFileEntry(
+                entryName,
+                ('/' + playlistName1 + '/' + entryName).toLowerCase()
+            ),
+            createResponseFolderEntry(playlistName1)
+        ];
+        var dropboxResponse = createDropboxListFolderResponseWithEntries(entries);
 
-    var storage = createDropboxStorage(dropbox);
-    return storage.getAllVideoItems()
-        .then(function () {
-            t.fail();
-        })
-        .catch(function (err) {
-            assertGetAllVideoItemsError(t, err);
-            t.ok(err.message.includes('Invalid video name'));
-            t.ok(err.message.includes(videoName1));
-        });
+        dropbox.filesListFolder
+            .withArgs(expectedArg)
+            .returns(Promise.resolve(dropboxResponse));
+
+        var storage = createDropboxStorage(dropbox);
+        return storage.getAllVideoItems()
+            .then(function () {
+                t.fail();
+            })
+            .catch(function (err) {
+                assertGetAllVideoItemsError(t, err);
+                t.ok(err.message.includes('Invalid entry name'));
+                t.ok(err.message.includes(entryName));
+            });
+    });
 });
 
 test('dropboxStorage - getAllVideoItems - list folder is missing folder entry', function (t) {
@@ -652,7 +673,7 @@ function createListFolderResponseEntries(videoItems) {
  * @returns {Object}
  */
 function createResponseFileEntryFromVideoItem(videoItem) {
-    var name = videoItem.videoName + '.foo';
+    var name = `${videoItem.name}_${videoItem.id}.foo`;
     var pathDisplay = '/' + videoItem.playlistName.toLowerCase() + '/' + name;
     return createResponseFileEntry(name, pathDisplay);
 }

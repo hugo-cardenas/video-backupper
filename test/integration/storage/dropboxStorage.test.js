@@ -29,29 +29,26 @@ test('dropboxStorage - save - succeeds', options, function (t) {
 
     var playlistName1 = 'playlist 1';
     var playlistName2 = 'playlist 2';
-    var videoName1 = 'video 1';
-    var videoName2 = 'video 2';
-    var videoName3 = 'video 3';
 
-    var videoItem1 = {
-        playlistName: playlistName1,
-        videoName: videoName1
-    };
-    var videoItem2 = {
-        playlistName: playlistName1,
-        videoName: videoName2
-    };
-    var videoItem3 = {
-        playlistName: playlistName2,
-        videoName: videoName3
-    };
+    var id1 = 'videoId1';
+    var name1 = 'video name 1';
+
+    var id2 = 'videoId2';
+    var name2 = 'video name 2';
+
+    var id3 = 'videoId3';
+    var name3 = 'video_name_3'; // Underscores in name should not affect extraction of id
+
+    var videoItem1 = createVideoItem(id1, name1, playlistName1);
+    var videoItem2 = createVideoItem(id2, name2, playlistName1);
+    var videoItem3 = createVideoItem(id3, name3, playlistName2);
 
     var folder1 = '/' + playlistName1.toLowerCase();
     var folder2 = '/' + playlistName2.toLowerCase();
 
-    var dropboxFilePath1 = folder1 + '/' + videoName1.toLowerCase() + '.' + extension;
-    var dropboxFilePath2 = folder1 + '/' + videoName2.toLowerCase() + '.' + extension;
-    var dropboxFilePath3 = folder2 + '/' + videoName3.toLowerCase() + '.' + extension;
+    var dropboxFilePath1 = `${folder1}/${name1.toLowerCase()}_${id1.toLowerCase()}.${extension}`;
+    var dropboxFilePath2 = `${folder1}/${name2.toLowerCase()}_${id2.toLowerCase()}.${extension}`;
+    var dropboxFilePath3 = `${folder2}/${name3.toLowerCase()}_${id3.toLowerCase()}.${extension}`;
 
     var dropbox = getDropbox();
 
@@ -96,13 +93,12 @@ test('dropboxStorage - save - overwrite file', options, function (t) {
     var stream2 = fs.createReadStream(file2);
 
     var playlistName1 = 'playlist 1';
-    var videoName1 = 'video 1';
-    var videoItem1 = {
-        playlistName: playlistName1,
-        videoName: videoName1
-    };
+    var id = 'videoId1';
+    var name = 'video 1';
+    var videoItem1 = createVideoItem(id, name, playlistName1);
 
-    var dropboxFilePath1 = '/' + playlistName1.toLowerCase() + '/' + videoName1.toLowerCase() + '.' + extension;
+    var dropboxFilePath1 = `/${playlistName1.toLowerCase()}/${name.toLowerCase()}_${id.toLowerCase()}.${extension}`;
+
     var dropbox = getDropbox();
 
     return cleanDropboxFiles(t)
@@ -137,22 +133,19 @@ test('dropboxStorage - save and getAllVideoItems - succeeds', options, function 
 
     var playlistName1 = 'PlayList 1';
     var playlistName2 = 'PlayList 2';
-    var videoName1 = 'Video 1';
-    var videoName2 = 'Video 2';
-    var videoName3 = 'Video 3';
 
-    var videoItem1 = {
-        playlistName: playlistName1,
-        videoName: videoName1
-    };
-    var videoItem2 = {
-        playlistName: playlistName1,
-        videoName: videoName2
-    };
-    var videoItem3 = {
-        playlistName: playlistName2,
-        videoName: videoName3
-    };
+    var id1 = 'videoId1';
+    var name1 = 'Video name 1';
+
+    var id2 = 'videoId2';
+    var name2 = 'Video name 2';
+
+    var id3 = 'videoId3';
+    var name3 = 'Video_name_3'; // Underscores in name should not affect extraction of id
+
+    var videoItem1 = createVideoItem(id1, name1, playlistName1);
+    var videoItem2 = createVideoItem(id2, name2, playlistName1);
+    var videoItem3 = createVideoItem(id3, name3, playlistName2);
 
     var expectedVideoItems = [videoItem1, videoItem2, videoItem3];
 
@@ -181,6 +174,16 @@ test('dropboxStorage - save and getAllVideoItems - succeeds', options, function 
 });
 
 /**
+ * @param {string} id
+ * @param {string} name
+ * @param {playlistName} playlistName
+ * @returns {Object}
+ */
+function createVideoItem(id, name, playlistName) {
+    return {id, name, playlistName};
+}
+
+/**
  * Assert contents of a dropbox directory
  *
  * @param {Object} t Test object
@@ -194,7 +197,7 @@ function assertFiles(t, dropbox, path, expectedFiles) {
         .then(function (files) {
             t.equal(files.length, expectedFiles.length);
             expectedFiles.forEach(function (expectedFile) {
-                t.ok(files.includes(expectedFile));
+                t.ok(files.includes(expectedFile), `${JSON.stringify(files)} should contain ${expectedFile}`);
             });
             return Promise.resolve();
         });
