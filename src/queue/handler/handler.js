@@ -29,8 +29,7 @@ module.exports = function (ytdl, storage, displayOutput) {
     function backup(videoItem) {
         var videoId = videoItem.id;
         try {
-            var url = buildVideoUrl(videoId);
-            var stream = ytdl(url);
+            var stream = ytdl(videoItem.url);
         } catch (err) {
             return Promise.reject(createError(videoId, err));
         }
@@ -48,7 +47,7 @@ module.exports = function (ytdl, storage, displayOutput) {
      */
     function getValidatedVideoItem(job) {
         validateProperties(job, ['data']);
-        validateProperties(job.data, ['id']);
+        validateProperties(job.data, ['id', 'url']);
         return job.data;
     }
 

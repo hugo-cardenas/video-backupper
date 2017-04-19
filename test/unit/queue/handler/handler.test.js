@@ -5,15 +5,13 @@ var createHandler = baserequire('src/queue/handler/handler');
 
 test('handler - handle - succeeds', function (t) {
     var id = 'foo42';
+    var url = 'url42';
+
     var stream = 'myStream42';
-    var videoItem = { id };
+    var videoItem = { id, url };
 
-    var baseVideoUrl = 'https://www.youtube.com/watch?v=';
-    var expectedVideoUrl = baseVideoUrl + id;
-
-    var ytdl = sinon.stub()
-        .withArgs(expectedVideoUrl)
-        .returns(stream);
+    var ytdl = sinon.stub();
+    ytdl.withArgs(url).returns(stream);
 
     var storage = { save: sinon.stub() };
     storage.save
@@ -39,7 +37,9 @@ test('handler - handle - succeeds', function (t) {
 var invalidJobs = [
     {},
     { foo: 123 },
-    { data: {} }
+    { data: {} },
+    { data: {id: 123} }, // Missing url
+    { data: {url: 456} } // Missing id
 ];
 
 invalidJobs.forEach(function (job, index) {
@@ -55,6 +55,7 @@ invalidJobs.forEach(function (job, index) {
                 t.fail();
             })
             .catch(function (err) {
+                t.ok(err.message.includes('Missing properties'));
                 t.ok(err.message.includes(JSON.stringify(job)));
             });
     });
@@ -62,15 +63,12 @@ invalidJobs.forEach(function (job, index) {
 
 test('handler - handle - ytdl fails', function (t) {
     var id = 'foo42';
-    var videoItem = { id };
-
-    var baseVideoUrl = 'https://www.youtube.com/watch?v=';
-    var expectedVideoUrl = baseVideoUrl + id;
+    var url = 'url42';
+    var videoItem = { id, url };
 
     var errorMessage = 'Ytdl failed';
-    var ytdl = sinon.stub()
-        .withArgs(expectedVideoUrl)
-        .throws(new Error(errorMessage));
+    var ytdl = sinon.stub();
+    ytdl.withArgs(url).throws(new Error(errorMessage));
 
     var storage = { save: sinon.stub() };
 
@@ -95,15 +93,13 @@ test('handler - handle - ytdl fails', function (t) {
 
 test('handler - handle - storage fails', function (t) {
     var id = 'foo42';
+    var url = 'url42';
+
     var stream = 'myStream42';
-    var videoItem = { id };
+    var videoItem = { id, url };
 
-    var baseVideoUrl = 'https://www.youtube.com/watch?v=';
-    var expectedVideoUrl = baseVideoUrl + id;
-
-    var ytdl = sinon.stub()
-        .withArgs(expectedVideoUrl)
-        .returns(stream);
+    var ytdl = sinon.stub();
+    ytdl.withArgs(url).returns(stream);
 
     var errorMessage = 'Storage failed';
     var storage = { save: sinon.stub() };
