@@ -1,7 +1,5 @@
 const VError = require('verror');
 const _ = require('lodash');
-const baserequire = require('base-require');
-const createVideo = baserequire('src/video/video');
 
 /**
  * Create a backupper
@@ -49,11 +47,10 @@ module.exports = function (provider, storage, queue, displayOutput) {
      */
     function formatVideoItems(videoItems) {
         return videoItems.map(function (videoItem) {
-            return createVideo(
-                videoItem.id,
-                formatStringToSafeChars(videoItem.name),
-                formatStringToSafeChars(videoItem.playlistName)
-            );
+            return Object.assign({}, videoItem, {
+                name: formatStringToSafeChars(videoItem.name),
+                playlistName: formatStringToSafeChars(videoItem.playlistName)
+            });
         });
     }
 

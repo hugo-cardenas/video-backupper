@@ -7,10 +7,10 @@ test('queueBackupper - run - succeeds', function (t) {
     var playlistId = 'myPlaylist42';
 
     var videoItems = [
-        createVideoItem('videoId1', 'videoName1', 'playlistName1'),
-        createVideoItem('videoId2', 'videoName2', 'playlistName2'),
-        createVideoItem('videoId3', 'videoName3', 'playlistName3'),
-        createVideoItem('videoId4', 'videoName4', 'playlistName4')
+        createProviderVideoItem('videoId1', 'videoName1', 'playlistName1', 'url1'),
+        createProviderVideoItem('videoId2', 'videoName2', 'playlistName2', 'url2'),
+        createProviderVideoItem('videoId3', 'videoName3', 'playlistName3', 'url3'),
+        createProviderVideoItem('videoId4', 'videoName4', 'playlistName4', 'url4')
     ];
 
     var storedVideoItems = [
@@ -58,14 +58,14 @@ test('queueBackupper - run - succeeds', function (t) {
 });
 
 var videoItemsWithInvalidChars = [{
-    original: createVideoItem('playlistIdIrrelevant', '/', 'videoIdIrrelevant', '/'),
-    formatted: createVideoItem('playlistIdIrrelevant', '-', 'videoIdIrrelevant', '-')
+    original: createProviderVideoItem('videoIdIrrelevant', '/', '/', 'urlIrrelevant'),
+    formatted: createProviderVideoItem('videoIdIrrelevant', '-', '-', 'urlIrrelevant')
 }, {
-    original: createVideoItem('playlistIdIrrelevant', '\\', 'videoIdIrrelevant', '\\'),
-    formatted: createVideoItem('playlistIdIrrelevant', '-', 'videoIdIrrelevant', '-')
+    original: createProviderVideoItem('videoIdIrrelevant', '\\', '\\', 'urlIrrelevant'),
+    formatted: createProviderVideoItem('videoIdIrrelevant', '-', '-', 'urlIrrelevant')
 }, {
-    original: createVideoItem('playlistIdIrrelevant', '/playlist//name///', 'videoIdIrrelevant', '/video//name///'),
-    formatted: createVideoItem('playlistIdIrrelevant', '-playlist--name---', 'videoIdIrrelevant', '-video--name---')
+    original: createProviderVideoItem('videoIdIrrelevant', '/video//name///', '/playlist//name///', 'urlIrrelevant'),
+    formatted: createProviderVideoItem('videoIdIrrelevant', '-video--name---', '-playlist--name---', 'urlIrrelevant')
 }];
 
 videoItemsWithInvalidChars.forEach(function (videos, index) {
@@ -121,7 +121,7 @@ videoItemsWithInvalidChars.forEach(function (videos, index) {
 
         var videoItems = [
             originalVideoItem,
-            createVideoItem('playlistId1', 'playlistName1', 'videoId1', 'videoName1') // Other random video to be stored
+            createProviderVideoItem('videoId1', 'videoName1', 'playlistName1', 'url1') // Other random video to be stored
         ];
 
         var storedVideoItems = [
@@ -165,8 +165,8 @@ test('queueBackupper - run - succeeds, no stored items', function (t) {
     var playlistId = 'myPlaylist42';
 
     var videoItems = [
-        createVideoItem('videoId1', 'videoName1', 'playlistName1'),
-        createVideoItem('videoId2', 'videoName2', 'playlistName2')
+        createProviderVideoItem('videoId1', 'videoName1', 'playlistName1', 'url1'),
+        createProviderVideoItem('videoId2', 'videoName2', 'playlistName2', 'url2')
     ];
 
     var storedVideoItems = [];
@@ -212,8 +212,8 @@ test('queueBackupper - run - succeeds, no filtered items', function (t) {
     var playlistId = 'myPlaylist42';
 
     var videoItems = [
-        createVideoItem('videoId1', 'videoName1', 'playlistName1'),
-        createVideoItem('videoId2', 'videoName2', 'playlistName2')
+        createProviderVideoItem('videoId1', 'videoName1', 'playlistName1', 'url1'),
+        createProviderVideoItem('videoId2', 'videoName2', 'playlistName2', 'url2')
     ];
 
     var storedVideoItems = [
@@ -261,8 +261,8 @@ test('queueBackupper - run - succeeds, all items filtered', function (t) {
     var playlistId = 'myPlaylist42';
 
     var videoItems = [
-        createVideoItem('videoId1', 'videoName1', 'playlistName1'),
-        createVideoItem('videoId2', 'videoName2', 'playlistName2')
+        createProviderVideoItem('videoId1', 'videoName1', 'playlistName1', 'url1'),
+        createProviderVideoItem('videoId2', 'videoName2', 'playlistName2', 'url2')
     ];
 
     var storedVideoItems = [
@@ -362,8 +362,8 @@ test('queueBackupper - run - storage fails', function (t) {
     var playlistId = 'myPlaylist42';
 
     var videoItems = [
-        createVideoItem('playlistId1', 'playlistName1', 'videoId1', 'videoName1'),
-        createVideoItem('playlistId2', 'playlistName2', 'videoId2', 'videoName2')
+        createProviderVideoItem('videoId1', 'videoName1', 'playlistName1', 'url1'),
+        createProviderVideoItem('videoId2', 'videoName2', 'playlistName2', 'url2'),
     ];
 
     var provider = {
@@ -402,8 +402,8 @@ test('queueBackupper - run - queue fails', function (t) {
     var playlistId = 'myPlaylist42';
 
     var videoItems = [
-        createVideoItem('videoId1', 'videoName1', 'playlistName1'),
-        createVideoItem('videoId2', 'videoName2', 'playlistName2')
+        createProviderVideoItem('videoId1', 'videoName1', 'playlistName1', 'url1'),
+        createProviderVideoItem('videoId2', 'videoName2', 'playlistName2', 'url2')
     ];
 
     var storedVideoItems = [
@@ -443,6 +443,17 @@ test('queueBackupper - run - queue fails', function (t) {
             t.ok(err.message.includes(errorMessage));
         });
 });
+
+/**
+ * @param {string} id
+ * @param {string} name
+ * @param {string} playlistName
+ * @param {string} url
+ * @returns {Object}
+ */
+function createProviderVideoItem(id, name, playlistName, url) {
+    return { id, name, playlistName, url };
+}
 
 /**
  * @param {string} id
