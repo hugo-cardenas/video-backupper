@@ -1,6 +1,5 @@
 const test = require('blue-tape');
 const crypto = require('crypto');
-const sinon = require('sinon');
 const baserequire = require('base-require');
 const createProvider = baserequire('src/provider/provider');
 
@@ -59,19 +58,7 @@ test('provider - getPlaylistVideoItems - succeeds', function (t) {
         }
     };
 
-    const google = {
-        auth: {
-            JWT: function () {
-                return jwtClient;
-            }
-        },
-        youtube: function (options) {
-            t.equal(options.version, 'v3');
-            t.deepEqual(options.auth, jwtClient);
-            return youtube;
-        }
-    };
-
+    const google = createGoogleClient(t, jwtClient, youtube);
     const provider = createProvider(google, config);
 
     return provider.getPlaylistVideoItems(playlistId)
@@ -173,7 +160,6 @@ test('provider - getPlaylistVideoItems - playlists resource error', function (t)
 const playlistsResourceInvalidResponseData = [
     {},
     { items: 'foo' },
-    { items: [] },
     { items: [{}] },
     {
         items: [{ snippet: {} }]
@@ -181,7 +167,7 @@ const playlistsResourceInvalidResponseData = [
 ];
 
 playlistsResourceInvalidResponseData.forEach(function (playlistsResponseData, index) {
-    test('provider - getItems - playlists resource invalid response format #' + index, function (t) {
+    test('provider - getPlaylistVideoItems - playlists resource invalid response format #' + index, function (t) {
         const playlistId = 'playlistId40';
 
         const videoId1 = 'videoId42';
@@ -239,6 +225,54 @@ playlistsResourceInvalidResponseData.forEach(function (playlistsResponseData, in
                 t.ok(err.message.includes(JSON.stringify(playlistsResponseData)));
             });
     });
+});
+
+test('provider - getPlaylistVideoItems - playlists resource empty results', function (t) {
+    const playlistId = 'playlistId40';
+
+    const videoId1 = 'videoId42';
+    const videoName1 = 'videoName42';
+
+    const videoId2 = 'videoId44';
+    const videoName2 = 'videoName44';
+
+    const playlistsResponseData = createPlaylistsResponseData([]);
+
+    const playlistItemsResponseData = createPlaylistItemsResponseData(playlistId, [{
+        id: videoId1,
+        name: videoName1
+    }, {
+        id: videoId2,
+        name: videoName2
+    }]);
+
+    const config = {
+        email: 'foo@bar.com',
+        keyFile: '/path/to/private/key.pem'
+    };
+
+    const jwtClient = createJwtClient(null);
+
+    const err = null;
+    const youtube = {
+        playlists: {
+            list: createApiPlaylistsByIdFunction(t, playlistId, err, playlistsResponseData)
+        },
+        playlistItems: {
+            list: createApiPlaylistItemsFunction(t, playlistId, err, playlistItemsResponseData)
+        }
+    };
+
+    const google = createGoogleClient(t, jwtClient, youtube);
+    const provider = createProvider(google, config);
+
+    return provider.getPlaylistVideoItems(playlistId)
+        .then(function () {
+            t.fail();
+        })
+        .catch(function (err) {
+            t.ok(err.message.includes(`Playlist with id ${playlistId} not found`));
+        });
 });
 
 test('provider - getPlaylistVideoItems - playlistItems resource error', function (t) {
@@ -333,7 +367,7 @@ const playlistItemsResourceInvalidResponseData = [
 ];
 
 playlistItemsResourceInvalidResponseData.forEach(function (playlistItemsResponseData, index) {
-    test('provider - getItems - playlistItems resource invalid response format #' + index, function (t) {
+    test('provider - getPlaylistVideoItems - playlistItems resource invalid response format #' + index, function (t) {
         const playlistId = 'playlistId40';
         const playlistName = 'playlistName40';
 
@@ -382,7 +416,7 @@ playlistItemsResourceInvalidResponseData.forEach(function (playlistItemsResponse
     });
 });
 
-test.skip('provider - getChannelVideoItems - succeeds', function (t) {
+test('provider - getChannelVideoItems - succeeds', function (t) {
     const channelId = 'channelId';
 
     const playlistId1 = 'playlistId1';
@@ -429,34 +463,193 @@ test.skip('provider - getChannelVideoItems - succeeds', function (t) {
     const jwtClient = createJwtClient(null);
 
     const err = null;
+    const playlistItemsMockedCalls = [
+        createApiPlaylistItemsFunction(t, playlistId1, null, playlistItemsResponseData1),
+        createApiPlaylistItemsFunction(t, playlistId2, null, playlistItemsResponseData2)
+    ];
+
     const youtube = {
         playlists: {
             list: createApiPlaylistsByChannelIdFunction(t, channelId, err, playlistsResponseData)
         },
         playlistItems: {
-            list: sinon.stub()
-        }
-    };
-
-    const google = {
-        auth: {
-            JWT: function () {
-                return jwtClient;
+            list: function () {
+                return playlistItemsMockedCalls.shift().apply(this, arguments);
             }
-        },
-        youtube: function (options) {
-            t.equal(options.version, 'v3');
-            t.deepEqual(options.auth, jwtClient);
-            return youtube;
         }
     };
 
+    const google = createGoogleClient(t, jwtClient, youtube);
     const provider = createProvider(google, config);
 
-    return provider.getPlaylistVideoItems()
+    return provider.getChannelVideoItems(channelId)
         .then(function (items) {
             t.deepEqual(items, expectedVideoItems);
         });
+});
+
+test('provider - getChannelVideoItems - authorization error', function (t) {
+    const channelId = 'channelId';
+
+    const config = {
+        email: 'foo@bar.com',
+        keyFile: '/path/to/private/key.pem'
+    };
+
+    const errorMessage = 'Jwt client authorization has failed';
+    const jwtClient = createJwtClient(new Error(errorMessage));
+
+    const google = createGoogleClient(t, jwtClient, {});
+    const provider = createProvider(google, config);
+
+    return provider.getChannelVideoItems(channelId)
+        .then(function () {
+            t.fail();
+        })
+        .catch(function (err) {
+            t.ok(err.message.includes(channelId));
+            t.ok(err.message.includes(errorMessage));
+        });
+});
+
+test('provider - getChannelVideoItems - playlists resource error', function (t) {
+    const channelId = 'channelId';
+
+    const config = {
+        email: 'foo@bar.com',
+        keyFile: '/path/to/private/key.pem'
+    };
+
+    const jwtClient = createJwtClient(null);
+
+    const errorMessage = 'Client has failed to request playlists resource';
+    const youtube = {
+        playlists: {
+            list: createApiPlaylistsByChannelIdFunction(t, channelId, new Error(errorMessage), {})
+        }
+    };
+
+    const google = createGoogleClient(t, jwtClient, youtube);
+    const provider = createProvider(google, config);
+
+    return provider.getChannelVideoItems(channelId)
+        .then(function () {
+            t.fail();
+        })
+        .catch(function (err) {
+            t.ok(err.message.includes(channelId));
+            t.ok(err.message.includes(errorMessage));
+        });
+});
+
+playlistsResourceInvalidResponseData.forEach(function (playlistsResponseData, index) {
+    test('provider - getChannelVideoItems - playlists resource invalid response format #' + index, function (t) {
+        const channelId = 'channelId';
+
+        const config = {
+            email: 'foo@bar.com',
+            keyFile: '/path/to/private/key.pem'
+        };
+
+        const jwtClient = createJwtClient(null);
+
+        const err = null;
+        const youtube = {
+            playlists: {
+                list: createApiPlaylistsByChannelIdFunction(t, channelId, err, playlistsResponseData)
+            }
+        };
+
+        const google = createGoogleClient(t, jwtClient, youtube);
+        const provider = createProvider(google, config);
+
+        return provider.getChannelVideoItems(channelId)
+            .then(function () {
+                t.fail();
+            })
+            .catch(function (err) {
+                t.ok(err.message.includes(channelId));
+                t.ok(err.message.includes(JSON.stringify(playlistsResponseData)));
+            });
+    });
+});
+
+test('provider - getChannelVideoItems - playlistItems resource error', function (t) {
+    const channelId = 'channelId';
+
+    const playlistId = 'playlistId40';
+    const playlistName = 'playlistName40';
+
+    const playlistsResponseData = createPlaylistsResponseData([{ id: playlistId, name: playlistName }]);
+
+    const config = {
+        email: 'foo@bar.com',
+        keyFile: '/path/to/private/key.pem'
+    };
+
+    const jwtClient = createJwtClient(null);
+
+    const errorMessage = 'Client has failed to request playlistItems resource';
+    const youtube = {
+        playlists: {
+            list: createApiPlaylistsByChannelIdFunction(t, channelId, null, playlistsResponseData)
+        },
+        playlistItems: {
+            list: createApiPlaylistItemsFunction(t, playlistId, new Error(errorMessage), {})
+        }
+    };
+
+    const google = createGoogleClient(t, jwtClient, youtube);
+    const provider = createProvider(google, config);
+
+    return provider.getChannelVideoItems(channelId)
+        .then(function () {
+            t.fail();
+        })
+        .catch(function (err) {
+            t.ok(err.message.includes(channelId));
+            t.ok(err.message.includes(errorMessage));
+        });
+});
+
+playlistItemsResourceInvalidResponseData.forEach(function (playlistItemsResponseData, index) {
+    test('provider - getChannelVideoItems - playlistItems resource invalid response format #' + index, function (t) {
+        const channelId = 'channelId';
+
+        const playlistId = 'playlistId40';
+        const playlistName = 'playlistName40';
+
+        const playlistsResponseData = createPlaylistsResponseData([{ id: playlistId, name: playlistName }]);
+
+        const config = {
+            email: 'foo@bar.com',
+            keyFile: '/path/to/private/key.pem'
+        };
+
+        const jwtClient = createJwtClient(null);
+
+        const err = null;
+        const youtube = {
+            playlists: {
+                list: createApiPlaylistsByChannelIdFunction(t, channelId, err, playlistsResponseData)
+            },
+            playlistItems: {
+                list: createApiPlaylistItemsFunction(t, playlistId, err, playlistItemsResponseData)
+            }
+        };
+
+        const google = createGoogleClient(t, jwtClient, youtube);
+        const provider = createProvider(google, config);
+
+        return provider.getChannelVideoItems(channelId)
+            .then(function () {
+                t.fail();
+            })
+            .catch(function (err) {
+                t.ok(err.message.includes(channelId));
+                t.ok(err.message.includes(JSON.stringify(playlistItemsResponseData)));
+            });
+    });
 });
 
 /**
@@ -662,8 +855,29 @@ function createApiPlaylistItemsFunction(t, playlistId, err, responseData) {
  */
 function createApiFunctionMock(t, expectedOptions, err, responseData) {
     return function (options, params, callback) {
-        t.deepEqual(expectedOptions, options);
+        t.deepEqual(options, expectedOptions);
         const response = [];
         callback(err, responseData, response);
+    };
+}
+
+/**
+ * @param {Object} t Test object
+ * @param {Object} jwtClient
+ * @param {Object} youtube Youtube client object
+ * @returns {Object} Google client object
+ */
+function createGoogleClient(t, jwtClient, youtube) {
+    return {
+        auth: {
+            JWT: function () {
+                return jwtClient;
+            }
+        },
+        youtube: function (options) {
+            t.equal(options.version, 'v3');
+            t.deepEqual(options.auth, jwtClient);
+            return youtube;
+        }
     };
 }

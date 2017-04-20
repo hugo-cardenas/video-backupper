@@ -22,6 +22,9 @@ module.exports = function (google, config) {
     var jwtClient;
     var youtubeClient;
 
+    // Cache for storing API playlists by id
+    var cachedPlaylists = {};
+
     /**
      * Get video items from the specified playlist
      *
@@ -39,12 +42,30 @@ module.exports = function (google, config) {
                 return composeResult(videoItems, playlistName);
             })
             .catch(function (err) {
-                throw createError(playlistId, err);
+                throw createPlaylistError(playlistId, err);
             });
     }
 
+    /**
+     * Get video items from the specified channel
+     *
+     * @param {string} channelId
+     * @returns {Promise<Object[]>} Promise resolving with an array of video items
+     */
     function getChannelVideoItems(channelId) {
-        
+        return getChannelPlaylists(channelId)
+            .then(function (playlists) {
+                var promises = playlists.map(function (playlist) {
+                    return getPlaylistVideoItems(playlist.id);
+                });
+                return Promise.all(promises);
+            })
+            .then(function (values) {
+                return _.flatten(values);
+            })
+            .catch(function (err) {
+                throw createChannelError(channelId, err);
+            });
     }
 
     /**
@@ -185,22 +206,85 @@ module.exports = function (google, config) {
     /**
      * Get playlist name for the specified playlist id
      *
-     * @param {Object} jwtClient
      * @param {string} playlistId
      * @returns {Promise<string>} Resolves with playlist name
      */
     function getPlaylistName(playlistId) {
+        if (cachedPlaylists[playlistId]) {
+            return Promise.resolve(cachedPlaylists[playlistId].name);
+        }
+
+        return getAPIPlaylistsById(playlistId)
+            .then(function (playlists) {
+                if (playlists.length < 1) {
+                    return Promise.reject(new VError('Playlist with id %s not found in API', playlistId));
+                }
+                return playlists;
+            })
+            .then(cachePlaylists)
+            .then(function () {
+                return cachedPlaylists[playlistId].name;
+            });
+    }
+
+    /**
+     * @param {Object[]} playlists
+     */
+    function cachePlaylists(playlists) {
+        playlists.forEach(function (playlist) {
+            cachedPlaylists[playlist.id] = playlist;
+        });
+    }
+
+    /**
+     * @param {string} channelId
+     * @returns {Promise<Object[]>} Resolves with array of playlist objects {id, name}
+     */
+    function getChannelPlaylists(channelId) {
+        return getAPIPlaylistsByChannelId(channelId)
+            .then(function (playlists) {
+                cachePlaylists(playlists);
+                return playlists;
+            });
+    }
+
+    /**
+     * @param {string} id
+     * @returns {Object[]} Array of playlist objects {id, name}
+     */
+    function getAPIPlaylistsById(id) {
+        var options = {
+            id: id,
+            part: ['snippet'],
+            maxResults: 1
+        };
+        return getAPIPlaylists(options);
+    }
+
+    /**
+     * @param {string} channelId
+     * @returns {Object[]} Array of playlist objects {id, name}
+     */
+    function getAPIPlaylistsByChannelId(channelId) {
+        var options = {
+            channelId: channelId,
+            part: ['snippet'],
+            maxResults: 50
+        };
+        return getAPIPlaylists(options);
+    }
+
+    /**
+     * @param {Object} options API options
+     * @returns {Object[]} Array of playlist objects {id, name}
+     */
+    function getAPIPlaylists(options) {
         return getYoutubeClient()
             .then(function (youtubeClient) {
-                var options = {
-                    id: playlistId,
-                    part: ['snippet'],
-                    maxResults: 1
-                };
                 return listPlaylists(youtubeClient, options);
             })
             .then(function (data) {
-                return extractPlaylistName(data);
+                return buildPlaylistsFromResponseData(data);
             });
     }
 
@@ -223,18 +307,22 @@ module.exports = function (google, config) {
     }
 
     /**
-     * @param {Object} responseData
-     * @returns {string}
+     * @param {Object} data Playlists resource response data
+     * @returns {Object[]} Array of playlist objects {id, name}
      */
-    function extractPlaylistName(responseData) {
+    function buildPlaylistsFromResponseData(data) {
         try {
-            var name = responseData.items[0].snippet.title;
-            if (name === undefined) {
-                throw new Error();
-            }
-            return name;
+            return data.items.map(function (item) {
+                if (!item.id || !item.snippet.title) {
+                    throw new Error();
+                }
+                return {
+                    id: item.id,
+                    name: item.snippet.title
+                };
+            });
         } catch (err) {
-            throw new VError('Invalid playlists resource response data %s', JSON.stringify(responseData));
+            throw new VError('Invalid playlists resource response data %s', JSON.stringify(data));
         }
     }
 
@@ -289,8 +377,17 @@ module.exports = function (google, config) {
      * @param {Error} err
      * @returns {Error}
      */
-    function createError(playlistId, err) {
-        return new VError(err, 'Unable to get video items for playlistId %s', playlistId);
+    function createPlaylistError(playlistId, err) {
+        return new VError(err, 'Unable to get video items for playlist id %s', playlistId);
+    }
+
+    /**
+     * @param {string} channelId
+     * @param {Error} err
+     * @returns {Error}
+     */
+    function createChannelError(channelId, err) {
+        return new VError(err, 'Unable to get video items for channel id %s', channelId);
     }
 
     /**
@@ -302,6 +399,7 @@ module.exports = function (google, config) {
     }
 
     return {
-        getPlaylistVideoItems: getPlaylistVideoItems
+        getPlaylistVideoItems: getPlaylistVideoItems,
+        getChannelVideoItems: getChannelVideoItems
     };
 };
