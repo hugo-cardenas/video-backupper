@@ -17,7 +17,7 @@ module.exports = function (provider, storage, queue, displayOutput) {
      * @returns {Promise} No resolve value
      */
     function run(playlistId) {
-        return getPlaylistVideoItems(playlistId)
+        return provider.getPlaylistVideoItems(playlistId)
             .then(processVideoItems)
             .catch(function (err) {
                 return Promise.reject(createErrorForPlaylist(playlistId, err));
@@ -34,7 +34,7 @@ module.exports = function (provider, storage, queue, displayOutput) {
 
     function processVideoItems(videoItems) {
         displayOutput.outputLine('Found ' + videoItems.length + ' video items');
-        return formatVideoItems(formatVideoItems) // TODO Should be moved to storage when comparison is done properly by id
+        return formatVideoItems(videoItems) // TODO Should be moved to storage when comparison is done properly by id
             .then(filterVideoItems)
             .then(function (videoItems) {
                 displayOutput.outputLine('Creating save jobs for ' + videoItems.length + ' video items');
@@ -44,27 +44,16 @@ module.exports = function (provider, storage, queue, displayOutput) {
     }
 
     /**
-     * @param {string} playlistId
-     * @returns {Promise<string[]>} Resolves with array of video items
-     */
-    function getPlaylistVideoItems(playlistId) {
-        return provider.getVideoItems(playlistId);
-    }
-
-    function getChannelVideoItems(userId) {
-        return Promise.resolve([]);
-    }
-
-    /**
      * @param {Object[]} videoItems
      */
     function formatVideoItems(videoItems) {
-        return videoItems.map(function (videoItem) {
+        var formattedVideoItems = videoItems.map(function (videoItem) {
             return Object.assign({}, videoItem, {
                 name: formatStringToSafeChars(videoItem.name),
                 playlistName: formatStringToSafeChars(videoItem.playlistName)
             });
         });
+        return Promise.resolve(formattedVideoItems);
     }
 
     /**

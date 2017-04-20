@@ -21,7 +21,7 @@ test('queueBackupper - run - succeeds', function (t) {
     ];
 
     var provider = {
-        getVideoItems: sinon.stub()
+        getPlaylistVideoItems: sinon.stub()
             .withArgs(playlistId)
             .returns(Promise.resolve(videoItems))
     };
@@ -80,7 +80,7 @@ videoItemsWithInvalidChars.forEach(function (videos, index) {
         var storedVideoItems = [];
 
         var provider = {
-            getVideoItems: sinon.stub()
+            getPlaylistVideoItems: sinon.stub()
                 .withArgs(playlistId)
                 .returns(Promise.resolve(videoItems))
         };
@@ -129,7 +129,7 @@ videoItemsWithInvalidChars.forEach(function (videos, index) {
         ];
 
         var provider = {
-            getVideoItems: sinon.stub()
+            getPlaylistVideoItems: sinon.stub()
                 .withArgs(playlistId)
                 .returns(Promise.resolve(videoItems))
         };
@@ -172,7 +172,7 @@ test('queueBackupper - run - succeeds, no stored items', function (t) {
     var storedVideoItems = [];
 
     var provider = {
-        getVideoItems: sinon.stub()
+        getPlaylistVideoItems: sinon.stub()
             .withArgs(playlistId)
             .returns(Promise.resolve(videoItems))
     };
@@ -221,7 +221,7 @@ test('queueBackupper - run - succeeds, no filtered items', function (t) {
     ];
 
     var provider = {
-        getVideoItems: sinon.stub()
+        getPlaylistVideoItems: sinon.stub()
             .withArgs(playlistId)
             .returns(Promise.resolve(videoItems))
     };
@@ -272,7 +272,7 @@ test('queueBackupper - run - succeeds, all items filtered', function (t) {
     ];
 
     var provider = {
-        getVideoItems: sinon.stub()
+        getPlaylistVideoItems: sinon.stub()
             .withArgs(playlistId)
             .returns(Promise.resolve(videoItems))
     };
@@ -303,7 +303,7 @@ test('queueBackupper - run - empty video list', function (t) {
     var videoItems = [];
 
     var provider = {
-        getVideoItems: sinon.stub()
+        getPlaylistVideoItems: sinon.stub()
             .withArgs(playlistId)
             .returns(Promise.resolve(videoItems))
     };
@@ -330,9 +330,9 @@ test('queueBackupper - run - provider fails', function (t) {
 
     var errorMessage = 'Provider has failed';
     var provider = {
-        getVideoItems: sinon.stub()
+        getPlaylistVideoItems: sinon.stub()
     };
-    provider.getVideoItems
+    provider.getPlaylistVideoItems
         .withArgs(playlistId)
         .returns(Promise.reject(new Error(errorMessage)));
 
@@ -363,11 +363,11 @@ test('queueBackupper - run - storage fails', function (t) {
 
     var videoItems = [
         createProviderVideoItem('videoId1', 'videoName1', 'playlistName1', 'url1'),
-        createProviderVideoItem('videoId2', 'videoName2', 'playlistName2', 'url2'),
+        createProviderVideoItem('videoId2', 'videoName2', 'playlistName2', 'url2')
     ];
 
     var provider = {
-        getVideoItems: sinon.stub()
+        getPlaylistVideoItems: sinon.stub()
             .withArgs(playlistId)
             .returns(Promise.resolve(videoItems))
     };
@@ -411,7 +411,7 @@ test('queueBackupper - run - queue fails', function (t) {
     ];
 
     var provider = {
-        getVideoItems: sinon.stub()
+        getPlaylistVideoItems: sinon.stub()
             .withArgs(playlistId)
             .returns(Promise.resolve(videoItems))
     };

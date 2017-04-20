@@ -19,7 +19,8 @@ test('providerManager - getProvider - succeeds', function (t) {
     var providerManager = createProviderManager(google, config);
     var provider = providerManager.getProvider();
     t.ok(provider);
-    t.ok(provider.hasOwnProperty('getVideoItems'));
+    t.ok(provider.hasOwnProperty('getPlaylistVideoItems'));
+    t.ok(provider.hasOwnProperty('getChannelVideoItems'));
     t.end();
 });
 
