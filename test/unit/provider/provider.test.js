@@ -5,8 +5,8 @@ const baserequire = require('base-require');
 const createProvider = baserequire('src/provider/provider');
 
 test('provider - create - invalid config', function (t) {
-    var google = {};
-    var config = {};
+    const google = {};
+    const config = {};
     try {
         createProvider(google, config);
         t.fail('Should throw error for invalid config');
@@ -19,18 +19,18 @@ test('provider - create - invalid config', function (t) {
 });
 
 test('provider - getPlaylistVideoItems - succeeds', function (t) {
-    var playlistId = 'playlistId40';
-    var playlistName = 'playlistName40';
+    const playlistId = 'playlistId40';
+    const playlistName = 'playlistName40';
 
-    var videoId1 = 'videoId42';
-    var videoName1 = 'videoName42';
+    const videoId1 = 'videoId42';
+    const videoName1 = 'videoName42';
 
-    var videoId2 = 'videoId44';
-    var videoName2 = 'videoName44';
+    const videoId2 = 'videoId44';
+    const videoName2 = 'videoName44';
 
-    var playlistsResponseData = createPlaylistsResponseData([{ id: playlistId, name: playlistName }]);
+    const playlistsResponseData = createPlaylistsResponseData([{ id: playlistId, name: playlistName }]);
 
-    var playlistItemsResponseData = createPlaylistItemsResponseData(playlistId, [{
+    const playlistItemsResponseData = createPlaylistItemsResponseData(playlistId, [{
         id: videoId1,
         name: videoName1
     }, {
@@ -38,19 +38,19 @@ test('provider - getPlaylistVideoItems - succeeds', function (t) {
         name: videoName2
     }]);
 
-    var expectedVideoItem1 = createProviderVideoItem(videoId1, videoName1, playlistName);
-    var expectedVideoItem2 = createProviderVideoItem(videoId2, videoName2, playlistName);
-    var expectedVideoItems = [expectedVideoItem1, expectedVideoItem2];
+    const expectedVideoItem1 = createProviderVideoItem(videoId1, videoName1, playlistName);
+    const expectedVideoItem2 = createProviderVideoItem(videoId2, videoName2, playlistName);
+    const expectedVideoItems = [expectedVideoItem1, expectedVideoItem2];
 
-    var config = {
+    const config = {
         email: 'foo@bar.com',
         keyFile: '/path/to/private/key.pem'
     };
 
-    var jwtClient = createJwtClient(null);
+    const jwtClient = createJwtClient(null);
 
-    var err = null;
-    var youtube = {
+    const err = null;
+    const youtube = {
         playlists: {
             list: createApiPlaylistsByIdFunction(t, playlistId, err, playlistsResponseData)
         },
@@ -59,7 +59,7 @@ test('provider - getPlaylistVideoItems - succeeds', function (t) {
         }
     };
 
-    var google = {
+    const google = {
         auth: {
             JWT: function () {
                 return jwtClient;
@@ -72,7 +72,7 @@ test('provider - getPlaylistVideoItems - succeeds', function (t) {
         }
     };
 
-    var provider = createProvider(google, config);
+    const provider = createProvider(google, config);
 
     return provider.getPlaylistVideoItems(playlistId)
         .then(function (items) {
@@ -81,17 +81,17 @@ test('provider - getPlaylistVideoItems - succeeds', function (t) {
 });
 
 test('provider - getPlaylistVideoItems - authorization error', function (t) {
-    var playlistId = 'playlistId42';
+    const playlistId = 'playlistId42';
 
-    var config = {
+    const config = {
         email: 'foo@bar.com',
         keyFile: '/path/to/private/key.pem'
     };
 
-    var errorMessage = 'Jwt client authorization has failed';
-    var jwtClient = createJwtClient(new Error(errorMessage));
+    const errorMessage = 'Jwt client authorization has failed';
+    const jwtClient = createJwtClient(new Error(errorMessage));
 
-    var google = {
+    const google = {
         auth: {
             JWT: function () {
                 return jwtClient;
@@ -99,7 +99,7 @@ test('provider - getPlaylistVideoItems - authorization error', function (t) {
         }
     };
 
-    var provider = createProvider(google, config);
+    const provider = createProvider(google, config);
 
     return provider.getPlaylistVideoItems(playlistId)
         .then(function () {
@@ -112,15 +112,15 @@ test('provider - getPlaylistVideoItems - authorization error', function (t) {
 });
 
 test('provider - getPlaylistVideoItems - playlists resource error', function (t) {
-    var playlistId = 'playlistId40';
+    const playlistId = 'playlistId40';
 
-    var videoId1 = 'videoId42';
-    var videoName1 = 'videoName42';
+    const videoId1 = 'videoId42';
+    const videoName1 = 'videoName42';
 
-    var videoId2 = 'videoId44';
-    var videoName2 = 'videoName44';
+    const videoId2 = 'videoId44';
+    const videoName2 = 'videoName44';
 
-    var playlistItemsResponseData = createPlaylistItemsResponseData(playlistId, [{
+    const playlistItemsResponseData = createPlaylistItemsResponseData(playlistId, [{
         id: videoId1,
         name: videoName1
     }, {
@@ -128,15 +128,15 @@ test('provider - getPlaylistVideoItems - playlists resource error', function (t)
         name: videoName2
     }]);
 
-    var config = {
+    const config = {
         email: 'foo@bar.com',
         keyFile: '/path/to/private/key.pem'
     };
 
-    var jwtClient = createJwtClient(null);
+    const jwtClient = createJwtClient(null);
 
-    var errorMessage = 'Client has failed to request playlists resource';
-    var youtube = {
+    const errorMessage = 'Client has failed to request playlists resource';
+    const youtube = {
         playlists: {
             list: createApiPlaylistsByIdFunction(t, playlistId, new Error(errorMessage), {})
         },
@@ -145,7 +145,7 @@ test('provider - getPlaylistVideoItems - playlists resource error', function (t)
         }
     };
 
-    var google = {
+    const google = {
         auth: {
             JWT: function () {
                 return jwtClient;
@@ -158,7 +158,7 @@ test('provider - getPlaylistVideoItems - playlists resource error', function (t)
         }
     };
 
-    var provider = createProvider(google, config);
+    const provider = createProvider(google, config);
 
     return provider.getPlaylistVideoItems(playlistId)
         .then(function () {
@@ -170,7 +170,7 @@ test('provider - getPlaylistVideoItems - playlists resource error', function (t)
         });
 });
 
-var playlistsResourceInvalidResponseData = [
+const playlistsResourceInvalidResponseData = [
     {},
     { items: 'foo' },
     { items: [] },
@@ -182,15 +182,15 @@ var playlistsResourceInvalidResponseData = [
 
 playlistsResourceInvalidResponseData.forEach(function (playlistsResponseData, index) {
     test('provider - getItems - playlists resource invalid response format #' + index, function (t) {
-        var playlistId = 'playlistId40';
+        const playlistId = 'playlistId40';
 
-        var videoId1 = 'videoId42';
-        var videoName1 = 'videoName42';
+        const videoId1 = 'videoId42';
+        const videoName1 = 'videoName42';
 
-        var videoId2 = 'videoId44';
-        var videoName2 = 'videoName44';
+        const videoId2 = 'videoId44';
+        const videoName2 = 'videoName44';
 
-        var playlistItemsResponseData = createPlaylistItemsResponseData(playlistId, [{
+        const playlistItemsResponseData = createPlaylistItemsResponseData(playlistId, [{
             id: videoId1,
             name: videoName1
         }, {
@@ -198,15 +198,15 @@ playlistsResourceInvalidResponseData.forEach(function (playlistsResponseData, in
             name: videoName2
         }]);
 
-        var config = {
+        const config = {
             email: 'foo@bar.com',
             keyFile: '/path/to/private/key.pem'
         };
 
-        var jwtClient = createJwtClient(null);
+        const jwtClient = createJwtClient(null);
 
-        var err = null;
-        var youtube = {
+        const err = null;
+        const youtube = {
             playlists: {
                 list: createApiPlaylistsByIdFunction(t, playlistId, err, playlistsResponseData)
             },
@@ -215,7 +215,7 @@ playlistsResourceInvalidResponseData.forEach(function (playlistsResponseData, in
             }
         };
 
-        var google = {
+        const google = {
             auth: {
                 JWT: function () {
                     return jwtClient;
@@ -228,7 +228,7 @@ playlistsResourceInvalidResponseData.forEach(function (playlistsResponseData, in
             }
         };
 
-        var provider = createProvider(google, config);
+        const provider = createProvider(google, config);
 
         return provider.getPlaylistVideoItems(playlistId)
             .then(function () {
@@ -242,20 +242,20 @@ playlistsResourceInvalidResponseData.forEach(function (playlistsResponseData, in
 });
 
 test('provider - getPlaylistVideoItems - playlistItems resource error', function (t) {
-    var playlistId = 'playlistId40';
-    var playlistName = 'playlistName40';
+    const playlistId = 'playlistId40';
+    const playlistName = 'playlistName40';
 
-    var playlistsResponseData = createPlaylistsResponseData([{ id: playlistId, name: playlistName }]);
+    const playlistsResponseData = createPlaylistsResponseData([{ id: playlistId, name: playlistName }]);
 
-    var config = {
+    const config = {
         email: 'foo@bar.com',
         keyFile: '/path/to/private/key.pem'
     };
 
-    var jwtClient = createJwtClient(null);
+    const jwtClient = createJwtClient(null);
 
-    var errorMessage = 'Client has failed to request playlistItems resource';
-    var youtube = {
+    const errorMessage = 'Client has failed to request playlistItems resource';
+    const youtube = {
         playlists: {
             list: createApiPlaylistsByIdFunction(t, playlistId, null, playlistsResponseData)
         },
@@ -264,7 +264,7 @@ test('provider - getPlaylistVideoItems - playlistItems resource error', function
         }
     };
 
-    var google = {
+    const google = {
         auth: {
             JWT: function () {
                 return jwtClient;
@@ -277,7 +277,7 @@ test('provider - getPlaylistVideoItems - playlistItems resource error', function
         }
     };
 
-    var provider = createProvider(google, config);
+    const provider = createProvider(google, config);
 
     return provider.getPlaylistVideoItems(playlistId)
         .then(function () {
@@ -289,7 +289,7 @@ test('provider - getPlaylistVideoItems - playlistItems resource error', function
         });
 });
 
-var playlistItemsResourceInvalidResponseData = [
+const playlistItemsResourceInvalidResponseData = [
     {},
     { items: 'foo' },
     { items: [{}] },
@@ -334,20 +334,20 @@ var playlistItemsResourceInvalidResponseData = [
 
 playlistItemsResourceInvalidResponseData.forEach(function (playlistItemsResponseData, index) {
     test('provider - getItems - playlistItems resource invalid response format #' + index, function (t) {
-        var playlistId = 'playlistId40';
-        var playlistName = 'playlistName40';
+        const playlistId = 'playlistId40';
+        const playlistName = 'playlistName40';
 
-        var playlistsResponseData = createPlaylistsResponseData([{ id: playlistId, name: playlistName }]);
+        const playlistsResponseData = createPlaylistsResponseData([{ id: playlistId, name: playlistName }]);
 
-        var config = {
+        const config = {
             email: 'foo@bar.com',
             keyFile: '/path/to/private/key.pem'
         };
 
-        var jwtClient = createJwtClient(null);
+        const jwtClient = createJwtClient(null);
 
-        var err = null;
-        var youtube = {
+        const err = null;
+        const youtube = {
             playlists: {
                 list: createApiPlaylistsByIdFunction(t, playlistId, err, playlistsResponseData)
             },
@@ -356,7 +356,7 @@ playlistItemsResourceInvalidResponseData.forEach(function (playlistItemsResponse
             }
         };
 
-        var google = {
+        const google = {
             auth: {
                 JWT: function () {
                     return jwtClient;
@@ -369,7 +369,7 @@ playlistItemsResourceInvalidResponseData.forEach(function (playlistItemsResponse
             }
         };
 
-        var provider = createProvider(google, config);
+        const provider = createProvider(google, config);
 
         return provider.getPlaylistVideoItems(playlistId)
             .then(function () {
@@ -383,53 +383,53 @@ playlistItemsResourceInvalidResponseData.forEach(function (playlistItemsResponse
 });
 
 test.skip('provider - getChannelVideoItems - succeeds', function (t) {
-    var channelId = 'channelId';
-    
-    var playlistId1 = 'playlistId1';
-    var playlistName1 = 'playlistName1';
+    const channelId = 'channelId';
 
-    var playlistId2 = 'playlistId2';
-    var playlistName2 = 'playlistName2';
+    const playlistId1 = 'playlistId1';
+    const playlistName1 = 'playlistName1';
 
-    var videoId1 = 'videoId1';
-    var videoName1 = 'videoName1';
+    const playlistId2 = 'playlistId2';
+    const playlistName2 = 'playlistName2';
 
-    var videoId2 = 'videoId2';
-    var videoName2 = 'videoName2';
+    const videoId1 = 'videoId1';
+    const videoName1 = 'videoName1';
 
-    var videoId3 = 'videoId3';
-    var videoName3 = 'videoName3';
+    const videoId2 = 'videoId2';
+    const videoName2 = 'videoName2';
 
-    var playlistsResponseData = createPlaylistsResponseData([
+    const videoId3 = 'videoId3';
+    const videoName3 = 'videoName3';
+
+    const playlistsResponseData = createPlaylistsResponseData([
         { id: playlistId1, name: playlistName1 },
         { id: playlistId2, name: playlistName2 }
     ]);
 
-    var playlistItemsResponseData1 = createPlaylistItemsResponseData(
+    const playlistItemsResponseData1 = createPlaylistItemsResponseData(
         playlistId1, [{ id: videoId1, name: videoName1 }]
     );
-    var playlistItemsResponseData2 = createPlaylistItemsResponseData(
+    const playlistItemsResponseData2 = createPlaylistItemsResponseData(
         playlistId2, [
             { id: videoId2, name: videoName2 },
             { id: videoId3, name: videoName3 }
         ]
     );
 
-    var expectedVideoItems = [
+    const expectedVideoItems = [
         createProviderVideoItem(videoId1, videoName1, playlistName1),
         createProviderVideoItem(videoId2, videoName2, playlistName2),
         createProviderVideoItem(videoId3, videoName3, playlistName2)
     ];
 
-    var config = {
+    const config = {
         email: 'foo@bar.com',
         keyFile: '/path/to/private/key.pem'
     };
 
-    var jwtClient = createJwtClient(null);
+    const jwtClient = createJwtClient(null);
 
-    var err = null;
-    var youtube = {
+    const err = null;
+    const youtube = {
         playlists: {
             list: createApiPlaylistsByChannelIdFunction(t, channelId, err, playlistsResponseData)
         },
@@ -438,7 +438,7 @@ test.skip('provider - getChannelVideoItems - succeeds', function (t) {
         }
     };
 
-    var google = {
+    const google = {
         auth: {
             JWT: function () {
                 return jwtClient;
@@ -451,7 +451,7 @@ test.skip('provider - getChannelVideoItems - succeeds', function (t) {
         }
     };
 
-    var provider = createProvider(google, config);
+    const provider = createProvider(google, config);
 
     return provider.getPlaylistVideoItems()
         .then(function (items) {
@@ -570,7 +570,7 @@ function createPlaylistItemsResponseData(playlistId, videoItems) {
 function createJwtClient(err) {
     return {
         authorize: function (callback) {
-            var tokens = [];
+            const tokens = [];
             callback(err, tokens);
         }
     };
@@ -609,7 +609,7 @@ function createProviderVideoItem(providerVideoId, name, playlistName) {
  * @returns {Object}
  */
 function createApiPlaylistsByIdFunction(t, playlistId, err, responseData) {
-    var expectedOptions = {
+    const expectedOptions = {
         id: playlistId,
         part: ['snippet'],
         maxResults: 1
@@ -627,7 +627,7 @@ function createApiPlaylistsByIdFunction(t, playlistId, err, responseData) {
  * @returns {Object}
  */
 function createApiPlaylistsByChannelIdFunction(t, channelId, err, responseData) {
-    var expectedOptions = {
+    const expectedOptions = {
         channelId: channelId,
         part: ['snippet'],
         maxResults: 50
@@ -645,7 +645,7 @@ function createApiPlaylistsByChannelIdFunction(t, channelId, err, responseData) 
  * @returns {Object}
  */
 function createApiPlaylistItemsFunction(t, playlistId, err, responseData) {
-    var expectedOptions = {
+    const expectedOptions = {
         playlistId: playlistId,
         part: ['snippet'],
         maxResults: 50
@@ -663,7 +663,7 @@ function createApiPlaylistItemsFunction(t, playlistId, err, responseData) {
 function createApiFunctionMock(t, expectedOptions, err, responseData) {
     return function (options, params, callback) {
         t.deepEqual(expectedOptions, options);
-        var response = [];
+        const response = [];
         callback(err, responseData, response);
     };
 }
