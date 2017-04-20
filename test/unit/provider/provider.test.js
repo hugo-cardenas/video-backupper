@@ -1,5 +1,6 @@
 const test = require('blue-tape');
 const crypto = require('crypto');
+const sinon = require('sinon');
 const baserequire = require('base-require');
 const createProvider = baserequire('src/provider/provider');
 
@@ -27,16 +28,14 @@ test('provider - getPlaylistVideoItems - succeeds', function (t) {
     var videoId2 = 'videoId44';
     var videoName2 = 'videoName44';
 
-    var playlistsResponseData = createPlaylistResponseData(playlistId, playlistName);
+    var playlistsResponseData = createPlaylistsResponseData([{ id: playlistId, name: playlistName }]);
 
-    var playlistItemsResponseData = createPlaylistItemsResponseData([{
-        videoId: videoId1,
-        videoName: videoName1,
-        playlistId: playlistId
+    var playlistItemsResponseData = createPlaylistItemsResponseData(playlistId, [{
+        id: videoId1,
+        name: videoName1
     }, {
-        videoId: videoId2,
-        videoName: videoName2,
-        playlistId: playlistId
+        id: videoId2,
+        name: videoName2
     }]);
 
     var expectedVideoItem1 = createProviderVideoItem(videoId1, videoName1, playlistName);
@@ -50,33 +49,13 @@ test('provider - getPlaylistVideoItems - succeeds', function (t) {
 
     var jwtClient = createJwtClient(null);
 
-    var expectedPlaylistOptions = {
-        id: playlistId,
-        part: ['snippet'],
-        maxResults: 1
-    };
-    var expectedPlaylistItemsOptions = {
-        playlistId: playlistId,
-        part: ['snippet'],
-        maxResults: 50
-    };
-
+    var err = null;
     var youtube = {
         playlists: {
-            list: function (options, params, callback) {
-                t.deepEqual(expectedPlaylistOptions, options);
-                var err = null;
-                var response = [];
-                callback(err, playlistsResponseData, response);
-            }
+            list: createApiPlaylistsByIdFunction(t, playlistId, err, playlistsResponseData)
         },
         playlistItems: {
-            list: function (options, params, callback) {
-                t.deepEqual(expectedPlaylistItemsOptions, options);
-                var err = null;
-                var response = [];
-                callback(err, playlistItemsResponseData, response);
-            }
+            list: createApiPlaylistItemsFunction(t, playlistId, err, playlistItemsResponseData)
         }
     };
 
@@ -141,14 +120,12 @@ test('provider - getPlaylistVideoItems - playlists resource error', function (t)
     var videoId2 = 'videoId44';
     var videoName2 = 'videoName44';
 
-    var playlistItemsResponseData = createPlaylistItemsResponseData([{
-        videoId: videoId1,
-        videoName: videoName1,
-        playlistId: playlistId
+    var playlistItemsResponseData = createPlaylistItemsResponseData(playlistId, [{
+        id: videoId1,
+        name: videoName1
     }, {
-        videoId: videoId2,
-        videoName: videoName2,
-        playlistId: playlistId
+        id: videoId2,
+        name: videoName2
     }]);
 
     var config = {
@@ -158,34 +135,13 @@ test('provider - getPlaylistVideoItems - playlists resource error', function (t)
 
     var jwtClient = createJwtClient(null);
 
-    var expectedPlaylistOptions = {
-        id: playlistId,
-        part: ['snippet'],
-        maxResults: 1
-    };
-    var expectedPlaylistItemsOptions = {
-        playlistId: playlistId,
-        part: ['snippet'],
-        maxResults: 50
-    };
-
     var errorMessage = 'Client has failed to request playlists resource';
     var youtube = {
         playlists: {
-            list: function (options, params, callback) {
-                t.deepEqual(expectedPlaylistOptions, options);
-                var err = new Error(errorMessage);
-                var response = [];
-                callback(err, {}, response);
-            }
+            list: createApiPlaylistsByIdFunction(t, playlistId, new Error(errorMessage), {})
         },
         playlistItems: {
-            list: function (options, params, callback) {
-                t.deepEqual(expectedPlaylistItemsOptions, options);
-                var err = null;
-                var response = [];
-                callback(err, playlistItemsResponseData, response);
-            }
+            list: createApiPlaylistItemsFunction(t, playlistId, null, playlistItemsResponseData)
         }
     };
 
@@ -234,14 +190,12 @@ playlistsResourceInvalidResponseData.forEach(function (playlistsResponseData, in
         var videoId2 = 'videoId44';
         var videoName2 = 'videoName44';
 
-        var playlistItemsResponseData = createPlaylistItemsResponseData([{
-            videoId: videoId1,
-            videoName: videoName1,
-            playlistId: playlistId
+        var playlistItemsResponseData = createPlaylistItemsResponseData(playlistId, [{
+            id: videoId1,
+            name: videoName1
         }, {
-            videoId: videoId2,
-            videoName: videoName2,
-            playlistId: playlistId
+            id: videoId2,
+            name: videoName2
         }]);
 
         var config = {
@@ -251,33 +205,13 @@ playlistsResourceInvalidResponseData.forEach(function (playlistsResponseData, in
 
         var jwtClient = createJwtClient(null);
 
-        var expectedPlaylistOptions = {
-            id: playlistId,
-            part: ['snippet'],
-            maxResults: 1
-        };
-        var expectedPlaylistItemsOptions = {
-            playlistId: playlistId,
-            part: ['snippet'],
-            maxResults: 50
-        };
-
+        var err = null;
         var youtube = {
             playlists: {
-                list: function (options, params, callback) {
-                    t.deepEqual(expectedPlaylistOptions, options);
-                    var err = null;
-                    var response = [];
-                    callback(err, playlistsResponseData, response);
-                }
+                list: createApiPlaylistsByIdFunction(t, playlistId, err, playlistsResponseData)
             },
             playlistItems: {
-                list: function (options, params, callback) {
-                    t.deepEqual(expectedPlaylistItemsOptions, options);
-                    var err = null;
-                    var response = [];
-                    callback(err, playlistItemsResponseData, response);
-                }
+                list: createApiPlaylistItemsFunction(t, playlistId, err, playlistItemsResponseData)
             }
         };
 
@@ -311,7 +245,7 @@ test('provider - getPlaylistVideoItems - playlistItems resource error', function
     var playlistId = 'playlistId40';
     var playlistName = 'playlistName40';
 
-    var playlistResponseData = createPlaylistResponseData(playlistId, playlistName);
+    var playlistsResponseData = createPlaylistsResponseData([{ id: playlistId, name: playlistName }]);
 
     var config = {
         email: 'foo@bar.com',
@@ -320,34 +254,13 @@ test('provider - getPlaylistVideoItems - playlistItems resource error', function
 
     var jwtClient = createJwtClient(null);
 
-    var expectedPlaylistOptions = {
-        id: playlistId,
-        part: ['snippet'],
-        maxResults: 1
-    };
-    var expectedPlaylistItemsOptions = {
-        playlistId: playlistId,
-        part: ['snippet'],
-        maxResults: 50
-    };
-
     var errorMessage = 'Client has failed to request playlistItems resource';
     var youtube = {
         playlists: {
-            list: function (options, params, callback) {
-                t.deepEqual(expectedPlaylistOptions, options);
-                var err = null;
-                var response = [];
-                callback(err, playlistResponseData, response);
-            }
+            list: createApiPlaylistsByIdFunction(t, playlistId, null, playlistsResponseData)
         },
         playlistItems: {
-            list: function (options, params, callback) {
-                t.deepEqual(expectedPlaylistItemsOptions, options);
-                var err = new Error(errorMessage);
-                var response = [];
-                callback(err, {}, response);
-            }
+            list: createApiPlaylistItemsFunction(t, playlistId, new Error(errorMessage), {})
         }
     };
 
@@ -424,7 +337,7 @@ playlistItemsResourceInvalidResponseData.forEach(function (playlistItemsResponse
         var playlistId = 'playlistId40';
         var playlistName = 'playlistName40';
 
-        var playlistsResponseData = createPlaylistResponseData(playlistId, playlistName);
+        var playlistsResponseData = createPlaylistsResponseData([{ id: playlistId, name: playlistName }]);
 
         var config = {
             email: 'foo@bar.com',
@@ -433,33 +346,13 @@ playlistItemsResourceInvalidResponseData.forEach(function (playlistItemsResponse
 
         var jwtClient = createJwtClient(null);
 
-        var expectedPlaylistOptions = {
-            id: playlistId,
-            part: ['snippet'],
-            maxResults: 1
-        };
-        var expectedPlaylistItemsOptions = {
-            playlistId: playlistId,
-            part: ['snippet'],
-            maxResults: 50
-        };
-
+        var err = null;
         var youtube = {
             playlists: {
-                list: function (options, params, callback) {
-                    t.deepEqual(expectedPlaylistOptions, options);
-                    var err = null;
-                    var response = [];
-                    callback(err, playlistsResponseData, response);
-                }
+                list: createApiPlaylistsByIdFunction(t, playlistId, err, playlistsResponseData)
             },
             playlistItems: {
-                list: function (options, params, callback) {
-                    t.deepEqual(expectedPlaylistItemsOptions, options);
-                    var err = null;
-                    var response = [];
-                    callback(err, playlistItemsResponseData, response);
-                }
+                list: createApiPlaylistItemsFunction(t, playlistId, err, playlistItemsResponseData)
             }
         };
 
@@ -490,40 +383,43 @@ playlistItemsResourceInvalidResponseData.forEach(function (playlistItemsResponse
 });
 
 test.skip('provider - getChannelVideoItems - succeeds', function (t) {
-    var playlistId = 'playlistId40';
-    var playlistName = 'playlistName40';
+    var channelId = 'channelId';
+    
+    var playlistId1 = 'playlistId1';
+    var playlistName1 = 'playlistName1';
 
-    var videoId1 = 'videoId42';
-    var videoName1 = 'videoName42';
+    var playlistId2 = 'playlistId2';
+    var playlistName2 = 'playlistName2';
 
-    var videoId2 = 'videoId44';
-    var videoName2 = 'videoName44';
+    var videoId1 = 'videoId1';
+    var videoName1 = 'videoName1';
 
-    var playlistsResponseData = createPlaylistResponseData(playlistId, playlistName);
+    var videoId2 = 'videoId2';
+    var videoName2 = 'videoName2';
 
-    var playlistItemsResponseData = createPlaylistItemsResponseData([{
-        videoId: videoId1,
-        videoName: videoName1,
-        playlistId: playlistId
-    }, {
-        videoId: videoId2,
-        videoName: videoName2,
-        playlistId: playlistId
-    }]);
+    var videoId3 = 'videoId3';
+    var videoName3 = 'videoName3';
 
-    var expectedVideoItem1 = {
-        id: sha256(videoId1 + '_' + playlistName),
-        name: videoName1,
-        playlistName: playlistName,
-        url: 'https://www.youtube.com/watch?v=' + videoId1
-    };
-    var expectedVideoItem2 = {
-        id: sha256(videoId2 + '_' + playlistName),
-        name: videoName2,
-        playlistName: playlistName,
-        url: 'https://www.youtube.com/watch?v=' + videoId2
-    };
-    var expectedVideoItems = [expectedVideoItem1, expectedVideoItem2];
+    var playlistsResponseData = createPlaylistsResponseData([
+        { id: playlistId1, name: playlistName1 },
+        { id: playlistId2, name: playlistName2 }
+    ]);
+
+    var playlistItemsResponseData1 = createPlaylistItemsResponseData(
+        playlistId1, [{ id: videoId1, name: videoName1 }]
+    );
+    var playlistItemsResponseData2 = createPlaylistItemsResponseData(
+        playlistId2, [
+            { id: videoId2, name: videoName2 },
+            { id: videoId3, name: videoName3 }
+        ]
+    );
+
+    var expectedVideoItems = [
+        createProviderVideoItem(videoId1, videoName1, playlistName1),
+        createProviderVideoItem(videoId2, videoName2, playlistName2),
+        createProviderVideoItem(videoId3, videoName3, playlistName2)
+    ];
 
     var config = {
         email: 'foo@bar.com',
@@ -532,33 +428,13 @@ test.skip('provider - getChannelVideoItems - succeeds', function (t) {
 
     var jwtClient = createJwtClient(null);
 
-    var expectedPlaylistOptions = {
-        id: playlistId,
-        part: ['snippet'],
-        maxResults: 1
-    };
-    var expectedPlaylistItemsOptions = {
-        playlistId: playlistId,
-        part: ['snippet'],
-        maxResults: 50
-    };
-
+    var err = null;
     var youtube = {
         playlists: {
-            list: function (options, params, callback) {
-                t.deepEqual(expectedPlaylistOptions, options);
-                var err = null;
-                var response = [];
-                callback(err, playlistsResponseData, response);
-            }
+            list: createApiPlaylistsByChannelIdFunction(t, channelId, err, playlistsResponseData)
         },
         playlistItems: {
-            list: function (options, params, callback) {
-                t.deepEqual(expectedPlaylistItemsOptions, options);
-                var err = null;
-                var response = [];
-                callback(err, playlistItemsResponseData, response);
-            }
+            list: sinon.stub()
         }
     };
 
@@ -577,7 +453,7 @@ test.skip('provider - getChannelVideoItems - succeeds', function (t) {
 
     var provider = createProvider(google, config);
 
-    return provider.getPlaylistVideoItems(playlistId)
+    return provider.getPlaylistVideoItems()
         .then(function (items) {
             t.deepEqual(items, expectedVideoItems);
         });
@@ -588,7 +464,7 @@ test.skip('provider - getChannelVideoItems - succeeds', function (t) {
  * @param {string} playlistName
  * @returns {Object}
  */
-function createPlaylistResponseData(playlistId, playlistName) {
+function createPlaylistsResponseData(playlists) {
     return {
         kind: 'kind',
         etag: 'etag',
@@ -596,63 +472,15 @@ function createPlaylistResponseData(playlistId, playlistName) {
             totalResults: 1,
             resultsPerPage: 1
         },
-        items: [{
-            kind: 'youtube#playlist',
-            etag: 'etag',
-            id: playlistId,
-            snippet: {
-                publishedAt: '2016-10-06T16:12:58.000Z',
-                channelId: 'channelId',
-                title: playlistName,
-                description: '',
-                thumbnails: {
-                    default: {
-                        url: 'https://foo1.jpg',
-                        width: 120,
-                        height: 90
-                    },
-                    medium: {
-                        url: 'https://foo2.jpg',
-                        width: 320,
-                        height: 180
-                    },
-                    high: {
-                        url: 'https://foo3.jpg',
-                        width: 480,
-                        height: 360
-                    }
-                },
-                channelTitle: 'channel title',
-                localized: {
-                    title: playlistName,
-                    description: ''
-                }
-            }
-        }]
-    };
-}
-
-/**
- * @param {Object[]} videos Array of objects with attributes [videoId, videoName, playlistId]
- * @returns {Object}
- */
-function createPlaylistItemsResponseData(videos) {
-    return {
-        kind: 'kind',
-        etag: 'etag',
-        pageInfo: {
-            totalResults: videos.length,
-            resultsPerPage: 50
-        },
-        items: videos.map(function (video) {
+        items: playlists.map(function (playlist) {
             return {
-                kind: 'youtube#playlistItem',
+                kind: 'youtube#playlist',
                 etag: 'etag',
-                id: 'itemId42',
+                id: playlist.id,
                 snippet: {
-                    publishedAt: '2016-10-09T17:53:41.000Z',
+                    publishedAt: '2016-10-06T16:12:58.000Z',
                     channelId: 'channelId',
-                    title: video.videoName,
+                    title: playlist.name,
                     description: '',
                     thumbnails: {
                         default: {
@@ -672,11 +500,62 @@ function createPlaylistItemsResponseData(videos) {
                         }
                     },
                     channelTitle: 'channel title',
-                    playlistId: video.playlistId,
+                    localized: {
+                        title: playlist.name,
+                        description: ''
+                    }
+                }
+            };
+        })
+    };
+}
+
+/**
+ * @param {string} playlistId
+ * @param {Object[]} videos Array of objects with attributes [id, name]
+ * @returns {Object}
+ */
+function createPlaylistItemsResponseData(playlistId, videoItems) {
+    return {
+        kind: 'kind',
+        etag: 'etag',
+        pageInfo: {
+            totalResults: videoItems.length,
+            resultsPerPage: 50
+        },
+        items: videoItems.map(function (videoItem) {
+            return {
+                kind: 'youtube#playlistItem',
+                etag: 'etag',
+                id: 'itemId42',
+                snippet: {
+                    publishedAt: '2016-10-09T17:53:41.000Z',
+                    channelId: 'channelId',
+                    title: videoItem.name,
+                    description: '',
+                    thumbnails: {
+                        default: {
+                            url: 'https://foo1.jpg',
+                            width: 120,
+                            height: 90
+                        },
+                        medium: {
+                            url: 'https://foo2.jpg',
+                            width: 320,
+                            height: 180
+                        },
+                        high: {
+                            url: 'https://foo3.jpg',
+                            width: 480,
+                            height: 360
+                        }
+                    },
+                    channelTitle: 'channel title',
+                    playlistId: playlistId,
                     position: 0,
                     resourceId: {
                         kind: 'youtube#video',
-                        videoId: video.videoId
+                        videoId: videoItem.id
                     }
                 }
             };
@@ -717,5 +596,74 @@ function createProviderVideoItem(providerVideoId, name, playlistName) {
         name: name,
         playlistName: playlistName,
         url: 'https://www.youtube.com/watch?v=' + providerVideoId
+    };
+}
+
+/**
+ * Create function mock for playlists resource queried by playlistId
+ *
+ * @param {Object} t Test object
+ * @param {string} playlistId
+ * @param {Error|null} err
+ * @param {Object} responseData
+ * @returns {Object}
+ */
+function createApiPlaylistsByIdFunction(t, playlistId, err, responseData) {
+    var expectedOptions = {
+        id: playlistId,
+        part: ['snippet'],
+        maxResults: 1
+    };
+    return createApiFunctionMock(t, expectedOptions, err, responseData);
+}
+
+/**
+ * Create function mock for playlists resource queried by channelId
+ *
+ * @param {Object} t Test object
+ * @param {string} channelId
+ * @param {Error|null} err
+ * @param {Object} responseData
+ * @returns {Object}
+ */
+function createApiPlaylistsByChannelIdFunction(t, channelId, err, responseData) {
+    var expectedOptions = {
+        channelId: channelId,
+        part: ['snippet'],
+        maxResults: 50
+    };
+    return createApiFunctionMock(t, expectedOptions, err, responseData);
+}
+
+/**
+ * Create function mock for playlistItems resource queried by playlistId
+ *
+ * @param {Object} t Test object
+ * @param {string} channelId
+ * @param {Error|null} err
+ * @param {Object} responseData
+ * @returns {Object}
+ */
+function createApiPlaylistItemsFunction(t, playlistId, err, responseData) {
+    var expectedOptions = {
+        playlistId: playlistId,
+        part: ['snippet'],
+        maxResults: 50
+    };
+    return createApiFunctionMock(t, expectedOptions, err, responseData);
+}
+
+/**
+ * @param {Object} t Test object
+ * @param {Object} options Expected options object
+ * @param {Error|null} err
+ * @param {Object} responseData
+ * @returns {Object}
+ */
+function createApiFunctionMock(t, expectedOptions, err, responseData) {
+    return function (options, params, callback) {
+        t.deepEqual(expectedOptions, options);
+        var response = [];
+        callback(err, responseData, response);
     };
 }
