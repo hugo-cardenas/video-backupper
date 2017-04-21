@@ -17,40 +17,26 @@ var options = {
     skip: !baseTest.isIntegrationTestEnabled()
 };
 
-test('backupper - backup - succeeds with Dropbox storage', options, function (t) {
+test('backupper - backupPlaylist - succeeds with Dropbox storage', options, function (t) {
     enableDropboxStorage();
 
     var playlistId = 'PLWcOakfYWxVM_wvoM_bKxEiuGwvgYCvOE';
-    var playlistName = 'nyancat playlist';
+    var playlistName = 'test playlist 01';
 
-    var videoId1 = '40T4IrLiCiU';
-    var videoName1 = 'video 1';
-
-    var videoId2 = 'egjumMGKZCg';
-    var videoName2 = 'video 2';
-
-    var videoId3 = '5y5MQMJmCxI';
-    var videoName3 = 'video 3';
+    var expectedVideos = [
+        { id: '40T4IrLiCiU', name: 'video 01' },
+        { id: 'egjumMGKZCg', name: 'video 02' },
+        { id: '5y5MQMJmCxI', name: 'video 03' }
+    ];
 
     return redisHelper.flushDb()
         .then(dropboxHelper.deleteAllFiles)
         .then(function () {
             // Queue all jobs for the playlist videos, run worker and wait until jobs are finished
-            return runBackupAndWaitForSucceededJobs(playlistId, 3, true);
+            return runPlaylistBackupAndWait(playlistId, 3);
         })
         .then(function () {
-            return dropboxHelper.listFiles('/' + playlistName);
-        })
-        .then(function (files) {
-            t.equal(files.length, 3, 'There are 3 files stored');
-            var expectedPaths = [
-                buildDropboxPath(playlistName, videoName1, videoId1),
-                buildDropboxPath(playlistName, videoName2, videoId2),
-                buildDropboxPath(playlistName, videoName3, videoId3)
-            ];
-            t.ok(files.includes(expectedPaths[0]), `Stored files contain ${expectedPaths[0]}}`);
-            t.ok(files.includes(expectedPaths[1]), `Stored files contain ${expectedPaths[1]}}`);
-            t.ok(files.includes(expectedPaths[2]), `Stored files contain ${expectedPaths[2]}}`);
+            return assertDropboxContainsPlaylistVideos(t, playlistName, expectedVideos);
         })
         .then(function () {
             getQueue().close();
@@ -59,20 +45,17 @@ test('backupper - backup - succeeds with Dropbox storage', options, function (t)
         .then(redisHelper.quit);
 });
 
-test('backupper - backup - succeeds with Dropbox storage, skips already backed up videos', options, function (t) {
+test('backupper - backupPlaylist - succeeds with Dropbox storage, skips already backed up videos', options, function (t) {
     enableDropboxStorage();
 
     var playlistId = 'PLWcOakfYWxVM_wvoM_bKxEiuGwvgYCvOE';
-    var playlistName = 'nyancat playlist';
+    var playlistName = 'test playlist 01';
 
-    var videoId1 = '40T4IrLiCiU';
-    var videoName1 = 'video 1';
-
-    var videoId2 = 'egjumMGKZCg';
-    var videoName2 = 'video 2';
-
-    var videoId3 = '5y5MQMJmCxI';
-    var videoName3 = 'video 3';
+    var expectedVideos = [
+        { id: '40T4IrLiCiU', name: 'video 01' },
+        { id: 'egjumMGKZCg', name: 'video 02' },
+        { id: '5y5MQMJmCxI', name: 'video 03' }
+    ];
 
     var queue = getQueue();
     var queueSpy = sinon.spy(queue, 'createJob');
@@ -81,26 +64,20 @@ test('backupper - backup - succeeds with Dropbox storage, skips already backed u
         .then(dropboxHelper.deleteAllFiles)
         .then(function () {
             // Queue all jobs for the playlist videos, run worker and wait until jobs are finished
-            return runBackupAndWaitForSucceededJobs(playlistId, 3, true);
+            return runPlaylistBackupAndWait(playlistId, 3);
         })
         .then(function () {
             // Delete one stored file and backup again - should create only 1 job
-            return dropboxHelper.deleteFile(buildDropboxPath(playlistName, videoName2, videoId2));
+            return dropboxHelper.deleteFile(buildDropboxPath(playlistName, expectedVideos[1].name, expectedVideos[1].id));
         })
         .then(function () {
             // Run backup again for one single video, wait until the single job is finished
-            return runBackupAndWaitForSucceededJobs(playlistId, 1, false);
-        })
-        .then(function () {
-            return dropboxHelper.listFiles('/' + playlistName);
+            return runPlaylistBackupAndWait(playlistId, 1, false);
         })
         .then(function (files) {
             // Check that only 4 jobs are created - 3 original video files + 1 saved again
             t.equal(queueSpy.callCount, 4, 'Queue createJob is called only 4 times (3+1 videos)');
-            t.equal(files.length, 3, 'There are 3 files stored');
-            t.ok(files.includes(buildDropboxPath(playlistName, videoName1, videoId1)));
-            t.ok(files.includes(buildDropboxPath(playlistName, videoName2, videoId2)));
-            t.ok(files.includes(buildDropboxPath(playlistName, videoName3, videoId3)));
+            return assertDropboxContainsPlaylistVideos(t, playlistName, expectedVideos);
         })
         .then(function () {
             getQueue().close();
@@ -109,26 +86,26 @@ test('backupper - backup - succeeds with Dropbox storage, skips already backed u
         .then(redisHelper.quit);
 });
 
-test('backupper - backup - succeeds with S3 storage', options, function (t) {
+test('backupper - backupPlaylist - succeeds with S3 storage', options, function (t) {
     enableS3Storage();
 
     var playlistId = 'PLWcOakfYWxVM_wvoM_bKxEiuGwvgYCvOE';
-    var playlistName = 'nyancat playlist';
+    var playlistName = 'test playlist 01';
 
     var videoId1 = '40T4IrLiCiU';
-    var videoName1 = 'video 1';
+    var videoName1 = 'video 01';
 
     var videoId2 = 'egjumMGKZCg';
-    var videoName2 = 'video 2';
+    var videoName2 = 'video 02';
 
     var videoId3 = '5y5MQMJmCxI';
-    var videoName3 = 'video 3';
+    var videoName3 = 'video 03';
 
     return redisHelper.flushDb()
         .then(s3Helper.deleteAllKeys)
         .then(function () {
             // Queue all jobs for the playlist videos, run worker and wait until jobs are finished
-            return runBackupAndWaitForSucceededJobs(playlistId, 3, true);
+            return runPlaylistBackupAndWait(playlistId, 3);
         })
         .then(s3Helper.listKeys)
         .then(function (s3Keys) {
@@ -144,20 +121,20 @@ test('backupper - backup - succeeds with S3 storage', options, function (t) {
         .then(redisHelper.quit);
 });
 
-test('backupper - backup - succeeds with S3 storage, skips already backed up videos', options, function (t) {
+test('backupper - backupPlaylist - succeeds with S3 storage, skips already backed up videos', options, function (t) {
     enableS3Storage();
 
     var playlistId = 'PLWcOakfYWxVM_wvoM_bKxEiuGwvgYCvOE';
-    var playlistName = 'nyancat playlist';
+    var playlistName = 'test playlist 01';
 
     var videoId1 = '40T4IrLiCiU';
-    var videoName1 = 'video 1';
+    var videoName1 = 'video 01';
 
     var videoId2 = 'egjumMGKZCg';
-    var videoName2 = 'video 2';
+    var videoName2 = 'video 02';
 
     var videoId3 = '5y5MQMJmCxI';
-    var videoName3 = 'video 3';
+    var videoName3 = 'video 03';
 
     var queue = getQueue();
     var queueSpy = sinon.spy(queue, 'createJob');
@@ -166,7 +143,7 @@ test('backupper - backup - succeeds with S3 storage, skips already backed up vid
         .then(s3Helper.deleteAllKeys)
         .then(function () {
             // Queue all jobs for the playlist videos, run worker and wait until jobs are finished
-            return runBackupAndWaitForSucceededJobs(playlistId, 3, true);
+            return runPlaylistBackupAndWait(playlistId, 3);
         })
         .then(function () {
             // Delete one stored file and backup again - should create only 1 job
@@ -174,7 +151,7 @@ test('backupper - backup - succeeds with S3 storage, skips already backed up vid
         })
         .then(function () {
             // Run backup again for one single video, wait until the single job is finished
-            return runBackupAndWaitForSucceededJobs(playlistId, 1, false);
+            return runPlaylistBackupAndWait(playlistId, 1, false);
         })
         .then(s3Helper.listKeys)
         .then(function (s3Keys) {
@@ -184,6 +161,47 @@ test('backupper - backup - succeeds with S3 storage, skips already backed up vid
             t.ok(s3Keys.includes(buildS3Key(playlistName, videoName1, videoId1)));
             t.ok(s3Keys.includes(buildS3Key(playlistName, videoName2, videoId2)));
             t.ok(s3Keys.includes(buildS3Key(playlistName, videoName3, videoId3)));
+        })
+        .then(function () {
+            getQueue().close();
+        })
+        .then(resetLocators)
+        .then(redisHelper.quit);
+});
+
+test('backupper - backupChannel - succeeds with Dropbox storage', options, function (t) {
+    enableDropboxStorage();
+
+    var channelId = 'UCX-DMXPI5qgrpb2e9gqCt0Q';
+
+    var playlistName1 = 'test playlist 01';
+    var playlistName2 = 'test playlist 02';
+
+    // Playlist 01
+    var expectedVideos1 = [
+        { id: '40T4IrLiCiU', name: 'video 01' },
+        { id: 'egjumMGKZCg', name: 'video 02' },
+        { id: '5y5MQMJmCxI', name: 'video 03' }
+    ];
+
+    // Playlist 02
+    var expectedVideos2 = [
+        { id: 'fhj5h9KJmAo', name: 'video 04' },
+        { id: 'gtkdENp8fWY', name: 'video 05' }
+    ];
+
+    return redisHelper.flushDb()
+        .then(dropboxHelper.deleteAllFiles)
+        .then(function () {
+            // Queue all jobs for the channel videos, run worker and wait until jobs are finished
+            return runChannelBackupAndWait(channelId, 5);
+        })
+        .then(function () {
+            console.log('FOO');
+            return Promise.all([
+                assertDropboxContainsPlaylistVideos(t, playlistName1, expectedVideos1),
+                assertDropboxContainsPlaylistVideos(t, playlistName2, expectedVideos2)
+            ]);
         })
         .then(function () {
             getQueue().close();
@@ -200,12 +218,36 @@ function getWorker() {
 }
 
 /**
- * Wait until the number specified of jobs have succeeded
+ * Run playlist backup and Wait until the number specified of jobs have succeeded
+ * @param {string} playlistId
  * @param {number} numJobs
- * @param {boolean} runWorker Launch worker after setting the wait for succeeded jobs
+ * @param {boolean} [runWorker=true] Launch worker after setting the wait for succeeded jobs
  * @returns {Promise}
  */
-function runBackupAndWaitForSucceededJobs(playlistId, numJobs, runWorker) {
+function runPlaylistBackupAndWait(playlistId, numJobs, runWorker = true) {
+    var backupFunction = getBackupper().backupPlaylist.bind(this, playlistId);
+    return runBackupAndWait(backupFunction, numJobs, runWorker);
+}
+
+/**
+ * Run channel backup and Wait until the number specified of jobs have succeeded
+ * @param {string} channelId
+ * @param {number} numJobs
+ * @param {boolean} [runWorker=true] Launch worker after setting the wait for succeeded jobs
+ * @returns {Promise}
+ */
+function runChannelBackupAndWait(channelId, numJobs, runWorker = true) {
+    var backupFunction = getBackupper().backupChannel.bind(this, channelId);
+    return runBackupAndWait(backupFunction, numJobs, runWorker);
+}
+
+/**
+ * @param {function} backupCallback
+ * @param {number} numJobs
+ * @param {boolean} runWorker
+ * @returns {Promise}
+ */
+function runBackupAndWait(backupFunction, numJobs, runWorker) {
     // Wait until jobs are finished
     var queue = getQueue();
     var numSucceeded = 0;
@@ -219,7 +261,7 @@ function runBackupAndWaitForSucceededJobs(playlistId, numJobs, runWorker) {
         if (runWorker) {
             getWorker().run();
         }
-        getBackupper().backupPlaylist(playlistId);
+        backupFunction();
     });
 }
 
@@ -308,4 +350,21 @@ function getConfigValue(key) {
  */
 function sha256(value) {
     return crypto.createHash('sha256').update(value).digest('hex');
+}
+
+/**
+ * @param {Object} t Test object
+ * @param {string} playlistName
+ * @param {Object[]} videos Array of video objects {id, name}
+ * @returns
+ */
+function assertDropboxContainsPlaylistVideos(t, playlistName, videos) {
+    return dropboxHelper.listFiles('/' + playlistName)
+        .then(function (files) {
+            t.equal(files.length, videos.length, `There are ${videos.length} files stored`);
+            videos.forEach(function (video) {
+                const path = buildDropboxPath(playlistName, video.name, video.id);
+                t.ok(files.includes(path), `Stored files contain ${path}}`);
+            });
+        });
 }
