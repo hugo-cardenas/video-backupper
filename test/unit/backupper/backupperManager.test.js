@@ -12,6 +12,6 @@ test('backupperManager - getQueueBackupper - succeeds', function (t) {
     var backupper = backupperManager.getQueueBackupper();
 
     t.ok(backupper);
-    t.ok(backupper.hasOwnProperty('run'));
+    t.ok(backupper.hasOwnProperty('backupVideos'));
     t.end();
 });

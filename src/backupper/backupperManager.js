@@ -22,7 +22,7 @@ module.exports = function (provider, storage, queue, displayOutput) {
      */
     function getQueueBackupper() {
         if (!queueBackupper) {
-            queueBackupper = createQueueBackupper(provider, storage, queue, displayOutput);
+            queueBackupper = createQueueBackupper(storage, queue, displayOutput);
         }
         return queueBackupper;
     }

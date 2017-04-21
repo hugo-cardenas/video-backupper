@@ -10,37 +10,48 @@ const _ = require('lodash');
  * @param {DisplayOutput} displayOutput Object to output messages
  * @returns {Backupper}
  */
-module.exports = function (provider, storage, queue, displayOutput) {
+module.exports = function (storage, queue, displayOutput) {
     /**
-     * Run the backup process for all the videos in the playlist specified
-     * @param {string} playlistId
+     * Run the backup process for the videos specified
+     * @param {Object[]} videos
      * @returns {Promise} No resolve value
      */
-    function run(playlistId) {
-        return provider.getPlaylistVideoItems(playlistId)
-            .then(processVideoItems)
-            .catch(function (err) {
-                return Promise.reject(createErrorForPlaylist(playlistId, err));
-            });
-    }
-
-    function backupChannel(userId) {
-        return getChannelVideoItems(userId)
-            .then(processVideoItems)
-            .catch(function (err) {
-                return Promise.reject(createErrorForChannel(userId, err));
-            });
-    }
-
-    function processVideoItems(videoItems) {
-        displayOutput.outputLine('Found ' + videoItems.length + ' video items');
-        return formatVideoItems(videoItems) // TODO Should be moved to storage when comparison is done properly by id
-            .then(filterVideoItems)
-            .then(function (videoItems) {
-                displayOutput.outputLine('Creating save jobs for ' + videoItems.length + ' video items');
-                return videoItems;
+    function backupVideos(videos) {
+        displayOutput.outputLine('Processing ' + videos.length + ' video items');
+        return Promise.resolve()
+            .then(function () {
+                validateVideoItems(videos);
+                return videos;
             })
-            .then(queueVideoItems);
+            .then(formatVideoItems)  // TODO Should be moved to storage when comparison is done properly by id
+            .then(filterVideoItems)
+            .then(function (videos) {
+                displayOutput.outputLine('Creating save jobs for ' + videos.length + ' video items');
+                return videos;
+            })
+            .then(queueVideoItems)
+            .catch(function (err) {
+                return Promise.reject(createError(videos, err));
+            });
+    }
+
+    /**
+     * @param {any} videos
+     */
+    function validateVideoItems(videos) {
+        const mandatoryProperties = ['id', 'name', 'playlistName', 'url'];
+        videos.forEach(function (video) {
+            const invalidProperties = mandatoryProperties.filter(function (property) {
+                return !video[property] || typeof video[property] !== 'string';
+            });
+            if (invalidProperties.length > 0) {
+                throw new VError(
+                    'Invalid video %s, invalid or missing properties [%s]',
+                    JSON.stringify(video),
+                    invalidProperties.join(', ')
+                );
+            }
+        });
     }
 
     /**
@@ -94,31 +105,17 @@ module.exports = function (provider, storage, queue, displayOutput) {
 
     /**
      * Create a backup specific error
-     * @param {string} playlistId
+     * @param {Object[]} videos
      * @param {Error} previousErr
      * @returns {Error}
      */
-    function createErrorForPlaylist(playlistId, previousErr) {
-        var message = 'Failed to create backup jobs for playlist id ' + playlistId;
-        var err = new VError(previousErr, message);
-        displayOutput.outputLine(err.message);
-        return err;
-    }
-
-    /**
-     * Create a backup specific error
-     * @param {string} playlistId
-     * @param {Error} previousErr
-     * @returns {Error}
-     */
-    function createErrorForChannel(channelId, previousErr) {
-        var message = 'Failed to create backup jobs for channel id ' + channelId;
-        var err = new VError(previousErr, message);
+    function createError(videos, previousErr) {
+        var err = new VError(previousErr, 'Failed to create backup jobs for %d videos', videos.length);
         displayOutput.outputLine(err.message);
         return err;
     }
 
     return {
-        run: run
+        backupVideos: backupVideos
     };
 };
