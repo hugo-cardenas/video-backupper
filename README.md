@@ -8,12 +8,21 @@ Uses a queue ([bee-queue](https://github.com/LewisJEllis/bee-queue)) based on Re
 
 # Usage
 ```
-VIDEOBACKUPPER_CONFIG=/path/to/config.json bin/backup myPlaylistId42
+VIDEOBACKUPPER_CONFIG=/path/to/config.json bin/backup channel myChannelId40
+```
+```
+VIDEOBACKUPPER_CONFIG=/path/to/config.json bin/backup playlist myPlaylistId42
 ```
 ```  
-Usage: backup <playlist-id>
+Usage: backup [command]
 
-Create backup jobs for all videos in a Youtube playlist
+
+  Commands:
+
+    channel <channel-id>    Create backup jobs for all videos in all playlists from a channel
+    playlist <playlist-id>  Create backup jobs for all videos in a playlist
+
+  Create backup jobs for Youtube videos
 ```
 
 ```
