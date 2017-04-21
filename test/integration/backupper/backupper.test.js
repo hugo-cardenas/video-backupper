@@ -17,7 +17,7 @@ var options = {
     skip: !baseTest.isIntegrationTestEnabled()
 };
 
-test('queueBackupper - backup - succeeds with Dropbox storage', options, function (t) {
+test('backupper - backup - succeeds with Dropbox storage', options, function (t) {
     enableDropboxStorage();
 
     var playlistId = 'PLWcOakfYWxVM_wvoM_bKxEiuGwvgYCvOE';
@@ -59,7 +59,7 @@ test('queueBackupper - backup - succeeds with Dropbox storage', options, functio
         .then(redisHelper.quit);
 });
 
-test('queueBackupper - backup - succeeds with Dropbox storage, skips already backed up videos', options, function (t) {
+test('backupper - backup - succeeds with Dropbox storage, skips already backed up videos', options, function (t) {
     enableDropboxStorage();
 
     var playlistId = 'PLWcOakfYWxVM_wvoM_bKxEiuGwvgYCvOE';
@@ -109,7 +109,7 @@ test('queueBackupper - backup - succeeds with Dropbox storage, skips already bac
         .then(redisHelper.quit);
 });
 
-test('queueBackupper - backup - succeeds with S3 storage', options, function (t) {
+test('backupper - backup - succeeds with S3 storage', options, function (t) {
     enableS3Storage();
 
     var playlistId = 'PLWcOakfYWxVM_wvoM_bKxEiuGwvgYCvOE';
@@ -144,7 +144,7 @@ test('queueBackupper - backup - succeeds with S3 storage', options, function (t)
         .then(redisHelper.quit);
 });
 
-test('queueBackupper - backup - succeeds with S3 storage, skips already backed up videos', options, function (t) {
+test('backupper - backup - succeeds with S3 storage, skips already backed up videos', options, function (t) {
     enableS3Storage();
 
     var playlistId = 'PLWcOakfYWxVM_wvoM_bKxEiuGwvgYCvOE';
@@ -219,7 +219,7 @@ function runBackupAndWaitForSucceededJobs(playlistId, numJobs, runWorker) {
         if (runWorker) {
             getWorker().run();
         }
-        getQueueBackupper().run(playlistId);
+        getBackupper().backupPlaylist(playlistId);
     });
 }
 
@@ -256,8 +256,8 @@ function buildVideoId(providerVideoId, playlistName) {
 /**
  * @returns {Object}
  */
-function getQueueBackupper() {
-    return backupperLocator.getBackupperManager().getQueueBackupper();
+function getBackupper() {
+    return backupperLocator.getBackupperManager().getBackupper();
 }
 
 function resetLocators() {
