@@ -4,27 +4,43 @@ var program = require('commander');
 var baserequire = require('base-require');
 var locator = baserequire('src/backupper/backupperLocator');
 
-/**
- * @param {string} playlistId
- */
-function handleCommand(playlistId) {
-    locator.getBackupperManager().getQueueBackupper().run(playlistId)
-        .then(function (errors) {
-            if (errors && errors.length > 0) {
-                console.log('Errors:', errors);
-            }
-            console.log('Finished!');
-            process.exit(0);
-        })
-        .catch(function (err) {
-            console.log('Error!', err);
-            process.exit(1);
-        });
-}
+program
+    .version('1.0.0')
+    .description('Create backup jobs for Youtube videos');
 
 program
-    .version('0.0.1')
-    .description('Create backup jobs for all videos in a Youtube playlist')
-    .arguments('backup <playlist-id>')
-    .action(handleCommand)
-    .parse(process.argv);
+    .command('channel <channel-id>')
+    .description('Create backup jobs for all videos in all playlists from a channel')
+    .action(function (channelId) {
+        return getBackupper().backupChannel(channelId)
+            .then(handleResolve)
+            .catch(handleReject);
+    });
+
+program
+    .command('playlist <playlist-id>')
+    .description('Create backup jobs for all videos in a playlist')
+    .action(function (playlistId) {
+        return getBackupper().backupPlaylist(playlistId)
+            .then(handleResolve)
+            .catch(handleReject);
+    });
+
+program.parse(process.argv);
+
+function handleResolve(errors) {
+    if (errors && errors.length > 0) {
+        console.log('Errors:', errors);
+    }
+    console.log('Finished!');
+    process.exit(0);
+}
+
+function handleReject(error) {
+    console.log('Error!', error);
+    process.exit(1);
+}
+
+function getBackupper() {
+    return locator.getBackupperManager().getBackupper();
+}
