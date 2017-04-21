@@ -1,11 +1,6 @@
 var baserequire = require('base-require');
+var createBackupper = baserequire('src/backupper/backupper');
 var createQueueBackupper = baserequire('src/backupper/queueBackupper');
-
-/**
- * @typedef {Object} BackupperManager
- *
- * @property {function} getBackupper Get backupper object
- */
 
 /**
  * @param {Provider} provider
@@ -15,19 +10,22 @@ var createQueueBackupper = baserequire('src/backupper/queueBackupper');
  * @returns {BackupperManager}
  */
 module.exports = function (provider, storage, queue, displayOutput) {
-    var queueBackupper;
+    var backupper;
 
     /**
-     * @returns {QueueBackupper}
+     * @returns {Object}
      */
-    function getQueueBackupper() {
-        if (!queueBackupper) {
-            queueBackupper = createQueueBackupper(storage, queue, displayOutput);
+    function getBackupper() {
+        if (!backupper) {
+            backupper = createBackupper(
+                provider,
+                createQueueBackupper(storage, queue, displayOutput)
+            );
         }
-        return queueBackupper;
+        return backupper;
     }
 
     return {
-        getQueueBackupper: getQueueBackupper
+        getBackupper
     };
 };

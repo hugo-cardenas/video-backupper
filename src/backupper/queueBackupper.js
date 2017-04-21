@@ -4,7 +4,6 @@ const _ = require('lodash');
 /**
  * Create a backupper
  *
- * @param {Provider} provider Provider of video items
  * @param {Storage} storage Video storage
  * @param {Object} queue Job queue
  * @param {DisplayOutput} displayOutput Object to output messages
