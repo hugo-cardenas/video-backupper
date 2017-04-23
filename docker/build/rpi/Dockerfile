@@ -8,7 +8,7 @@ WORKDIR /usr/local/src/video-backupper
 
 # Install app dependencies
 COPY package.json .
-#RUN npm install
+RUN npm install
 
 # Copy full app
 COPY . .
