@@ -9,4 +9,4 @@ fi
 docker-compose \
     --file docker/compose/compose.dev.yml \
     run --rm -T app \
-    "$@"
+    /bin/bash -c "$@"
