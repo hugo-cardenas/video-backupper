@@ -6,6 +6,10 @@ const promiseFilter = require('bluebird').filter;
 const baserequire = require('base-require');
 const createVideo = baserequire('src/video/video');
 
+/**
+ * @param {string} baseDir
+ * @returns {Object} File storage {getAllVideoItems, save}
+ */
 module.exports = function (baseDir) {
     const extension = 'mp4';
 
@@ -39,7 +43,10 @@ module.exports = function (baseDir) {
                     .then(() => filePath);
             })
             .then(fs.createWriteStream)
-            .then(writeStream => pipeStream(stream, writeStream));
+            .then(writeStream => pipeStream(stream, writeStream))
+            .catch(err => {
+                throw createSaveError(videoItem, err);
+            });
     }
 
     /**
@@ -143,13 +150,12 @@ module.exports = function (baseDir) {
     function pipeStream(fromStream, toStream) {
         return new Promise((resolve, reject) => {
             fromStream.pipe(toStream);
-            fromStream.on('end', () => {
-                resolve();
-            });
+            fromStream.on('end', () => resolve());
             fromStream.on('error', err => {
                 toStream.end();
                 return reject(err);
             });
+            toStream.on('error', err => reject(err));
         });
     }
 

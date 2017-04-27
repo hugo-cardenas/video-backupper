@@ -81,29 +81,54 @@ invalidFileNames.forEach((fileName, index) => {
             .then(() => storage.getAllVideoItems())
             .then(() => t.fail())
             .catch(err => {
-                t.ok('unable to get all video items');
+                t.ok(err.message.includes('unable to get all video items'));
                 t.ok(err.message.includes(`Invalid file name "${fileName}"`));
             })
             .then(fileHelper.removeTmpDir);
     });
 });
 
-test.skip('fileStorage - getAllVideoItems - error reading dir', function (t) {
-
+test('fileStorage - getAllVideoItems - error reading dir', function (t) {
+    let baseDir;
+    return fileHelper.getTmpDir()
+        .then(tmpDir => {
+            baseDir = tmpDir;
+        })
+        // Remove read rights from storage dir
+        .then(() => fs.chmod(baseDir, '300'))
+        .then(() => createFileStorage(baseDir))
+        .then(storage => storage.getAllVideoItems())
+        .then(() => t.fail())
+        .catch(err => {
+            t.ok(err.message.includes('unable to get all video items'));
+            t.ok(err.message.includes('permission denied'));
+            t.ok(err.message.includes(baseDir));
+        })
+        // We need to forcefully remove the dir (due to permissions, fileHelper won't clean automatically)
+        .then(() => fs.rmdir(baseDir));
 });
 
 test('fileStorage - save - succeeds', function (t) {
-    const video = {
-        id: 'videoId',
-        name: 'videoName',
-        playlistName: 'playlistName'
-    };
+    const videos = [
+        createVideo('id1', 'name1', 'playlist1'),
+        createVideo('id2', 'name2', 'playlist2'),
+        createVideo('id3', 'name3', 'playlist2')
+    ];
 
-    const file = './test/integration/storage/video1.mp4';
-    const stream = fs.createReadStream(file);
+    const files = [
+        './test/integration/storage/video1.mp4',
+        './test/integration/storage/video2.mp4',
+        './test/integration/storage/video3.mp4'
+    ];
+
+    const streams = files.map(file => fs.createReadStream(file));
 
     const extension = 'mp4';
-    const expectedPath = `${video.playlistName}/${video.name}_${video.id}.${extension}`;
+    const expectedPaths = [
+        `playlist1/name1_id1.${extension}`,
+        `playlist2/name2_id2.${extension}`,
+        `playlist2/name3_id3.${extension}`
+    ];
 
     let storage;
     let tmpDir;
@@ -115,8 +140,51 @@ test('fileStorage - save - succeeds', function (t) {
         .then(() => {
             storage = createFileStorage(tmpDir);
         })
-        .then(() => storage.save(stream, video))
-        .then(() => assertFileContents(t, path.join(tmpDir, expectedPath), file))
+        .then(() => {
+            return Promise.all([
+                storage.save(streams[0], videos[0]),
+                storage.save(streams[1], videos[1]),
+                storage.save(streams[2], videos[2])
+            ]);
+        })
+        .then(() => {
+            return Promise.all([
+                assertFileContents(t, path.join(tmpDir, expectedPaths[0]), files[0]),
+                assertFileContents(t, path.join(tmpDir, expectedPaths[1]), files[1]),
+                assertFileContents(t, path.join(tmpDir, expectedPaths[2]), files[2])
+            ]);
+        })
+        .then(fileHelper.removeTmpDir);
+});
+
+test('fileStorage - save - succeeds, overwrites file', function (t) {
+    const video = createVideo('id1', 'name1', 'playlist1');
+
+    const file1 = './test/integration/storage/video1.mp4';
+    const file2 = './test/integration/storage/video2.mp4';
+
+    const stream1 = fs.createReadStream(file1);
+    const stream2 = fs.createReadStream(file2);
+
+    const extension = 'mp4';
+    const expectedPath = `playlist1/name1_id1.${extension}`;
+
+    let storage;
+    let tmpDir;
+
+    return fileHelper.getTmpDir()
+        .then(dir => {
+            tmpDir = dir;
+        })
+        .then(() => {
+            storage = createFileStorage(tmpDir);
+        })
+        .then(() => storage.save(stream1, video))
+        .then(() => assertFileContents(t, path.join(tmpDir, expectedPath), file1))
+        // Overwrite stream2 into the same video
+        .then(() => storage.save(stream2, video))
+        // Now it should contain file2 contents
+        .then(() => assertFileContents(t, path.join(tmpDir, expectedPath), file2))
         .then(fileHelper.removeTmpDir);
 });
 
@@ -150,9 +218,40 @@ invalidVideos.forEach((video, index) => {
     });
 });
 
+test('fileStorage - save - error saving to file', function (t) {
+    const video = createVideo('id1', 'name1', 'playlist1');
 
-test.skip('fileStorage - save - error saving to file', function (t) {
+    const file = './test/integration/storage/video1.mp4';
+    const stream = fs.createReadStream(file);
 
+    const extension = 'mp4';
+
+    let expectedPath;
+    let storage;
+    let tmpDir;
+
+    return fileHelper.getTmpDir()
+        .then(dir => {
+            tmpDir = dir;
+        })
+        .then(() => {
+            storage = createFileStorage(tmpDir);
+        })
+        .then(() => {
+            expectedPath = path.join(tmpDir, `playlist1/name1_id1.${extension}`);
+        })
+        // Create file in advance and remove write permissions
+        .then(() => fs.ensureFile(expectedPath))
+        .then(() => fs.chmod(expectedPath, '500'))
+        // Save should fail
+        .then(() => storage.save(stream, video))
+        .then(() => t.fail())
+        .catch(err => {
+            t.ok(err.message.includes('unable to save stream'));
+            t.ok(err.message.includes(JSON.stringify(video)));
+            t.ok(err.message.includes('permission denied'));
+            t.ok(err.message.includes(expectedPath));
+        });
 });
 
 /**
@@ -187,4 +286,14 @@ function assertFileContents(t, file, expectedFile) {
             var expectedBuffer = values[1];
             t.ok(buffer.toString('binary') === expectedBuffer.toString('binary'), 'Buffers are equal');
         });
+}
+
+/**
+ * @param {string} id
+ * @param {string} name
+ * @param {string} playlistName
+ * @returns {Object}
+ */
+function createVideo(id, name, playlistName) {
+    return { id, name, playlistName };
 }

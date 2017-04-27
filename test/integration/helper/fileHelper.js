@@ -4,6 +4,8 @@ const moment = require('moment');
 let tmpDir;
 let tmpDirCleanupFunction;
 
+tmp.setGracefulCleanup();
+
 /**
  * @returns {Promise<string>}
  */
