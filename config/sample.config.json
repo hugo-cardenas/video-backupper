@@ -20,6 +20,9 @@
         "dropbox": {
             "token": "dropbox-token"
         },
+        "file": {
+            "baseDir": "/path/to/local/storage/dir"
+        },
         "s3": {
             "bucket": "bucket-name"
         }

@@ -1,16 +1,22 @@
 var test = require('blue-tape');
 var sinon = require('sinon');
 var crypto = require('crypto');
+var fs = require('fs-promise');
+var path = require('path');
 var baserequire = require('base-require');
+
 var baseTest = baserequire('test/integration/baseTest');
 var backupperLocator = baserequire('src/backupper/backupperLocator');
 var queueLocator = baserequire('src/queue/queueLocator');
 var configLocator = baserequire('src/config/configLocator');
-var storageLocator = baserequire('src/backupper/storageLocator');
-var createConfig = baserequire('src/config/config');
+var backupperStorageLocator = baserequire('src/backupper/storageLocator');
+var storageLocator = baserequire('src/storage/storageLocator');
 var dropboxHelper = baserequire('test/integration/helper/dropboxHelper');
+
 var redisHelper = baserequire('test/integration/helper/redisHelper');
 var s3Helper = baserequire('test/integration/helper/s3Helper');
+var configHelper = baserequire('test/integration/helper/configHelper');
+var fileHelper = baserequire('test/integration/helper/fileHelper');
 
 baseTest.setUp();
 var options = {
@@ -169,6 +175,33 @@ test('backupper - backupPlaylist - succeeds with S3 storage, skips already backe
         .then(redisHelper.quit);
 });
 
+test('backupper - backupPlaylist - succeeds with file storage', options, function (t) {
+    var playlistId = 'PLWcOakfYWxVM_wvoM_bKxEiuGwvgYCvOE';
+    var playlistName = 'test playlist 01';
+
+    var expectedVideos = [
+        { id: '40T4IrLiCiU', name: 'video 01' },
+        { id: 'egjumMGKZCg', name: 'video 02' },
+        { id: '5y5MQMJmCxI', name: 'video 03' }
+    ];
+
+    let baseDir;
+
+    return fileHelper.getTmpDir()
+        .then(tmpDir => {
+            baseDir = tmpDir;
+        })
+        .then(() => enableFileStorage(baseDir))
+        .then(redisHelper.flushDb)
+        // Queue all jobs for the playlist videos, run worker and wait until jobs are finished
+        .then(() => runPlaylistBackupAndWait(playlistId, 3))
+        .then(() => assertDirContainsPlaylistVideos(t, baseDir, playlistName, expectedVideos))
+        .then(() => getQueue().close())
+        .then(resetLocators)
+        .then(fileHelper.removeTmpDir)
+        .then(redisHelper.quit);
+});
+
 test('backupper - backupChannel - succeeds with Dropbox storage', options, function (t) {
     enableDropboxStorage();
 
@@ -197,7 +230,6 @@ test('backupper - backupChannel - succeeds with Dropbox storage', options, funct
             return runChannelBackupAndWait(channelId, 5);
         })
         .then(function () {
-            console.log('FOO');
             return Promise.all([
                 assertDropboxContainsPlaylistVideos(t, playlistName1, expectedVideos1),
                 assertDropboxContainsPlaylistVideos(t, playlistName2, expectedVideos2)
@@ -306,7 +338,8 @@ function resetLocators() {
     backupperLocator.setBackupperManager(null);
     configLocator.setConfigManager(null);
     queueLocator.setQueueManager(null);
-    storageLocator.setBackupperStorageManager(null);
+    backupperStorageLocator.setBackupperStorageManager(null);
+    storageLocator.setStorageManager(null);
 }
 
 /**
@@ -325,23 +358,32 @@ function enableS3Storage() {
 }
 
 /**
+ * @param {string} baseDir
+ */
+function enableFileStorage(baseDir) {
+    enableBackupperStorage('file');
+    setFileStorageBaseDir(baseDir);
+}
+
+/**
+ * @param {string} baseDir
+ */
+function setFileStorageBaseDir(baseDir) {
+    configHelper.overrideConfig({
+        storage: {
+            file: { baseDir }
+        }
+    });
+}
+
+/**
  * Enable storage in config
  * @param {string} storageName
  */
 function enableBackupperStorage(storageName) {
-    var configArray = getConfigValue('');
-    configArray.backupper.storage = storageName;
-    var newConfig = createConfig(configArray);
-    configLocator.getConfigManager().getConfig = sinon.stub();
-    configLocator.getConfigManager().getConfig.returns(newConfig);
-}
-
-/**
- * @param {string} key
- * @returns {string|number|boolean|Object}
- */
-function getConfigValue(key) {
-    return configLocator.getConfigManager().getConfig().get(key);
+    configHelper.overrideConfig({
+        backupper: { storage: storageName }
+    });
 }
 
 /**
@@ -356,7 +398,7 @@ function sha256(value) {
  * @param {Object} t Test object
  * @param {string} playlistName
  * @param {Object[]} videos Array of video objects {id, name}
- * @returns
+ * @returns {Promise}
  */
 function assertDropboxContainsPlaylistVideos(t, playlistName, videos) {
     return dropboxHelper.listFiles('/' + playlistName)
@@ -365,6 +407,23 @@ function assertDropboxContainsPlaylistVideos(t, playlistName, videos) {
             videos.forEach(function (video) {
                 const path = buildDropboxPath(playlistName, video.name, video.id);
                 t.ok(files.includes(path), `Stored files contain ${path}}`);
+            });
+        });
+}
+
+/**
+ * @param {Object} t Test object
+ * @param {string} playlistName
+ * @param {Object[]} videos Array of video objects {id, name}
+ * @returns {Promise}
+ */
+function assertDirContainsPlaylistVideos(t, baseDir, playlistName, videos) {
+    return fs.readdir(path.join(baseDir, playlistName))
+        .then(items => {
+            t.equal(items.length, videos.length);
+            videos.forEach(video => {
+                const file = `${video.name}_${sha256(video.id + '_' + playlistName)}.mp4`;
+                t.ok(items.includes(file));
             });
         });
 }

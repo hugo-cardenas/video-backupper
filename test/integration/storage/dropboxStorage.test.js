@@ -2,7 +2,7 @@ var test = require('blue-tape');
 var fs = require('fs');
 var _ = require('lodash');
 var request = require('request');
-var tmp = require('tmp');
+var tmp = require('tmp-promise');
 var Dropbox = require('dropbox');
 var baserequire = require('base-require');
 var baseTest = baserequire('test/integration/baseTest');
@@ -180,7 +180,7 @@ test('dropboxStorage - save and getAllVideoItems - succeeds', options, function 
  * @returns {Object}
  */
 function createVideoItem(id, name, playlistName) {
-    return {id, name, playlistName};
+    return { id, name, playlistName };
 }
 
 /**
@@ -346,15 +346,11 @@ function cleanDropboxFiles(t) {
  * @returns {Promise<string>} Resolves with file path
  */
 function createTmpFile() {
-    return new Promise(function (resolve, reject) {
-        tmp.file(function (err, path, fd, cleanupCallback) {
-            if (err) {
-                return reject(err);
-            }
-            tmpFileCleanupCallbacks.push(cleanupCallback);
-            return resolve(path);
+    return tmp.file()
+        .then(result => {
+            tmpFileCleanupCallbacks.push(result.cleanup);
+            return result.path;
         });
-    });
 }
 
 function cleanTmpFiles() {
