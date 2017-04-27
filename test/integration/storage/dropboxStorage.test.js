@@ -224,7 +224,6 @@ function assertFileContents(t, dropbox, dropboxPath, expectedFile) {
             var dropboxBuffer = values[0];
             var expectedBuffer = values[1];
             t.ok(dropboxBuffer.toString('binary') === expectedBuffer.toString('binary'), 'Buffers are equal');
-            return Promise.resolve();
         });
 }
 

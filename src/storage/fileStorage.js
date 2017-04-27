@@ -7,6 +7,8 @@ const baserequire = require('base-require');
 const createVideo = baserequire('src/video/video');
 
 module.exports = function (baseDir) {
+    const extension = 'mp4';
+
     /**
      * @returns {Promise<Object>} Resolves with array of videos {id, name, playlistName}
      */
@@ -21,6 +23,23 @@ module.exports = function (baseDir) {
             .catch(err => {
                 throw createGetAllVideoItemsError(err);
             });
+    }
+
+    /**
+     * @param {Stream} stream
+     * @param {Object} videoItem {id, name, playlistName}
+     * @returns {Promise}
+     */
+    function save(stream, videoItem) {
+        return Promise.resolve()
+            .then(() => validateVideo(videoItem))
+            .then(() => getFilePath(videoItem))
+            .then(filePath => {
+                return fs.ensureFile(filePath)
+                    .then(() => filePath);
+            })
+            .then(fs.createWriteStream)
+            .then(writeStream => pipeStream(stream, writeStream));
     }
 
     /**
@@ -85,6 +104,56 @@ module.exports = function (baseDir) {
     }
 
     /**
+     * @param {Object} video {id, name, playlistName}
+     * @throws {Error}
+     */
+    function validateVideo(video) {
+        const mandatoryProperties = ['id', 'name', 'playlistName'];
+        const invalidProperties = mandatoryProperties.filter(property => {
+            return !video[property] ||
+                typeof video[property] !== 'string' ||
+                video[property].includes('/');
+        });
+        if (invalidProperties.length > 0) {
+            throw new VError(
+                'Invalid video %s, missing or invalid properties [%s]',
+                JSON.stringify(video),
+                invalidProperties.join(', ')
+            );
+        }
+    }
+
+    /**
+     * @param {Object} video
+     * @returns {string}
+     */
+    function getFilePath(video) {
+        return path.join(
+            baseDir,
+            video.playlistName,
+            `${video.name}_${video.id}.${extension}`
+        );
+    }
+
+    /**
+     * @param {Stream} fromStream
+     * @param {Stream} toStream
+     * @returns {Promise}
+     */
+    function pipeStream(fromStream, toStream) {
+        return new Promise((resolve, reject) => {
+            fromStream.pipe(toStream);
+            fromStream.on('end', () => {
+                resolve();
+            });
+            fromStream.on('error', err => {
+                toStream.end();
+                return reject(err);
+            });
+        });
+    }
+
+    /**
      * @param {Error} err
      * @returns {Error}
      */
@@ -102,6 +171,7 @@ module.exports = function (baseDir) {
     }
 
     return {
-        getAllVideoItems
+        getAllVideoItems,
+        save
     };
 };

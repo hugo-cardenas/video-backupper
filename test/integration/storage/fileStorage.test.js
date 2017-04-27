@@ -92,13 +92,64 @@ test.skip('fileStorage - getAllVideoItems - error reading dir', function (t) {
 
 });
 
-test.skip('fileStorage - save - succeeds', function (t) {
+test('fileStorage - save - succeeds', function (t) {
+    const video = {
+        id: 'videoId',
+        name: 'videoName',
+        playlistName: 'playlistName'
+    };
 
+    const file = './test/integration/storage/video1.mp4';
+    const stream = fs.createReadStream(file);
+
+    const extension = 'mp4';
+    const expectedPath = `${video.playlistName}/${video.name}_${video.id}.${extension}`;
+
+    let storage;
+    let tmpDir;
+
+    return fileHelper.getTmpDir()
+        .then(dir => {
+            tmpDir = dir;
+        })
+        .then(() => {
+            storage = createFileStorage(tmpDir);
+        })
+        .then(() => storage.save(stream, video))
+        .then(() => assertFileContents(t, path.join(tmpDir, expectedPath), file))
+        .then(fileHelper.removeTmpDir);
 });
 
-test.skip('fileStorage - save - validates video', function (t) {
+var invalidVideos = [
+    {},
+    { id: 'foo' },
+    { name: 'foo' },
+    { id: 'foo', name: 'bar' },
+    { playlistName: 'foo' },
+    { id: 'foo', playlistName: 'bar' },
+    { id: 'foo/', name: 'bar/', playlistName: 'baz/' }
+];
 
+invalidVideos.forEach((video, index) => {
+    test('fileStorage - save - validates video #' + index, function (t) {
+        const stream = 'stream';
+        let storage = null;
+
+        return fileHelper.getTmpDir()
+            .then(tmpDir => {
+                storage = createFileStorage(tmpDir);
+                return tmpDir;
+            })
+            .then(tmpDir => storage.save(stream, video))
+            .then(() => t.fail())
+            .catch(err => {
+                t.ok(err.message.includes('Invalid video'));
+                t.ok(err.message.includes(JSON.stringify(video)));
+            })
+            .then(fileHelper.removeTmpDir);
+    });
 });
+
 
 test.skip('fileStorage - save - error saving to file', function (t) {
 
@@ -117,4 +168,23 @@ function assertVideos(t, storedVideos, expectedVideos) {
         });
         t.ok(foundItem, 'Item ' + JSON.stringify(video) + ' is found in stored items');
     });
+}
+
+/**
+ * @param {string} file
+ * @param {string} expectedFile
+ * @returns {Promise}
+ */
+function assertFileContents(t, file, expectedFile) {
+    const promises = [
+        fileHelper.getStreamBuffer(fs.createReadStream(file)),
+        fileHelper.getStreamBuffer(fs.createReadStream(expectedFile))
+    ];
+
+    return Promise.all(promises)
+        .then(function (values) {
+            var buffer = values[0];
+            var expectedBuffer = values[1];
+            t.ok(buffer.toString('binary') === expectedBuffer.toString('binary'), 'Buffers are equal');
+        });
 }
