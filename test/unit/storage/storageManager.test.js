@@ -1,41 +1,41 @@
-var test = require('tape');
-var sinon = require('sinon');
-var baserequire = require('base-require');
-var createStorageManager = baserequire('src/storage/storageManager');
+const test = require('tape');
+const sinon = require('sinon');
+const baserequire = require('base-require');
+const createStorageManager = baserequire('src/storage/storageManager');
 
 test('storageManager - getStorage - s3 succeeds', function (t) {
-    var s3StorageConfig = { bucket: 'bucket42' };
+    const s3StorageConfig = { bucket: 'bucket42' };
 
-    var config = {
+    const config = {
         get: sinon.stub()
     };
     config.get.withArgs('storage.s3').returns(s3StorageConfig);
 
-    var s3 = { 'foo': 's3' };
-    var Dropbox = function () {};
+    const s3 = { 'foo': 's3' };
+    const Dropbox = function () {};
 
-    var storageManager = createStorageManager(config, s3, Dropbox);
+    const storageManager = createStorageManager(config, s3, Dropbox);
 
-    var s3Storage = storageManager.getStorage('s3');
+    const s3Storage = storageManager.getStorage('s3');
     t.ok(s3Storage);
     t.ok(s3Storage.hasOwnProperty('save'));
     t.end();
 });
 
 test('storageManager - getStorage - dropbox succeeds', function (t) {
-    var dropboxToken = 'token42';
+    const dropboxToken = 'token42';
 
-    var config = {
+    const config = {
         get: sinon.stub()
     };
     config.get.withArgs('storage.dropbox.token').returns(dropboxToken);
 
-    var s3 = {};
-    var Dropbox = function () {};
+    const s3 = {};
+    const Dropbox = function () {};
 
-    var storageManager = createStorageManager(config, s3, Dropbox);
+    const storageManager = createStorageManager(config, s3, Dropbox);
 
-    var s3Storage = storageManager.getStorage('dropbox');
+    const s3Storage = storageManager.getStorage('dropbox');
     t.ok(s3Storage);
     t.ok(s3Storage.hasOwnProperty('save'));
 
@@ -43,18 +43,36 @@ test('storageManager - getStorage - dropbox succeeds', function (t) {
     t.end();
 });
 
+test('storageManager - getStorage - file succeeds', function (t) {
+    const config = {
+        get: sinon.stub()
+    };
+    config.get.withArgs('storage.file.baseDir').returns('baseDirFoo');
+
+    const s3 = {};
+    const Dropbox = () => {};
+
+    const storageManager = createStorageManager(config, s3, Dropbox);
+    const storage = storageManager.getStorage('file');
+
+    t.ok(storage);
+    t.ok(storage.hasOwnProperty('save'));
+    t.ok(config.get.calledWith('storage.file.baseDir'));
+    t.end();
+});
+
 test('storageManager - getStorage - invalid name', function (t) {
-    var invalidName = 'invalidStorage';
-    var config = {
+    const invalidName = 'invalidStorage';
+    const config = {
         get: sinon.stub()
     };
 
-    var s3 = {};
-    var dropbox = {};
+    const s3 = {};
+    const dropbox = {};
 
-    var createS3Storage = sinon.stub();
-    var createDropboxStorage = sinon.stub();
-    var storageManager = createStorageManager(config, createS3Storage, s3, createDropboxStorage, dropbox);
+    const createS3Storage = sinon.stub();
+    const createDropboxStorage = sinon.stub();
+    const storageManager = createStorageManager(config, createS3Storage, s3, createDropboxStorage, dropbox);
 
     try {
         storageManager.getStorage(invalidName);
@@ -67,18 +85,18 @@ test('storageManager - getStorage - invalid name', function (t) {
 });
 
 test('storageManager - getStorage - missing config', function (t) {
-    var config = {
+    const config = {
         get: sinon.stub()
     };
-    var configErrorMessage = 'Config key not found';
+    const configErrorMessage = 'Config key not found';
     config.get.withArgs('storage.s3').throws(new Error(configErrorMessage));
 
-    var s3 = {};
-    var dropbox = {};
+    const s3 = {};
+    const dropbox = {};
 
-    var createS3Storage = sinon.stub();
-    var createDropboxStorage = sinon.stub();
-    var storageManager = createStorageManager(config, createS3Storage, s3, createDropboxStorage, dropbox);
+    const createS3Storage = sinon.stub();
+    const createDropboxStorage = sinon.stub();
+    const storageManager = createStorageManager(config, createS3Storage, s3, createDropboxStorage, dropbox);
 
     try {
         storageManager.getStorage('s3');

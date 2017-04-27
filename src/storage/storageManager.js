@@ -10,10 +10,12 @@
  * @property {function} save Save a stream for a playlistId, videoId
  */
 
-var VError = require('verror');
-var baserequire = require('base-require');
-var createS3Storage = baserequire('src/storage/s3Storage');
-var createDropboxStorage = baserequire('src/storage/dropboxStorage');
+const VError = require('verror');
+const baserequire = require('base-require');
+const createS3Storage = baserequire('src/storage/s3Storage');
+const createDropboxStorage = baserequire('src/storage/dropboxStorage');
+const createFileStorage = baserequire('src/storage/fileStorage');
+
 
 /**
  * @param {Config} config Config object
@@ -23,9 +25,10 @@ var createDropboxStorage = baserequire('src/storage/dropboxStorage');
  */
 module.exports = function (config, s3, Dropbox) {
     const CONFIG_S3 = 'storage.s3';
+    const CONFIG_FILE_BASEDIR = 'storage.file.baseDir';
 
-    var dropbox;
-    var storages = {};
+    let dropbox;
+    const storages = {};
 
     /**
      * Get storage by name. Created storages are cached in the manager object
@@ -54,6 +57,8 @@ module.exports = function (config, s3, Dropbox) {
                 return createS3Storage(s3, getConfigValue(name, CONFIG_S3));
             case 'dropbox':
                 return createDropboxStorage(getDropbox());
+            case 'file':
+                return createFileStorage(getConfigValue(name, CONFIG_FILE_BASEDIR));
             default:
                 throw new Error('Invalid storage name: "' + name + '"');
         }
@@ -77,8 +82,8 @@ module.exports = function (config, s3, Dropbox) {
      */
     function getDropbox() {
         if (!dropbox) {
-            var token = getConfigValue('dropbox', 'storage.dropbox.token');
-            var config = { accessToken: token };
+            const token = getConfigValue('dropbox', 'storage.dropbox.token');
+            const config = { accessToken: token };
             dropbox = new Dropbox(config);
         }
         return dropbox;
