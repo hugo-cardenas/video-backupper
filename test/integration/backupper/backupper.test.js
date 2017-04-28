@@ -305,7 +305,7 @@ function runBackupAndWait(backupFunction, numJobs, runWorker) {
  */
 function buildDropboxPath(playlistName, videoName, videoId) {
     const id = buildVideoId(videoId, playlistName);
-    return (`/${playlistName}/${videoName}_${id}.mp4`).toLowerCase();
+    return (`/${playlistName}/${videoName} (${id}).mp4`).toLowerCase();
 }
 
 /**
@@ -315,7 +315,7 @@ function buildDropboxPath(playlistName, videoName, videoId) {
  */
 function buildS3Key(playlistName, videoName, videoId) {
     const id = buildVideoId(videoId, playlistName);
-    return `${playlistName}/${videoName}_${id}.mp4`;
+    return `${playlistName}/${videoName} (${id}).mp4`;
 }
 
 /**
@@ -422,7 +422,7 @@ function assertDirContainsPlaylistVideos(t, baseDir, playlistName, videos) {
         .then(items => {
             t.equal(items.length, videos.length);
             videos.forEach(video => {
-                const file = `${video.name}_${sha256(video.id + '_' + playlistName)}.mp4`;
+                const file = `${video.name} (${buildVideoId(video.id, playlistName)}).mp4`;
                 t.ok(items.includes(file));
             });
         });
