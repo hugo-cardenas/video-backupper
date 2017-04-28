@@ -97,7 +97,7 @@ module.exports = function (baseDir) {
      * @returns {Object} {id, name, playlistName}
      */
     function buildVideo(playlist, fileName) {
-        // Example: videoBar_42.foo
+        // Example: videoBar (42).foo
         const regex = /^([^/]+) \(([0-9a-zA-Z]+)\)\.[0-9a-zA-Z]+$/;
         const result = regex.exec(fileName);
 

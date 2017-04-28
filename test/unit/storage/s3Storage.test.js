@@ -30,7 +30,7 @@ test('s3Storage - save - succeeds', function (t) {
     var videoItem = { id, name, playlistName };
     var stream = 'I am a stream';
 
-    var expectedKey = `${playlistName}/${name}_${id}.mp4`;
+    var expectedKey = `${playlistName}/${name} (${id}).mp4`;
     var s3 = {
         upload: function (params, callback) {
             t.equal(params.Bucket, config.bucket);
@@ -88,7 +88,7 @@ test('s3Storage - save - s3 client fails', function (t) {
 
     var stream = 'I am a stream';
 
-    var expectedKey = `${playlistName}/${name}_${id}.mp4`;
+    var expectedKey = `${playlistName}/${name} (${id}).mp4`;
 
     var errorMessage = 'Error saving stream';
     var s3 = {
@@ -125,7 +125,7 @@ test('s3Storage - getAllVideoItems - succeeds', function (t) {
     var name1 = 'video Name 1';
 
     var id2 = 'videoId2';
-    var name2 = 'video_Name_2'; // Underscores in name should not affect extraction of id
+    var name2 = '(video (Name) ()2))'; // Parentheses in name should not affect extraction of id
 
     var videoItem1 = createVideoItem(id1, name1, playlistName);
     var videoItem2 = createVideoItem(id2, name2, playlistName);
@@ -137,8 +137,8 @@ test('s3Storage - getAllVideoItems - succeeds', function (t) {
 
     var s3ClientResponseData = {
         Contents: [
-            { Key: `${playlistName}/${name1}_${id1}.foo` },
-            { Key: `${playlistName}/${name2}_${id2}.foo2` }
+            { Key: `${playlistName}/${name1} (${id1}).foo` },
+            { Key: `${playlistName}/${name2} (${id2}).foo2` }
         ]
     };
 
@@ -194,19 +194,19 @@ var invalidResponses = [
     },
     {
         Contents: [
-            { Key: 'foo/bar_42.baz' },
+            { Key: 'foo/bar (42).baz' },
             'foo'
         ]
     },
     {
         Contents: [
-            { Key: 'foo/bar_42.baz' },
+            { Key: 'foo/bar (42).baz' },
             {}
         ]
     },
     {
         Contents: [
-            { Key: 'foo/bar_42.baz' },
+            { Key: 'foo/bar (42).baz' },
             { foo: 'bar' }
         ]
     }
@@ -248,9 +248,9 @@ var invalidKeys = [
     '//',
     '///',
     'foo',
-    'foo_42',
+    'foo (42)',
     '/foo',
-    '/foo_42',
+    '/foo (42)',
     'foo/',
     '//foo',
     'foo//',
@@ -259,8 +259,9 @@ var invalidKeys = [
     '/foo//',
     '/foo/bar',
     '/foo/bar/',
-    'foo/bar_42', // Missing file extension
-    'foo/bar.baz' // Missing id
+    'foo/bar (42)', // Missing file extension
+    'foo/bar.baz', // Missing id
+    'foo/bar(42).baz' // Missing space before (id)
 ];
 
 invalidKeys.forEach(function (invalidKey, index) {
@@ -275,7 +276,7 @@ invalidKeys.forEach(function (invalidKey, index) {
 
         var s3ClientResponseData = {
             Contents: [
-                { Key: 'foo/bar_42.baz' },
+                { Key: 'foo/bar (42).baz' },
                 { Key: invalidKey }
             ]
         };
