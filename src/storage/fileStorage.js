@@ -98,7 +98,7 @@ module.exports = function (baseDir) {
      */
     function buildVideo(playlist, fileName) {
         // Example: videoBar_42.foo
-        const regex = /^([^/]+)_([0-9a-zA-Z]+)\.[0-9a-zA-Z]+$/;
+        const regex = /^([^/]+) \(([0-9a-zA-Z]+)\)\.[0-9a-zA-Z]+$/;
         const result = regex.exec(fileName);
 
         if (result && result[1] && result[2]) {
@@ -138,7 +138,7 @@ module.exports = function (baseDir) {
         return path.join(
             baseDir,
             video.playlistName,
-            `${video.name}_${video.id}.${extension}`
+            `${video.name} (${video.id}).${extension}`
         );
     }
 

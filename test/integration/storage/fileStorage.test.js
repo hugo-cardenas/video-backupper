@@ -22,9 +22,9 @@ test('fileStorage - getAllVideoItems - succeeds', function (t) {
         })
         .then(tmpDir => {
             return Promise.all([
-                fs.ensureFile(path.join(tmpDir, 'playlistName1', 'videoName1_videoId1.foo')),
-                fs.ensureFile(path.join(tmpDir, 'playlistName2', 'videoName2_videoId2.foo')),
-                fs.ensureFile(path.join(tmpDir, 'playlistName2', 'videoName3_videoId3.foo'))
+                fs.ensureFile(path.join(tmpDir, 'playlistName1', 'videoName1 (videoId1).foo')),
+                fs.ensureFile(path.join(tmpDir, 'playlistName2', 'videoName2 (videoId2).foo')),
+                fs.ensureFile(path.join(tmpDir, 'playlistName2', 'videoName3 (videoId3).foo'))
             ]);
         })
         .then(() => storage.getAllVideoItems())
@@ -36,9 +36,10 @@ test('fileStorage - getAllVideoItems - succeeds', function (t) {
  * [path, expectedVideo]
  */
 const trickyVideos = [
-    ['play.list/vid.eo_id.foo', { id: 'id', name: 'vid.eo', playlistName: 'play.list' }],
-    ['play..list/vid..eo_id.foo', { id: 'id', name: 'vid..eo', playlistName: 'play..list' }],
-    ['play_list/vid_eo_id.foo', { id: 'id', name: 'vid_eo', playlistName: 'play_list' }]
+    ['playlist/video  (id).foo', { id: 'id', name: 'video ', playlistName: 'playlist' }],
+    ['play.list/vid.eo (id).foo', { id: 'id', name: 'vid.eo', playlistName: 'play.list' }],
+    ['play..list/vid..eo (id).foo', { id: 'id', name: 'vid..eo', playlistName: 'play..list' }],
+    ['play (list)/(vid ( )eo) (id).foo', { id: 'id', name: '(vid ( )eo)', playlistName: 'play (list)' }]
 ];
 
 trickyVideos.forEach((element, index) => {
@@ -62,7 +63,8 @@ trickyVideos.forEach((element, index) => {
 
 const invalidFileNames = [
     'foo',
-    'foo_bar',
+    'foo (bar)',
+    'foo(bar).baz', // Missing space before (id)
     'foo.baz'
 ];
 
@@ -125,9 +127,9 @@ test('fileStorage - save - succeeds', function (t) {
 
     const extension = 'mp4';
     const expectedPaths = [
-        `playlist1/name1_id1.${extension}`,
-        `playlist2/name2_id2.${extension}`,
-        `playlist2/name3_id3.${extension}`
+        `playlist1/name1 (id1).${extension}`,
+        `playlist2/name2 (id2).${extension}`,
+        `playlist2/name3 (id3).${extension}`
     ];
 
     let storage;
@@ -167,7 +169,7 @@ test('fileStorage - save - succeeds, overwrites file', function (t) {
     const stream2 = fs.createReadStream(file2);
 
     const extension = 'mp4';
-    const expectedPath = `playlist1/name1_id1.${extension}`;
+    const expectedPath = `playlist1/name1 (id1).${extension}`;
 
     let storage;
     let tmpDir;
@@ -238,7 +240,7 @@ test('fileStorage - save - error saving to file', function (t) {
             storage = createFileStorage(tmpDir);
         })
         .then(() => {
-            expectedPath = path.join(tmpDir, `playlist1/name1_id1.${extension}`);
+            expectedPath = path.join(tmpDir, `playlist1/name1 (id1).${extension}`);
         })
         // Create file in advance and remove write permissions
         .then(() => fs.ensureFile(expectedPath))
