@@ -37,7 +37,7 @@ test('dropboxStorage - save - succeeds', options, function (t) {
     var name2 = 'video name 2';
 
     var id3 = 'videoId3';
-    var name3 = 'video_name_3'; // Underscores in name should not affect extraction of id
+    var name3 = '(video (Name) ()3))'; // Parentheses in name should not affect extraction of id
 
     var videoItem1 = createVideoItem(id1, name1, playlistName1);
     var videoItem2 = createVideoItem(id2, name2, playlistName1);
@@ -46,9 +46,9 @@ test('dropboxStorage - save - succeeds', options, function (t) {
     var folder1 = '/' + playlistName1.toLowerCase();
     var folder2 = '/' + playlistName2.toLowerCase();
 
-    var dropboxFilePath1 = `${folder1}/${name1.toLowerCase()}_${id1.toLowerCase()}.${extension}`;
-    var dropboxFilePath2 = `${folder1}/${name2.toLowerCase()}_${id2.toLowerCase()}.${extension}`;
-    var dropboxFilePath3 = `${folder2}/${name3.toLowerCase()}_${id3.toLowerCase()}.${extension}`;
+    var dropboxFilePath1 = `${folder1}/${name1.toLowerCase()} (${id1.toLowerCase()}).${extension}`;
+    var dropboxFilePath2 = `${folder1}/${name2.toLowerCase()} (${id2.toLowerCase()}).${extension}`;
+    var dropboxFilePath3 = `${folder2}/${name3.toLowerCase()} (${id3.toLowerCase()}).${extension}`;
 
     var dropbox = getDropbox();
 
@@ -97,7 +97,7 @@ test('dropboxStorage - save - overwrite file', options, function (t) {
     var name = 'video 1';
     var videoItem1 = createVideoItem(id, name, playlistName1);
 
-    var dropboxFilePath1 = `/${playlistName1.toLowerCase()}/${name.toLowerCase()}_${id.toLowerCase()}.${extension}`;
+    var dropboxFilePath1 = `/${playlistName1.toLowerCase()}/${name.toLowerCase()} (${id.toLowerCase()}).${extension}`;
 
     var dropbox = getDropbox();
 
@@ -141,7 +141,7 @@ test('dropboxStorage - save and getAllVideoItems - succeeds', options, function 
     var name2 = 'Video name 2';
 
     var id3 = 'videoId3';
-    var name3 = 'Video_name_3'; // Underscores in name should not affect extraction of id
+    var name3 = '(video (Name) ()3))'; // Parentheses in name should not affect extraction of id
 
     var videoItem1 = createVideoItem(id1, name1, playlistName1);
     var videoItem2 = createVideoItem(id2, name2, playlistName1);

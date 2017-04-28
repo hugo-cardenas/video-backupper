@@ -171,7 +171,7 @@ module.exports = function (dropbox) {
      */
     function buildVideoItem(entryName, playlistName) {
         // Example: videoBar_42.foo
-        const regex = /^([^/]+)_([0-9a-zA-Z]+)\.[0-9a-zA-Z]+$/;
+        const regex = /^([^/]+) \(([0-9a-zA-Z]+)\)\.[0-9a-zA-Z]+$/;
         const result = regex.exec(entryName);
 
         if (result && result[1] && result[2]) {
@@ -283,7 +283,7 @@ module.exports = function (dropbox) {
     function getDropboxPath(videoItem) {
         return getDirPath(videoItem.playlistName)
             .then(function (dirPath) {
-                return Promise.resolve(`${dirPath}/${videoItem.name}_${videoItem.id}.${extension}`);
+                return Promise.resolve(`${dirPath}/${videoItem.name} (${videoItem.id}).${extension}`);
             });
     }
 

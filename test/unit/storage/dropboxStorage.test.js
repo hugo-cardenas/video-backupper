@@ -19,7 +19,7 @@ test('dropboxStorage - save - succeeds', function (t) {
     var videoItem = { id, name, playlistName };
 
     var expectedFolderPath = '/' + playlistName;
-    var expectedFilePath = `${expectedFolderPath}/${name}_${id}.mp4`;
+    var expectedFilePath = `${expectedFolderPath}/${name} (${id}).mp4`;
 
     var dropbox = {
         filesCreateFolder: function () {},
@@ -55,7 +55,7 @@ test('dropboxStorage - save - folder exists', function (t) {
     var videoItem = { id, name, playlistName };
 
     var expectedFolderPath = '/' + playlistName;
-    var expectedFilePath = `${expectedFolderPath}/${name}_${id}.mp4`;
+    var expectedFilePath = `${expectedFolderPath}/${name} (${id}).mp4`;
 
     var dropbox = {
         filesCreateFolder: function () {},
@@ -192,7 +192,7 @@ test('dropboxStorage - save - upload fails', function (t) {
     var videoItem = { id, name, playlistName };
 
     var expectedFolderPath = '/' + playlistName;
-    var expectedFilePath = `${expectedFolderPath}/${name}_${id}.mp4`;
+    var expectedFilePath = `${expectedFolderPath}/${name} (${id}).mp4`;
 
     var dropbox = {
         filesCreateFolder: function () {},
@@ -241,7 +241,7 @@ test('dropboxStorage - save - upload fails with non parsable error', function (t
     var videoItem = { id, name, playlistName };
 
     var expectedFolderPath = '/' + playlistName;
-    var expectedFilePath = `${expectedFolderPath}/${name}_${id}.mp4`;
+    var expectedFilePath = `${expectedFolderPath}/${name} (${id}).mp4`;
 
     var dropbox = {
         filesCreateFolder: function () {},
@@ -283,7 +283,7 @@ test('dropboxStorage - getAllVideoItems - succeeds', function (t) {
     var name2 = 'video Name 2';
 
     var id3 = 'videoId3';
-    var name3 = 'video_Name_3'; // Underscores in name should not affect extraction of id
+    var name3 = '(video (Name) ()3))'; // Parentheses in name should not affect extraction of id
 
     var videoItems = [
         createVideoItem(id1, name1, playlistName1),
@@ -513,8 +513,9 @@ test('dropboxStorage - getAllVideoItems - list folder contains invalid path', fu
 
 const invalidEntryNames = [
     'video 1', // Missing id and extension
-    'video 1_42', // Missing extension
-    'video 1.foo' // Missing id
+    'video 1 (42)', // Missing extension
+    'video 1.foo', // Missing id
+    'video 1(42).foo' // Missing space before (id)
 ];
 
 invalidEntryNames.forEach(function (entryName, index) {
@@ -673,7 +674,7 @@ function createListFolderResponseEntries(videoItems) {
  * @returns {Object}
  */
 function createResponseFileEntryFromVideoItem(videoItem) {
-    var name = `${videoItem.name}_${videoItem.id}.foo`;
+    var name = `${videoItem.name} (${videoItem.id}).foo`;
     var pathDisplay = '/' + videoItem.playlistName.toLowerCase() + '/' + name;
     return createResponseFileEntry(name, pathDisplay);
 }
