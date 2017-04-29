@@ -124,7 +124,7 @@ test('s3Storage - getAllVideoItems - succeeds', function (t) {
     var id1 = 'videoId1';
     var name1 = 'video Name 1';
 
-    var id2 = 'videoId2';
+    var id2 = '()(--videoId2)';
     var name2 = '(video (Name) ()2))'; // Parentheses in name should not affect extraction of id
 
     var videoItem1 = createVideoItem(id1, name1, playlistName);

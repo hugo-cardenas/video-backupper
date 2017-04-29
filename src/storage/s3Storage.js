@@ -86,7 +86,7 @@ module.exports = function (s3, config) {
      */
     function buildVideoItemFromKey(key) {
         // Example: playlistFoo/videoBar (42).baz
-        const regex = /^([^/]+)\/([^/]+) \(([0-9a-zA-Z]+)\)\.[0-9a-zA-Z]+$/;
+        const regex = /^([^/]+)\/([^/]+)\s\(([^\s]+)\)\.[0-9a-zA-Z]+$/;
         const result = regex.exec(key);
 
         if (result && result[1] && result[2] && result[3]) {

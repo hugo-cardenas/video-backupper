@@ -282,7 +282,7 @@ test('dropboxStorage - getAllVideoItems - succeeds', function (t) {
     var id2 = 'videoId2';
     var name2 = 'video Name 2';
 
-    var id3 = 'videoId3';
+    var id3 = '()(--videoId3)';
     var name3 = '(video (Name) ()3))'; // Parentheses in name should not affect extraction of id
 
     var videoItems = [

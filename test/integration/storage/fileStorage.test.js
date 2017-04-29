@@ -37,6 +37,7 @@ test('fileStorage - getAllVideoItems - succeeds', function (t) {
  */
 const trickyVideos = [
     ['playlist/video  (id).foo', { id: 'id', name: 'video ', playlistName: 'playlist' }],
+    ['playlist/video (()(id--).foo', { id: '()(id--', name: 'video', playlistName: 'playlist' }],
     ['play.list/vid.eo (id).foo', { id: 'id', name: 'vid.eo', playlistName: 'play.list' }],
     ['play..list/vid..eo (id).foo', { id: 'id', name: 'vid..eo', playlistName: 'play..list' }],
     ['play (list)/(vid ( )eo) (id).foo', { id: 'id', name: '(vid ( )eo)', playlistName: 'play (list)' }]

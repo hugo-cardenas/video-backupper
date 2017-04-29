@@ -171,7 +171,7 @@ module.exports = function (dropbox) {
      */
     function buildVideoItem(entryName, playlistName) {
         // Example: videoBar (42).foo
-        const regex = /^([^/]+) \(([0-9a-zA-Z]+)\)\.[0-9a-zA-Z]+$/;
+        const regex = /^([^/]+)\s\(([^\s]+)\)\.[0-9a-zA-Z]+$/;
         const result = regex.exec(entryName);
 
         if (result && result[1] && result[2]) {
