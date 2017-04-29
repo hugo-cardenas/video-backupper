@@ -86,7 +86,8 @@ module.exports = function (storage, queue, displayOutput) {
         return storage.getAllVideoItems()
             .then(function (storedVideoItems) {
                 return _.differenceWith(videoItems, storedVideoItems, function (videoItem, storedVideoItem) {
-                    return videoItem.id === storedVideoItem.id;
+                    return videoItem.id === storedVideoItem.id &&
+                        videoItem.playlistName === storedVideoItem.playlistName;
                 });
             });
     }

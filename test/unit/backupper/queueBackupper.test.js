@@ -12,10 +12,13 @@ test('queueBackupper - backupPlaylist - succeeds', function (t) {
     ];
 
     var storedVideoItems = [
-        // Should compare by video id only
-        createVideoItem('videoId2', '', ''),
-        createVideoItem('videoId999', '', ''),
-        createVideoItem('videoId4', '', '')
+        // Should compare by playlist name + video id
+        createVideoItem('videoId1', '', ''),
+        createVideoItem('videoId2', '', 'playlistName2'), // Match
+        createVideoItem('videoId3', '', 'foo'),
+        createVideoItem('videoId4', '', 'playlistName4'), // Match
+        createVideoItem('videoId10', '', ''),
+        createVideoItem('videoId11', '', 'playlistName1')
     ];
 
     var storage = {
@@ -180,7 +183,7 @@ test('queueBackupper - backupPlaylist - succeeds, no filtered items', function (
     ];
 
     var storedVideoItems = [
-        createVideoItem('videoId3', '', '')
+        createVideoItem('videoId3', '', 'playlistName2')
     ];
 
     var storage = {
@@ -220,9 +223,9 @@ test('queueBackupper - backupPlaylist - succeeds, all items filtered', function 
         createProviderVideoItem('videoId2', 'videoName2', 'playlistName2', 'url2')
     ];
     var storedVideoItems = [
-        createVideoItem('videoId1', '', ''),
-        createVideoItem('videoId2', '', ''),
-        createVideoItem('videoId3', '', '')
+        createVideoItem('videoId1', '', 'playlistName1'),
+        createVideoItem('videoId2', '', 'playlistName2'),
+        createVideoItem('videoId3', '', 'playlistName3')
     ];
 
     var storage = {
@@ -359,13 +362,10 @@ test('queueBackupper - backupPlaylist - storage fails', function (t) {
 
 test('queueBackupper - backupPlaylist - queue fails', function (t) {
     var videoItems = [
-        createProviderVideoItem('videoId1', 'videoName1', 'playlistName1', 'url1'),
-        createProviderVideoItem('videoId2', 'videoName2', 'playlistName2', 'url2')
+        createProviderVideoItem('videoId1', 'videoName1', 'playlistName1', 'url1')
     ];
 
-    var storedVideoItems = [
-        createVideoItem('videoId2', '', '')
-    ];
+    var storedVideoItems = [];
 
     var storage = {
         getAllVideoItems: sinon.stub()
