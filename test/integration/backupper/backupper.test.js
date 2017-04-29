@@ -1,6 +1,5 @@
 var test = require('blue-tape');
 var sinon = require('sinon');
-var crypto = require('crypto');
 var fs = require('fs-promise');
 var path = require('path');
 var baserequire = require('base-require');
@@ -304,8 +303,7 @@ function runBackupAndWait(backupFunction, numJobs, runWorker) {
  * @returns {string}
  */
 function buildDropboxPath(playlistName, videoName, videoId) {
-    const id = buildVideoId(videoId, playlistName);
-    return (`/${playlistName}/${videoName} (${id}).mp4`).toLowerCase();
+    return (`/${playlistName}/${videoName} (${videoId}).mp4`).toLowerCase();
 }
 
 /**
@@ -314,17 +312,7 @@ function buildDropboxPath(playlistName, videoName, videoId) {
  * @returns {string}
  */
 function buildS3Key(playlistName, videoName, videoId) {
-    const id = buildVideoId(videoId, playlistName);
-    return `${playlistName}/${videoName} (${id}).mp4`;
-}
-
-/**
- * @param {string} providerVideoId
- * @param {string} playlistName
- * @returns {string}
- */
-function buildVideoId(providerVideoId, playlistName) {
-    return sha256(providerVideoId + '_' + playlistName);
+    return `${playlistName}/${videoName} (${videoId}).mp4`;
 }
 
 /**
@@ -387,14 +375,6 @@ function enableBackupperStorage(storageName) {
 }
 
 /**
- * @param {string} value
- * @returns {string}
- */
-function sha256(value) {
-    return crypto.createHash('sha256').update(value).digest('hex');
-}
-
-/**
  * @param {Object} t Test object
  * @param {string} playlistName
  * @param {Object[]} videos Array of video objects {id, name}
@@ -422,7 +402,7 @@ function assertDirContainsPlaylistVideos(t, baseDir, playlistName, videos) {
         .then(items => {
             t.equal(items.length, videos.length);
             videos.forEach(video => {
-                const file = `${video.name} (${buildVideoId(video.id, playlistName)}).mp4`;
+                const file = `${video.name} (${video.id}).mp4`;
                 t.ok(items.includes(file));
             });
         });

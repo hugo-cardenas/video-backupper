@@ -1,5 +1,4 @@
 const test = require('blue-tape');
-const crypto = require('crypto');
 const baserequire = require('base-require');
 const createProvider = baserequire('src/provider/provider');
 
@@ -770,25 +769,17 @@ function createJwtClient(err) {
 }
 
 /**
- * @param {string} str
- * @returns {string}
- */
-function sha256(str) {
-    return crypto.createHash('sha256').update(str).digest('hex');
-}
-
-/**
  * @param {string} providerVideoId
  * @param {string} name
  * @param {string} playlistName
  * @returns {Object}
  */
-function createProviderVideoItem(providerVideoId, name, playlistName) {
+function createProviderVideoItem(id, name, playlistName) {
     return {
-        id: sha256(providerVideoId + '_' + playlistName),
+        id: id,
         name: name,
         playlistName: playlistName,
-        url: 'https://www.youtube.com/watch?v=' + providerVideoId
+        url: 'https://www.youtube.com/watch?v=' + id
     };
 }
 

@@ -1,6 +1,5 @@
 const _ = require('lodash');
 const VError = require('verror');
-const crypto = require('crypto');
 var url = require('url');
 
 /**
@@ -343,7 +342,7 @@ module.exports = function (google, config) {
      */
     function buildVideoObject(item, playlistName) {
         return {
-            id: buildVideoId(item.videoId, playlistName),
+            id: item.videoId,
             name: item.videoName,
             playlistName: playlistName,
             url: buildVideoUrl(item.videoId)
@@ -364,15 +363,6 @@ module.exports = function (google, config) {
     }
 
     /**
-     * @param {string} videoId
-     * @param {string} playlistName
-     * @returns {string}
-     */
-    function buildVideoId(videoId, playlistName) {
-        return sha256(videoId + '_' + playlistName);
-    }
-
-    /**
      * @param {string} playlistId
      * @param {Error} err
      * @returns {Error}
@@ -388,14 +378,6 @@ module.exports = function (google, config) {
      */
     function createChannelError(channelId, err) {
         return new VError(err, 'Unable to get video items for channel id %s', channelId);
-    }
-
-    /**
-     * @param {string} value
-     * @returns {string}
-     */
-    function sha256(value) {
-        return crypto.createHash('sha256').update(value).digest('hex');
     }
 
     return {
