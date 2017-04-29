@@ -60,6 +60,9 @@ Example of the project config.json:
         "dropbox": {
             "token": "my-dropbox-token"
         },
+        "file": {
+            "baseDir": "/path/to/storage/dir"
+        }
         "s3": {
             "bucket": "bucket-name"
         }
@@ -79,11 +82,13 @@ The whole `queue` section is passed through to `bee-queue` config: https://githu
 
 #### Storage
 
-There are two storages available for saving the videos: Amazon S3 and Dropbox. The storage to be used is specified in the `backupper` section.
+There are three configurable storages for saving the videos: Amazon S3, Dropbox and local filesystem. The storage to be used is specified in `backupper.storage` (values can be `s3`, `dropbox` or `file`).
 
 How to setup credentials for the S3 storage: http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html#cli-config-files
 
 How to setup credentials for the Dropbox storage: https://www.dropbox.com/developers/reference/oauth-guide
+
+The file storage will store the videos in the `baseDir` directory specified. This directory needs to exist with `rw` permissions before running the application with the file storage enabled.
 
 # Tests
 Tests are written with [tape](https://github.com/substack/tape)
