@@ -13,6 +13,7 @@ services:
       - "${VIDEO_BACKUPPER_PROJECT_DIR}:/usr/local/src/video-backupper"
       - "${VIDEO_BACKUPPER_CONFIG}:/usr/local/src/video-backupper/config/config.json"
       - "${VIDEO_BACKUPPER_YOUTUBE_KEY}:/usr/local/src/video-backupper/config/youtube.pem"
+      - "${VIDEO_BACKUPPER_FILE_STORAGE_DIR}:/usr/local/video-backupper-videos"
 
   redis:
     image: redis:3.2
