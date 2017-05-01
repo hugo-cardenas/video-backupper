@@ -2,16 +2,22 @@
 
 [![Build Status](https://travis-ci.org/hugo-cardenas/video-backupper.svg?branch=master)](https://travis-ci.org/hugo-cardenas/video-backupper)
 
-Make backups of videos from Youtube, saving them into a persistent storage (Amazon S3 or Dropbox). 
+Make backups of videos from Youtube, saving them into a persistent storage (Amazon S3, Dropbox or local filesystem). 
 
 Uses a queue ([bee-queue](https://github.com/LewisJEllis/bee-queue)) based on Redis for storing and processing the backup jobs.
 
 # Usage
+
+Set the environment variable specifying the application config file:
 ```
-VIDEOBACKUPPER_CONFIG=/path/to/config.json bin/backup channel myChannelId40
+export VIDEOBACKUPPER_CONFIG=/path/to/config.json
+```
+Then, use the commands:
+```
+./bin/backup channel myChannelId40
 ```
 ```
-VIDEOBACKUPPER_CONFIG=/path/to/config.json bin/backup playlist myPlaylistId42
+./bin/backup playlist myPlaylistId42
 ```
 ```  
 Usage: backup [command]
@@ -26,7 +32,7 @@ Usage: backup [command]
 ```
 
 ```
-VIDEOBACKUPPER_CONFIG=/path/to/config.json bin/runWorker
+./bin/runWorker
 ```
 ```  
 Usage: runWorker
