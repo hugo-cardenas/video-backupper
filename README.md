@@ -126,10 +126,10 @@ docker build -t 'video-backupper-node-rpi:1.0.0' -f docker/build/rpi/Dockerfile 
 
 ## Run
 
-There is a Docker compose file ready for running the project in development environment ([compose.dev.yml](video-backupper/docker/compose/compose.dev.yml)). It requires to specify some arguments in environment variables.
+There is a Docker compose file ready for running the project in development environment ([compose.dev.yml](docker/compose/compose.dev.yml)). It requires to specify some arguments in environment variables.
 
 In order to simplify running common commands with `docker-compose`, there are a few wrapper shell commands available
-in the directory [docker](video-backupper/docker).
+in the directory [docker](docker).
 
 Example:
 
