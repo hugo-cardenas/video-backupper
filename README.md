@@ -102,6 +102,41 @@ Integration tests will run only if this config contains the setting  `"integrati
 
 Note that they will delete all the contents from the S3 bucket and the Dropbox account, and will flush the Redis DB specified from the config.
 
+# Docker
+There is also a setup for running the application using Docker containers.
+
+## Build
+First, build the Docker image (run from project folder):
+
+```
+docker build -t 'video-backupper-node:1.0.0' -f docker/build/default/Dockerfile .
+```
+
+There is also a Dockerfile for Raspberry Pi machines (it requires a different build):
+
+```
+docker build -t 'video-backupper-node-rpi:1.0.0' -f docker/build/rpi/Dockerfile .
+```
+
+## Run
+
+There is a Docker compose file ready for running the project in development environment ([compose.dev.yml](video-backupper/docker/compose/compose.dev.yml)). It requires to specify some arguments in environment variables.
+
+In order to simplify running common commands with `docker-compose`, there are a few wrapper shell commands available
+in the directory [docker](video-backupper/docker).
+
+Example:
+
+* Run the worker:
+```
+./docker/runWorker.sh
+```
+* Run the backup:
+```
+./docker/backup.sh playlist myPlaylistId42
+```
+
+
 # license
 
 MIT
