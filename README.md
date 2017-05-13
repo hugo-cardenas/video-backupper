@@ -6,7 +6,19 @@ Make backups of videos from Youtube, saving them into a persistent storage (Amaz
 
 Uses a queue ([bee-queue](https://github.com/LewisJEllis/bee-queue)) based on Redis for storing and processing the backup jobs.
 
-# Usage
+## Requirements
+
+* npm >= 4.7
+* Node.js >= 7.6
+* Redis >= 3.2
+
+or 
+
+* npm >= 4.7
+* Docker >= 1.13
+* Docker Compose >= 1.9
+
+## Usage
 
 Set the environment variable specifying the application config file:
 ```
@@ -40,7 +52,7 @@ Usage: runWorker
 Process backup jobs from the queue
 ```
 
-# Config
+## Config
 
 Example of the project config.json:
 ```
@@ -96,7 +108,7 @@ How to setup credentials for the Dropbox storage: https://www.dropbox.com/develo
 
 The file storage will store the videos in the `baseDir` directory specified. This directory needs to exist with `rw` permissions before running the application with the file storage enabled.
 
-# Tests
+## Tests
 Tests are written with [tape](https://github.com/substack/tape)
 
 ```
@@ -108,10 +120,10 @@ Integration tests will run only if this config contains the setting  `"integrati
 
 Note that they will delete all the contents from the S3 bucket and the Dropbox account, and will flush the Redis DB specified from the config.
 
-# Docker
+## Docker
 There is also a setup for running the application using Docker containers.
 
-## Build
+### Build
 First, build the Docker image (run from project folder):
 
 ```
@@ -124,7 +136,7 @@ There is also a Dockerfile for Raspberry Pi machines (it requires a different bu
 docker build -t 'video-backupper-node-rpi:1.0.0' -f docker/build/rpi/Dockerfile .
 ```
 
-## Run
+### Run
 
 There is a Docker compose file ready for running the project in development environment ([compose.dev.yml](video-backupper/docker/compose/compose.dev.yml)). It requires to specify some arguments in environment variables.
 
@@ -143,6 +155,6 @@ Example:
 ```
 
 
-# license
+## License
 
 MIT
